@@ -122,7 +122,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `fillColumns` con sostituzioni di superficie (P4); `TERRAIN_GENERATOR_VERSION` (P5).
   - Fatto quando: tutti i test di WORLD-005/006 verdi senza cambiare l'hash di riferimento.
 
-- [ ] **T2.03** Schema, analisi YAML e diagnostica
+- [x] **T2.03** Schema, analisi YAML e diagnostica
   - Req: YAML-001, YAML-002 · Dip: —
   - Dipendenza `yaml`; `schema.ts`, `parse.ts`, `report.ts`, `worldFile.ts` (P1, P2, P14). Documentazione del formato in `worlds/README.md`.
   - Fatto quando: test di YAML-001.a–b e YAML-002.a–c verdi, con riga e percorso controllati.
