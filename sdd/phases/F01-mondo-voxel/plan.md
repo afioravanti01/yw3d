@@ -161,7 +161,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Luce emisferica + direzionale con ombre statiche (P7); cielo a gradiente e nebbia (P8); prima taratura dei colori. Valori di partenza: cielo da `#DCE8EC` (orizzonte, = nebbia) a `#86B4DC` (zenit), sole `#FFE8C4` basso sull'orizzonte.
   - Fatto quando: la scena mostra ombre, cielo e nebbia; screenshot allegato al commit per la revisione.
 
-- [ ] **T1.11** Camera libera
+- [x] **T1.11** Camera libera
   - Req: CAM-001 · Dip: T1.09
   - Pointer lock, WASD/Spazio/Shift con `KeyboardEvent.code` (P13), rotella per la velocità, `clampCamera` pura, posizione iniziale.
   - Fatto quando: test CAM-001.d verde; volo verificato a mano.
