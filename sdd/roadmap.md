@@ -51,7 +51,7 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 
 ## F04 — Host e riga di comando
 **Obiettivo:** l'autore lavora in una propria cartella e avvia il mondo con un comando; la simulazione gira in un host headless e il browser si collega come vista (D-008).
-- `yw3d <cartella>` (o `yw3d <file.yaml>`): valida il YAML e stampa gli errori nel terminale, avvia l'host, serve l'app e apre il browser. Comando installabile con `npm link`.
+- `yw3d <cartella>` (il mondo è sempre `world.yaml` della cartella): valida il YAML e stampa gli errori nel terminale, avvia l'host, serve l'app e apre il browser. Comando installabile con `npm link`.
 - Cartella del mondo in qualunque posizione del disco: il YAML e, facoltative, strutture TypeScript dell'autore registrate all'avvio.
 - Host: composizione del mondo e simulazione a passo fisso in Node, autorità sullo stato.
 - Browser collegato via WebSocket: ricostruisce il mondo dallo stesso YAML, riceve lo stato delle entità, invia le intenzioni del giocatore. La modalità solo browser resta.

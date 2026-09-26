@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | draft |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-26 |
 | Piano | [plan.md](plan.md) (dopo G1) |
 
@@ -36,7 +36,7 @@ L'autore lavora in una propria cartella, in qualunque posizione del disco, e avv
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### CLI-001 — Comando `yw3d`
-- **a** `[unit]` `yw3d <cartella>` usa il file `world.yaml` della cartella; `yw3d <file.yaml>` usa quel file, e la sua cartella è la cartella del mondo (Q1). Una cartella senza `world.yaml` o un file inesistente producono un messaggio chiaro e un codice di uscita ≠ 0.
+- **a** `[unit]` `yw3d <cartella>` usa il file `world.yaml` della cartella, sempre con questo nome (Q1). Una cartella inesistente, o senza `world.yaml`, produce un messaggio chiaro e un codice di uscita ≠ 0.
 - **b** `[unit]` All'avvio il comando valida il file e stampa errori e avvisi nel formato di YAML-002. Con errori l'host parte comunque e attende un file valido (Q2).
 - **c** `[unit]` Il comando stampa l'indirizzo dell'app; `--port` sceglie la porta, `--no-open` non apre il browser, `--lan` rende l'host raggiungibile dalla rete locale (per default solo dalla macchina locale, Q4), `--seed` sostituisce il seed del file, `--help` descrive l'uso.
 - **d** `[manuale]` Senza `--no-open` il browser di sistema si apre sull'app collegata al mondo.
@@ -84,12 +84,16 @@ Stesso hardware di riferimento di PERF-001.
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Domande aperte
-- **Q1** Nome del file nella cartella: proposta **`world.yaml`** fisso, così una cartella è un mondo; `yw3d file.yaml` resta possibile per file con altri nomi.
-- **Q2** Avvio con errori nel YAML: proposta **l'host parte e attende** un file valido, mostrando gli errori; l'autore corregge e il mondo compare. Alternativa: il comando esce con errore.
-- **Q3** Più browser collegati: proposta **il primo guida il giocatore, gli altri guardano** con la camera libera; se il primo si scollega, la guida passa al successivo. Alternativa: tutti possono guidare.
-- **Q4** Rete: proposta **solo macchina locale per default**, perché l'host esegue codice della cartella; `--lan` per aprirlo alla rete locale (ad esempio per giocare dal PC Windows con l'host sul Mac).
-- **Q5** Codice delle strutture dell'autore: proposta **lanciare il comando vale come consenso**, come eseguire `node script.js`; il consenso esplicito resta per i comandi dei controllori (F05). Alternativa: chiedere conferma al primo avvio per ogni cartella.
+## Domande risolte
+Chiuse con l'utente il 2026-09-26, prima di G1.
+
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Quale file della cartella è il mondo | Sempre `world.yaml`; il comando accetta solo una cartella | CLI-001.a senza la variante `yw3d <file.yaml>` |
+| Q2 | `world.yaml` con errori all'avvio | L'host parte, mostra gli errori e attende un file valido | CLI-001.b invariato |
+| Q3 | Più browser collegati | Il primo guida il giocatore, gli altri guardano con la camera libera; se il primo si scollega la guida passa al successivo | HOST-002.d invariato |
+| Q4 | Rete | Solo la macchina locale per default; `--lan` per la rete locale | CLI-001.c invariato |
+| Q5 | Codice delle strutture dell'autore | Lanciare il comando vale come consenso, e il terminale lo ricorda; il consenso esplicito resta per i comandi dei controllori (F05) | STRUCT-008.d invariato |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
