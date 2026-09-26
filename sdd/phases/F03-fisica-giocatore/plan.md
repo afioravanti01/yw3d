@@ -82,7 +82,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `solid: false` per le foglie; test di WORLD-004.c aggiornato.
   - Fatto quando: test verdi; hash di riferimento invariati (la solidità non entra nei dati del mondo).
 
-- [ ] **T3.03** Entità, intenzioni e passo fisso
+- [x] **T3.03** Entità, intenzioni e passo fisso
   - Req: PHYS-001, PHYS-002 · Dip: —
   - `constants.ts`, `entity.ts`, `fixedStep.ts`, `PhysicsWorld` con spawn e passo vuoto; determinismo e indipendenza dal frame rate.
   - Fatto quando: test di PHYS-001.a–b e PHYS-002.a–c verdi.
