@@ -1,14 +1,20 @@
+import { WATER } from '../blocks/builtin';
 import type { BlockRegistry } from '../blocks/registry';
 import type { World } from '../world/world';
 import { boxIntersectsSolid, boxOf, moveAlongAxis, type Axis, type Box } from './collide';
 import {
+  BUOYANCY_STIFFNESS,
+  FLOAT_FRACTION,
   GRAVITY,
   JUMP_SPEED,
   MAX_FALL_SPEED,
   RUN_SPEED,
   STEP_HEIGHT,
   STEP_SECONDS,
+  SWIM_SPEED,
   WALK_SPEED,
+  WATER_DRAG,
+  WATER_SPEED_FACTOR,
   WATER_STEP_HEIGHT,
 } from './constants';
 import { IDLE, type BoxSize, type EntityState, type Intent } from './entity';
@@ -106,12 +112,30 @@ export class PhysicsWorld {
 
   private stepBody(body: Body): void {
     const { state, intent } = body;
-    const speed = intent.run ? RUN_SPEED : WALK_SPEED;
+    const water = this.waterAround(body);
+    state.submerged = water.submerged;
+    const inWater = state.submerged >= 0.5;
+    const speed = (intent.run ? RUN_SPEED : WALK_SPEED) * (inWater ? WATER_SPEED_FACTOR : 1);
     state.vx = intent.moveX * speed;
     state.vz = intent.moveZ * speed;
-    // A jump starts only from the ground (PHYS-005.a).
-    if (intent.jump && state.onGround) state.vy = JUMP_SPEED;
-    state.vy = Math.max(-MAX_FALL_SPEED, state.vy - GRAVITY * STEP_SECONDS);
+    if (state.submerged > 0) {
+      // Buoyancy against gravity, balanced at FLOAT_FRACTION, with drag (plan F03 P5). The
+      // depth below the surface keeps pushing even when the entity is fully under water.
+      const depth = water.surface - state.y;
+      const buoyancy =
+        BUOYANCY_STIFFNESS * GRAVITY * (depth / body.size.height / FLOAT_FRACTION - 1);
+      if (intent.swim === 0) {
+        state.vy = (state.vy + buoyancy * STEP_SECONDS) * WATER_DRAG;
+      } else {
+        // Swimming takes over: the vertical speed tends to the swimming speed (PHYS-006.c).
+        state.vy = state.vy * WATER_DRAG + (1 - WATER_DRAG) * intent.swim * SWIM_SPEED;
+      }
+      state.vy = Math.max(-SWIM_SPEED, Math.min(SWIM_SPEED, state.vy));
+    } else {
+      // A jump starts only from the ground (PHYS-005.a).
+      if (intent.jump && state.onGround) state.vy = JUMP_SPEED;
+      state.vy = Math.max(-MAX_FALL_SPEED, state.vy - GRAVITY * STEP_SECONDS);
+    }
 
     // Vertical first, then the two horizontal axes (plan F03 P3).
     const vertical = this.move(body, 1, state.vy * STEP_SECONDS);
@@ -141,6 +165,29 @@ export class PhysicsWorld {
     if (axis === 0) state.x += across.moved;
     else state.z += across.moved;
     return across.blocked;
+  }
+
+  /**
+   * Water on the central column of a body: the fraction of its height inside water blocks,
+   * and the height of the water surface above its lowest wet block.
+   */
+  private waterAround(body: Body): { submerged: number; surface: number } {
+    const { x, y, z } = body.state;
+    const bx = Math.floor(x);
+    const bz = Math.floor(z);
+    const top = y + body.size.height;
+    let wet = 0;
+    let surface = -Infinity;
+    for (let by = Math.floor(y); by < top; by++) {
+      if (this.world.getBlock(bx, by, bz) !== WATER) continue;
+      wet += Math.min(top, by + 1) - Math.max(y, by);
+      if (surface === -Infinity) {
+        let s = by + 1;
+        while (this.world.getBlock(bx, s, bz) === WATER) s++;
+        surface = s;
+      }
+    }
+    return { submerged: wet / body.size.height, surface };
   }
 
   /** Moves a body along an axis, stopping at solid blocks. */

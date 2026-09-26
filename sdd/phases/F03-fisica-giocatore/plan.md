@@ -97,7 +97,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Salto da terra, salita automatica (P4).
   - Fatto quando: test di PHYS-005.a–b verdi.
 
-- [ ] **T3.06** Acqua
+- [x] **T3.06** Acqua
   - Req: PHYS-006 · Dip: T3.05
   - Frazione immersa, velocità dimezzata, galleggiamento, nuoto, uscita sulla riva (P5).
   - Fatto quando: test di PHYS-006.a–d verdi.
@@ -154,3 +154,4 @@ Come in F02: task in ordine senza fermarsi fino al punto di controllo di T3.10; 
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T3.06 | Galleggiamento come molla sulla profondità rispetto alla superficie (non solo sulla frazione immersa) con smorzamento quasi critico; il nuoto imposta la velocità verticale (3 m/s) invece di aggiungere una spinta | Con la sola frazione immersa un'entità rilasciata sul fondo risaliva in oltre 3 s (PHYS-006.b); con una spinta di nuoto fissa non si raggiungeva il fondo né la riva (PHYS-006.c–d) | Nessuno |

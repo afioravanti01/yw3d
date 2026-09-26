@@ -24,3 +24,11 @@ export const STEP_HEIGHT = 1;
 export const WATER_STEP_HEIGHT = 1.3;
 /** In water the horizontal speed is at most half of the speed on land (PHYS-006.a). */
 export const WATER_SPEED_FACTOR = 0.5;
+/** In water an entity floats with this fraction of its height submerged (head out, PHYS-006.b). */
+export const FLOAT_FRACTION = 0.85;
+/** Strength of buoyancy: how hard the water pushes an entity back to its floating height. */
+export const BUOYANCY_STIFFNESS = 2;
+/** Fraction of the vertical speed kept at each step in water: near-critical damping of bobbing. */
+export const WATER_DRAG = 0.87;
+/** Vertical speed when swimming up or down, and highest vertical speed in water: 3 m/s. */
+export const SWIM_SPEED = metersToBlocks(3);
