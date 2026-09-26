@@ -1,18 +1,33 @@
 import { IDLE, type Intent } from '../core/physics/entity';
-import { movementDirection } from '../render/flyCamera';
 
 const MOUSE_SENSITIVITY = 0.0022;
+/** Turning speed with the ←/→ arrows, about 125° per second (A3.1). */
+export const TURN_SPEED = 2.2;
 const MAX_PITCH = (89 * Math.PI) / 180;
 /** Keys whose default browser action (scrolling, menus) would get in the way. */
-const CAPTURED = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F4']);
+const CAPTURED = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+
+const pressed = (keys: ReadonlySet<string>, ...codes: string[]) =>
+  codes.some((code) => keys.has(code)) ? 1 : 0;
 
 /**
- * Intents of the player for the pressed keys (PLAYER-002.b, plan F03 P11): WASD or arrows move
- * on the horizontal plane relative to the view, Shift runs, Space jumps; in water Space or Z
- * swim up and X swims down. Keys are physical positions (KeyboardEvent.code).
+ * Intents of the player for the pressed keys (PLAYER-002.b, plan F03 P11): WASD move on the
+ * horizontal plane relative to the view, ↑/↓ go forward and back (the ←/→ arrows turn, see
+ * `turnFromKeys`), Shift runs, Space jumps; in water Space or Z swim up and X swims down.
+ * Keys are physical positions (KeyboardEvent.code).
  */
 export function intentFromKeys(keys: ReadonlySet<string>, yaw: number): Intent {
-  const { x, z } = movementDirection(keys, yaw);
+  const forward = pressed(keys, 'KeyW', 'ArrowUp') - pressed(keys, 'KeyS', 'ArrowDown');
+  const right = pressed(keys, 'KeyD') - pressed(keys, 'KeyA');
+  const sin = Math.sin(yaw);
+  const cos = Math.cos(yaw);
+  let x = -sin * forward + cos * right;
+  let z = -cos * forward - sin * right;
+  const length = Math.hypot(x, z);
+  if (length > 1) {
+    x /= length;
+    z /= length;
+  }
   const up = keys.has('Space') || keys.has('KeyZ');
   const down = keys.has('KeyX');
   return {
@@ -24,6 +39,11 @@ export function intentFromKeys(keys: ReadonlySet<string>, yaw: number): Intent {
     jump: keys.has('Space'),
     swim: up && !down ? 1 : down && !up ? -1 : 0,
   };
+}
+
+/** Change of the view direction in `seconds` for the ←/→ arrows: left turns left (A3.1). */
+export function turnFromKeys(keys: ReadonlySet<string>, seconds: number): number {
+  return (pressed(keys, 'ArrowLeft') - pressed(keys, 'ArrowRight')) * TURN_SPEED * seconds;
 }
 
 /** Keyboard and mouse state of the player mode: pressed keys and view direction. */
@@ -63,6 +83,11 @@ export class PlayerControls {
       },
       { signal },
     );
+  }
+
+  /** Turns the view with the arrow keys for a frame of `seconds`. */
+  turn(seconds: number): void {
+    if (this.enabled) this.yaw += turnFromKeys(this.keys, seconds);
   }
 
   /** Current intents, or none while the player mode is not active. */

@@ -76,7 +76,7 @@ Un'entità è "in acqua" quando almeno metà del suo volume è in blocchi d'acqu
 
 ### PLAYER-002 — Controlli del giocatore
 - **a** `[unit]` Camminata a 4 m/s, corsa a 7 m/s tenendo premuto Shift (Q2).
-- **b** `[manuale]` Un click cattura il puntatore ed Esc lo rilascia; il mouse ruota la visuale con inclinazione limitata a ±89°. W/A/S/D e le frecce muovono nel piano orizzontale secondo la direzione di vista (posizione fisica dei tasti); Spazio salta. In acqua Spazio o Z fanno salire, X fa scendere.
+- **b** `[manuale]` Un click cattura il puntatore ed Esc lo rilascia; il mouse ruota la visuale con inclinazione limitata a ±89°. W/A/S/D muovono nel piano orizzontale secondo la direzione di vista (posizione fisica dei tasti); le frecce ↑/↓ vanno avanti e indietro come W/S, le frecce ←/→ ruotano la visuale a sinistra e a destra (A3.1); Spazio salta. In acqua Spazio o Z fanno salire, X fa scendere.
 
 ### PLAYER-003 — Visuale in prima e terza persona
 - **a** `[manuale]` All'avvio la visuale è in prima persona, all'altezza degli occhi. Il tasto V alterna prima e terza persona.
@@ -104,8 +104,8 @@ Stesso hardware di riferimento di PERF-001.
 - **Prima:** e `[manuale]` All'avvio la camera è sopra il centro del mondo, più in alto della superficie, e inquadra il terreno.
 - **Dopo:** criteri a, b, c e d invariati (valgono in modalità camera libera); il criterio e diventa, e si aggiunge f:
 - **e** `[manuale]` Passando alla camera libera, la camera parte dalla visuale corrente del giocatore.
-- **f** `[manuale]` Il tasto F4 alterna giocatore e camera libera (modalità di debug). Mentre la camera libera è attiva il giocatore resta fermo dov'era; tornando al giocatore la visuale riprende dal giocatore.
-- **Motivo:** dalla F03 si entra nel mondo come giocatore; la camera libera resta per ispezionare (roadmap).
+- **f** `[manuale]` Il tasto C alterna giocatore e camera libera (modalità di debug). Mentre la camera libera è attiva il giocatore resta fermo dov'era; tornando al giocatore la visuale riprende dal giocatore. (A3.2)
+- **Motivo:** dalla F03 si entra nel mondo come giocatore; la camera libera resta per ispezionare (roadmap). Tasto C invece di F4 per l'emendamento A3.2.
 
 ### DEBUG-001 — Overlay diagnostico
 - **Prima:** a `[manuale]` Il tasto F3 mostra e nasconde un overlay con: fps, posizione della camera (in blocchi e in metri), velocità, seed, nome del file del mondo, numero di strutture per tipo, numero di avvisi, numero di regioni e di triangoli, tempo di caricamento, durata dell'ultima ricostruzione di una regione.
@@ -131,3 +131,5 @@ Chiuse con l'utente il 2026-09-26, prima di G1. Tutte le proposte sono state acc
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A3.1 | 2026-09-26 | PLAYER-002.b | Le frecce ←/→ ruotano la visuale invece di spostare di lato; ↑/↓ restano avanti e indietro | Richiesta dell'utente alla demo: girarsi senza mouse | sì, utente, 2026-09-26 |
+| A3.2 | 2026-09-26 | CAM-001.f | Tasto C invece di F4 per la camera libera | Richiesta dell'utente alla demo | sì, utente, 2026-09-26 |

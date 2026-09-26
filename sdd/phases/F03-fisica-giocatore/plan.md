@@ -127,6 +127,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Sezione `player` nel borgo di `worlds/default.yaml`; durata del passo nell'overlay; misura.
   - Fatto quando: il giocatore parte nel borgo; passo sotto 1 ms in sviluppo.
 
+- [x] **T3.14+** Correzioni dalla demo
+  - Req: PLAYER-002, CAM-001, PLAYER-003 · Dip: T3.10
+  - Frecce ←/→ che ruotano la visuale (A3.1), tasto C per la camera libera (A3.2), capelli della figura che sfarfallano sulla testa (facce sovrapposte).
+  - Fatto quando: `npm run check` verde; test della mappatura dei tasti aggiornato.
+
 - [ ] **T3.12** Test end-to-end
   - Req: PHYS-002 · Dip: T3.10
   - PHYS-002.d con `simulate`; test e screenshot di F01–F02 adattati all'avvio come giocatore.

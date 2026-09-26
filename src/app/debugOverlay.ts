@@ -79,8 +79,8 @@ export class DebugOverlay {
       `rebuild    ${d.lastChunkRebuildMs.toFixed(1)} ms (last chunk)`,
       ``,
       d.mode === 'free'
-        ? `F3 hide · F4 player · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`
-        : `F3 hide · click to look · WASD/arrows walk · Shift run · Space jump/swim up · X swim down · V view · F4 free camera`,
+        ? `F3 hide · C player · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`
+        : `F3 hide · click to look · WASD/↑↓ walk · ←→ turn · Shift run · Space jump/swim up · X swim down · V view · C free camera`,
     ].join('\n');
   }
 }

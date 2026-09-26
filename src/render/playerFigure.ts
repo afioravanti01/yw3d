@@ -30,8 +30,10 @@ export function createPlayerFigure(): THREE.Group {
   part(SHIRT, 0.3, 1.15, 0.4, -0.66, 1.65);
   part(SHIRT, 0.3, 1.15, 0.4, 0.66, 1.65);
   part(SKIN, 0.7, 0.7, 0.7, 0, 2.8);
-  part(HAIR, 0.74, 0.2, 0.74, 0, 3.3);
-  // A darker band at the back of the head shows which way the figure faces.
-  part(HAIR, 0.74, 0.5, 0.12, 0, 2.9, 0.33);
+  // The hair wraps the top of the head and sticks out a little everywhere: no face of the hair
+  // lies on a face of the head, which would flicker (z-fighting).
+  part(HAIR, 0.76, 0.16, 0.76, 0, 3.38);
+  // A band at the back of the head shows which way the figure faces.
+  part(HAIR, 0.76, 0.6, 0.12, 0, 2.9, 0.33);
   return group;
 }

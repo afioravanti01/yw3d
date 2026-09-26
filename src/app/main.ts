@@ -67,7 +67,7 @@ async function main(): Promise<void> {
   let current: Loaded | undefined;
   const playerControls = new PlayerControls(canvas, (code) => {
     if (code === 'KeyV') playerView?.toggleThirdPerson();
-    if (code === 'F4') playerView?.toggleFree(camera);
+    if (code === 'KeyC') playerView?.toggleFree(camera);
   });
   let reloadMs = 0;
   // Replaced by the hot update of the world files (YAML-007).

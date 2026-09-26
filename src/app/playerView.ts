@@ -60,7 +60,7 @@ export class PlayerView {
     if (this.mode !== 'free') this.setMode(this.mode === 'first' ? 'third' : 'first');
   }
 
-  /** F4: free camera from the current view, and back to the player (CAM-001.e–f). */
+  /** C: free camera from the current view, and back to the player (CAM-001.e–f). */
   toggleFree(camera: THREE.PerspectiveCamera): void {
     if (this.mode === 'free') {
       this.setMode(this.lastPlayerMode);
@@ -77,6 +77,7 @@ export class PlayerView {
 
   /** Advances the simulation by a frame and places the camera and the figure. */
   update(dt: number, camera: THREE.PerspectiveCamera): void {
+    if (this.mode !== 'free') this.controls.turn(dt);
     const steps = this.stepper.advance(dt);
     for (let i = 0; i < steps; i++) {
       this.previous = this.player.state;
