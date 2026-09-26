@@ -6,8 +6,10 @@ import {
   TERRAIN_GENERATOR_VERSION,
 } from '../gen/terrain';
 import { formatPath, type Issue } from '../schema/schema';
-import { StructureBuilder } from '../structures/builder';
-import { buildStructure, type StructureRegistry } from '../structures/registry';
+import { WATER } from '../blocks/builtin';
+import { rotateColumn, StructureBuilder } from '../structures/builder';
+import { basinOf, buildStructure, type StructureRegistry } from '../structures/registry';
+import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import { loadWorldFile } from '../yaml/worldFile';
@@ -94,12 +96,53 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
 
   const map = cloneHeightmap(generateHeightmap(seed, size, DEFAULT_TERRAIN_PARAMS));
   lap('heightmap');
-  const world = fillColumns(map, seed, size, DEFAULT_TERRAIN_PARAMS);
+
+  // Terrain adaptation (STRUCT-003): basins first, then leveling, in declaration order.
+  const surface = new Uint8Array(size.x * size.z);
+  const anchors = new Map<Placement, number>();
+  const basins: DugBasin[] = [];
+  for (const placement of placements) {
+    if (placement.type.terrain !== 'dig') continue;
+    const basin = basinOf(placement.type, placement.params, placement.seed);
+    if (!basin) continue;
+    const columns = basin.columns.map(([lx, lz, depth]) => {
+      const [rx, rz] = rotateColumn(lx, lz, placement.rotation);
+      return [placement.x + rx, placement.z + rz, depth] as const;
+    });
+    const dug = dig(
+      map,
+      surface,
+      columns,
+      basin.shoreWidth,
+      basin.shoreBlock,
+      placement.y === undefined ? Infinity : placement.y - 1,
+    );
+    basins.push(dug);
+    anchors.set(placement, dug.waterLevel + 1);
+  }
+  for (const placement of placements) {
+    if (placement.type.terrain !== 'flatten') continue;
+    const level = flatten(
+      map,
+      placement.rect,
+      placement.y === undefined ? undefined : placement.y - 1,
+    );
+    anchors.set(placement, level + 1);
+  }
+  lap('adaptation');
+
+  const world = fillColumns(map, seed, size, DEFAULT_TERRAIN_PARAMS, surface);
+  for (const { waterLevel, water } of basins) {
+    for (const [x, z, bed] of water) {
+      for (let y = bed + 1; y <= waterLevel; y++) world.setBlock(x, y, z, WATER);
+    }
+  }
   lap('columns');
 
   const structureCounts: Record<string, number> = {};
   for (const placement of placements) {
-    stamp(world, placement, map.heights[placement.x + placement.z * size.x]! + 1);
+    const ground = map.heights[placement.x + placement.z * size.x]! + 1;
+    stamp(world, placement, placement.y ?? anchors.get(placement) ?? ground);
     structureCounts[placement.type.name] = (structureCounts[placement.type.name] ?? 0) + 1;
   }
   lap('structures');
@@ -114,8 +157,10 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
   };
 }
 
-function stamp(world: World, placement: Placement, groundY: number): void {
+function stamp(world: World, placement: Placement, y: number): void {
   const builder = new StructureBuilder();
   buildStructure(placement.type, placement.params, placement.seed, builder);
-  builder.stamp(world, placement.x, placement.y ?? groundY, placement.z, placement.rotation);
+  // An explicit y is kept as is: only structures resting on the surface extend their base.
+  const groundFill = placement.type.terrain === 'sit' && placement.y === undefined;
+  builder.stamp(world, placement.x, y, placement.z, placement.rotation, groundFill);
 }

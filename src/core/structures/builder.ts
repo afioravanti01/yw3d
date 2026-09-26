@@ -1,7 +1,10 @@
+import { AIR, WATER } from '../blocks/builtin';
 import type { World } from '../world/world';
 
 /** Rotation around the vertical axis, clockwise seen from above (x east, z south). */
 export type Rotation = 0 | 90 | 180 | 270;
+
+const isLoose = (block: number) => block === AIR || block === WATER;
 
 /** Axis-aligned rectangle of columns, min inclusive, max exclusive. */
 export interface Rect {
@@ -88,13 +91,28 @@ export class StructureBuilder {
    * Writes the blocks into the world, rotated and moved so that the local origin lands on
    * (x, y, z). Blocks outside the world are skipped; returns how many were written.
    */
-  stamp(world: World, x: number, y: number, z: number, rotation: Rotation): number {
+  stamp(
+    world: World,
+    x: number,
+    y: number,
+    z: number,
+    rotation: Rotation,
+    groundFill = false,
+  ): number {
     let written = 0;
     for (const [lx, ly, lz, block] of this.entries()) {
       const [rx, rz] = rotateColumn(lx, lz, rotation);
-      if (world.isInside(x + rx, y + ly, z + rz)) {
-        world.setBlock(x + rx, y + ly, z + rz, block);
-        written++;
+      const wx = x + rx;
+      const wz = z + rz;
+      if (!world.isInside(wx, y + ly, wz)) continue;
+      world.setBlock(wx, y + ly, wz, block);
+      written++;
+      // STRUCT-003.a: on uneven ground the base extends down to the terrain, leaving no gaps.
+      if (groundFill && ly === 0 && block !== AIR) {
+        for (let wy = y - 1; wy >= 0 && isLoose(world.getBlock(wx, wy, wz)); wy--) {
+          world.setBlock(wx, wy, wz, block);
+          written++;
+        }
       }
     }
     return written;

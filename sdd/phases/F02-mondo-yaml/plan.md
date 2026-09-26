@@ -137,7 +137,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `composeWorld`: seed e dimensioni dal file, avviso di versione, ancoraggio alla superficie o quota esplicita, parametri di default, conflitti come avvisi, strutture fuori dal mondo come errori.
   - Fatto quando: test di YAML-001.c, YAML-003.a–b, YAML-004.a–d, STRUCT-004.a–b verdi.
 
-- [ ] **T2.06** Adattamento al terreno
+- [x] **T2.06** Adattamento al terreno
   - Req: STRUCT-003 · Dip: T2.05
   - Appoggio, livellamento con raccordo (P9), scavo; stratificazione delle colonne modificate.
   - Fatto quando: test di STRUCT-003.a–e verdi su 20 seed.

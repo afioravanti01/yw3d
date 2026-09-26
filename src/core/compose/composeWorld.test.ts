@@ -107,7 +107,7 @@ describe('world composition', () => {
         line: 7,
         path: 'structures[0].type',
         message:
-          'unknown structure type "test_pots" (did you mean "test_post"?); available: test_post',
+          'unknown structure type "test_pots" (did you mean "test_post"?); available: test_basin, test_pad, test_post',
       }),
     ]);
   });

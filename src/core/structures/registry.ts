@@ -1,6 +1,6 @@
 import { hash3, createRng, fnv1a, type Random } from '../math/rng';
 import type { Issue, Path, Schema } from '../schema/schema';
-import type { Rect, StructureBuilder } from './builder';
+import { StructureBuilder, type Rect } from './builder';
 
 /**
  * How a structure adapts the terrain (STRUCT-003): `sit` rests on the surface, `flatten`
@@ -16,6 +16,18 @@ export interface StructureContext<P> {
   readonly builder: StructureBuilder;
 }
 
+/**
+ * Basin of a `dig` structure (STRUCT-003.d), in local columns before rotation: each column has
+ * the depth of its bed below the water level (≥ 1). The composer carves it, fills it with
+ * water up to one block below the lowest rim, and covers bed and shore with `shoreBlock`.
+ */
+export interface Basin {
+  readonly columns: readonly (readonly [x: number, z: number, depth: number])[];
+  /** Width of the shore band around the water, 1–3 blocks (STRUCT-007.c). */
+  readonly shoreWidth: number;
+  readonly shoreBlock: number;
+}
+
 export interface StructureType<P = unknown> {
   /** Unique name, used in world files. */
   readonly name: string;
@@ -24,6 +36,8 @@ export interface StructureType<P = unknown> {
   readonly terrain: TerrainMode;
   /** Columns covered by the structure, in local coordinates, before rotation. */
   footprint(params: P): Rect;
+  /** For `dig` structures: the basin to carve. Must be deterministic. */
+  basin?(context: StructureContext<P>): Basin;
   /** Writes the structure in local coordinates. Must be deterministic (STRUCT-002.a). */
   generate(context: StructureContext<P>): void;
 }
@@ -83,4 +97,9 @@ export function buildStructure<P>(
   builder: StructureBuilder,
 ): void {
   type.generate({ params, seed, random: createRng(seed), builder });
+}
+
+/** The basin of a `dig` structure, or undefined for other modes. */
+export function basinOf<P>(type: StructureType<P>, params: P, seed: number): Basin | undefined {
+  return type.basin?.({ params, seed, random: createRng(seed), builder: new StructureBuilder() });
 }
