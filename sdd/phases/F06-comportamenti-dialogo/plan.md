@@ -187,7 +187,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `understand.ts` (P11).
   - Fatto quando: test di DIALOG-003.a–d verdi.
 
-- [ ] **T6.05** Linguaggio dei comportamenti: registro e compilazione
+- [x] **T6.05** Linguaggio dei comportamenti: registro e compilazione
   - Req: BEHAV-001, BEHAV-002, BEHAV-003, BEHAV-004, MAP-001 · Dip: T6.02
   - Registro (P3) e vocabolario predefinito; forma delle istruzioni (P2); compilazione con i riferimenti (P4); memoria dichiarata; stati.
   - Fatto quando: test di BEHAV-001.c, BEHAV-004.f, MAP-001.c e degli errori di BEHAV-003 e BEHAV-004.d verdi.

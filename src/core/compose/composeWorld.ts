@@ -16,11 +16,21 @@ import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import { DEFAULT_PLAYER_NAME, loadWorldFile, type PlaceDecl } from '../yaml/worldFile';
 import { areaInsideWorld } from './areas';
 import { buildWorldMap, checkIds, type Goal, type WorldMap } from '../map/worldMap';
+import { createDefaultBehaviors } from '../behaviors/builtin';
+import { compileBehaviors } from '../behaviors/compile';
+import type { BehaviorRegistry, Program } from '../behaviors/registry';
 import { checkStructureTypes, findConflicts, placeStructures, type Placement } from './placement';
 import { scatterStructures } from './scatter';
 
 export interface ComposeOptions {
   readonly registry: StructureRegistry;
+  /** Vocabulary of behaviors (BEHAV-004.f); the predefined one when absent. */
+  readonly behaviors?: BehaviorRegistry;
+  /**
+   * Reads a file of the world folder by its path relative to it, for behaviors in external
+   * files (plan F06 P14); undefined when the file cannot be read.
+   */
+  readonly readFile?: (path: string) => string | undefined;
   /** Replaces the terrain seed of the file (APP-001.a). */
   readonly seedOverride?: number;
   /** Clock for the step timings, e.g. `performance.now`; the core has no clock of its own. */
@@ -41,6 +51,8 @@ export interface CharacterStart {
   readonly appearance: Appearance;
   /** Command of the controller that drives it, if any (PROTO-003). */
   readonly command: string | undefined;
+  /** Its behavior, checked (BEHAV-001), if any. */
+  readonly behavior?: Program;
 }
 
 export interface PlacedStructure {
@@ -297,7 +309,18 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     })),
   });
 
-  const diagnostics = toDiagnostics();
+  const compiled = compileBehaviors({
+    decl,
+    file,
+    lineOf: loaded.lineOf,
+    registry: options.behaviors ?? createDefaultBehaviors(),
+    map: built.map,
+    goals: built.goals,
+    readFile: options.readFile,
+  });
+  lap('behaviors');
+
+  const diagnostics = [...toDiagnostics(), ...compiled.diagnostics];
   return {
     world: hasErrors(diagnostics) ? undefined : world,
     name: decl.name,
@@ -326,6 +349,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       yaw: (-c.yaw * Math.PI) / 180,
       appearance: resolveAppearance(c.appearance, seed, c.id),
       command: c.controller?.command,
+      behavior: compiled.programs.get(c.id),
     })),
     placements: placements.map((p) => ({
       type: p.type.name,
