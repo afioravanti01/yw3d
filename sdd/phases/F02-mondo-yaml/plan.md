@@ -112,7 +112,7 @@ scatter:
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T2.01** Blocchi di F02
+- [x] **T2.01** Blocchi di F02
   - Req: WORLD-004 · Dip: —
   - `water`, `sand`, `gravel`, `oak_log`, `birch_log`, `willow_log`, `oak_leaves`, `birch_leaves`, `willow_leaves`, `planks`, `cobblestone`, `roof_tiles` con colori della palette calda (RENDER-001); id stabili dopo quelli di F01.
   - Fatto quando: test di WORLD-004.c aggiornato e verde; hash di WORLD-005.b invariato.

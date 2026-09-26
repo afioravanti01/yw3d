@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { AIR, createDefaultRegistry, DIRT, GRASS, STONE } from './builtin';
+import {
+  AIR,
+  BIRCH_LEAVES,
+  BIRCH_LOG,
+  COBBLESTONE,
+  createDefaultRegistry,
+  DIRT,
+  GRASS,
+  GRAVEL,
+  OAK_LEAVES,
+  OAK_LOG,
+  PLANKS,
+  ROOF_TILES,
+  SAND,
+  STONE,
+  WATER,
+  WILLOW_LEAVES,
+  WILLOW_LOG,
+} from './builtin';
 import { BlockRegistry, type BlockDef } from './registry';
 
 const crystal: BlockDef = {
@@ -40,17 +58,33 @@ describe('BlockRegistry', () => {
     expect(() => registry.idOf('missing')).toThrow(/Unknown block/);
   });
 
-  it('WORLD-004.c: the F01 block types are registered', () => {
+  it('WORLD-004.c: the F01 and F02 block types are registered with stable ids', () => {
     const registry = createDefaultRegistry();
     expect(registry.all().map((b) => [b.id, b.name])).toEqual([
       [AIR, 'air'],
       [GRASS, 'grass'],
       [DIRT, 'dirt'],
       [STONE, 'stone'],
+      [WATER, 'water'],
+      [SAND, 'sand'],
+      [GRAVEL, 'gravel'],
+      [OAK_LOG, 'oak_log'],
+      [BIRCH_LOG, 'birch_log'],
+      [WILLOW_LOG, 'willow_log'],
+      [OAK_LEAVES, 'oak_leaves'],
+      [BIRCH_LEAVES, 'birch_leaves'],
+      [WILLOW_LEAVES, 'willow_leaves'],
+      [PLANKS, 'planks'],
+      [COBBLESTONE, 'cobblestone'],
+      [ROOF_TILES, 'roof_tiles'],
     ]);
-    expect(registry.get(AIR)).toMatchObject({ id: 0, solid: false, opaque: false });
-    for (const id of [GRASS, DIRT, STONE]) {
-      expect(registry.get(id)).toMatchObject({ solid: true, opaque: true });
+    // F01 ids never change: they are stored in world data.
+    expect([AIR, GRASS, DIRT, STONE]).toEqual([0, 1, 2, 3]);
+    for (const id of [AIR, WATER]) {
+      expect(registry.get(id)).toMatchObject({ solid: false, opaque: false });
+    }
+    for (const block of registry.all().filter((b) => b.id !== AIR && b.id !== WATER)) {
+      expect(block).toMatchObject({ solid: true, opaque: true });
     }
   });
 });
