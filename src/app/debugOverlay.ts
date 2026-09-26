@@ -54,7 +54,7 @@ export class DebugOverlay {
       `load       ${(d.loadTimeMs / 1000).toFixed(2)} s (generation ${d.generationMs.toFixed(0)} ms, meshing ${d.meshingMs.toFixed(0)} ms)`,
       `rebuild    ${d.lastChunkRebuildMs.toFixed(1)} ms (last chunk)`,
       ``,
-      `F3 hide · click to fly · WASD move · Space/Shift up/down · wheel speed`,
+      `F3 hide · click to fly · WASD/arrows move · Space/Shift up/down · wheel speed`,
     ].join('\n');
   }
 }

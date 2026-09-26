@@ -172,7 +172,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `params.ts` (seed da URL, avviso se non valido); sequenza di caricamento con misura del tempo; overlay F3; `testHook.ts` (P12).
   - Fatto quando: l'app parte con `?seed=` e senza; l'overlay mostra tutti i campi di DEBUG-001.a. **Punto di controllo con l'utente**: prima demo visiva, commenti sul look.
 
-- [ ] **T1.13** Test end-to-end
+- [x] **T1.13** Test end-to-end
   - Req: APP-001, WORLD-005, RENDER-005 · Dip: T1.12
   - Configurazione Playwright (Chromium, SwiftShader, `vite preview`); test APP-001.a–b, WORLD-005.d (hash browser = hash Node), RENDER-005.b; screenshot da 3 punti di vista fissi (P12). Script npm `e2e`. Prerequisito: l'utente esegue una volta `sudo npx playwright install-deps chromium`.
   - Fatto quando: `npm run e2e` è verde in locale.
@@ -226,3 +226,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.10 | Ombre `PCFShadowMap` invece di PCF soft | Three.js r186 ha rimosso `PCFSoftShadowMap` | Nessuno |
 | T1.12 | L'overlay diagnostico è visibile all'avvio (F3 lo nasconde) e mostra anche i tempi di generazione e meshing; i testi dell'interfaccia sono in inglese come il codice | Utile alla demo e alla misura di PERF-001.a; la spec non fissa lo stato iniziale né la lingua dell'interfaccia | Nessuno |
 | T1.16+ | Hash di riferimento di WORLD-005.b da `decee4b7` a `b8c27500` | Il generatore produce un terreno diverso per le pianure dell'emendamento A1.2, come previsto da WORLD-005.b | Nessuno. Sui 5 seed: zone piane 31–47% (soglia 25%); il rilievo di WORLD-006.c scende a 17 blocchi sui seed 1 e 2, con 1 blocco di margine |
+| T1.13 | Niente `sudo npx playwright install-deps chromium`; WebGL software forzato con `--use-angle=swiftshader` | Lo sviluppo è passato a macOS, dove i browser di Playwright erano già installati e le dipendenze di sistema non servono. SwiftShader esplicito rende il rendering uguale su ogni macchina | Nessuno. Il riferimento hardware di PERF-001 (PC Windows + WSL2) va riconsiderato alla verifica di T1.14 |
