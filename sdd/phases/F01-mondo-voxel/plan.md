@@ -141,7 +141,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Algoritmo della sezione "Generazione del terreno"; `TerrainParams` con i default; taratura; hash di riferimento per il seed 1.
   - Fatto quando: test WORLD-005.a–c e WORLD-006.a–f verdi su 5 seed; generazione del mondo di default in Node ≤ 1,5 s.
 
-- [ ] **T1.07** Mesher: culling delle facce e bordi del mondo
+- [x] **T1.07** Mesher: culling delle facce e bordi del mondo
   - Req: RENDER-001, RENDER-006 · Dip: T1.05
   - Copia imbottita 34³ (P3); una faccia per ogni lato tra un blocco opaco e uno non opaco, fuori mondo compreso; buffer di posizioni, normali, colori, indici.
   - Fatto quando: test su casi noti verdi (blocco isolato = 6 facce, due blocchi adiacenti = 10 facce, blocco d'angolo del mondo con facce esterne presenti; RENDER-001.a, RENDER-006.a).
@@ -208,3 +208,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.02 | Dati di prova dello script in `scripts/__fixtures__/` (spec, piano e test finti come file `.md`/`.txt`) | Scritti dentro il file di test, gli ID finti venivano letti come riferimenti reali | Nessuno |
 | T1.06 | Il generatore ha componenti in più rispetto alla formula del piano: un'onda lunga per valli e alture (λ ≈ 420), gli affioramenti sollevati fino a 3 blocchi, poggi sovrapposti combinati col massimo invece che sommati, limite morbido delle altezze invece del clamp, 3–6 poggi invece di 2–5 | Con la sola formula del piano il rilievo di alcuni seed era sotto i 16 blocchi (WORLD-006.c) e le cime venivano tagliate piatte a 72 | Nessuno |
 | T1.06 | `World.fromColumns` copia le colonne un segmento di chunk alla volta | La versione blocco per blocco portava la generazione a ~1 s; ora ~0,7 s | Nessuno |
+| T1.07 | Buffer compatti: posizioni `Uint8`, normali `Int8`, colori `Uint16` normalizzati, indici a 16 bit quando bastano | Con `Float32` il mondo di default (~700 mila facce) occuperebbe più di 100 MB di geometria; così circa 40 MB | Nessuno |
