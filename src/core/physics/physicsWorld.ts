@@ -1,7 +1,16 @@
 import type { BlockRegistry } from '../blocks/registry';
 import type { World } from '../world/world';
-import { boxIntersectsSolid, boxOf, moveAlongAxis, type Axis } from './collide';
-import { GRAVITY, MAX_FALL_SPEED, RUN_SPEED, STEP_SECONDS, WALK_SPEED } from './constants';
+import { boxIntersectsSolid, boxOf, moveAlongAxis, type Axis, type Box } from './collide';
+import {
+  GRAVITY,
+  JUMP_SPEED,
+  MAX_FALL_SPEED,
+  RUN_SPEED,
+  STEP_HEIGHT,
+  STEP_SECONDS,
+  WALK_SPEED,
+  WATER_STEP_HEIGHT,
+} from './constants';
 import { IDLE, type BoxSize, type EntityState, type Intent } from './entity';
 
 /**
@@ -21,6 +30,14 @@ interface Body {
   readonly size: BoxSize;
   readonly state: EntityState;
   intent: Intent;
+}
+
+function shift(box: Box, axis: Axis, amount: number): Box {
+  const min: [number, number, number] = [...box.min];
+  const max: [number, number, number] = [...box.max];
+  min[axis] += amount;
+  max[axis] += amount;
+  return { min, max };
 }
 
 /** Removes rounding noise after a vertical collision: feet rest exactly on a block face. */
@@ -92,24 +109,48 @@ export class PhysicsWorld {
     const speed = intent.run ? RUN_SPEED : WALK_SPEED;
     state.vx = intent.moveX * speed;
     state.vz = intent.moveZ * speed;
+    // A jump starts only from the ground (PHYS-005.a).
+    if (intent.jump && state.onGround) state.vy = JUMP_SPEED;
     state.vy = Math.max(-MAX_FALL_SPEED, state.vy - GRAVITY * STEP_SECONDS);
 
     // Vertical first, then the two horizontal axes (plan F03 P3).
     const vertical = this.move(body, 1, state.vy * STEP_SECONDS);
     state.onGround = vertical.blocked && state.vy < 0;
     if (vertical.blocked) state.vy = 0;
-    if (this.move(body, 0, state.vx * STEP_SECONDS).blocked) state.vx = 0;
-    if (this.move(body, 2, state.vz * STEP_SECONDS).blocked) state.vz = 0;
+    const stepHeight = state.submerged > 0 ? WATER_STEP_HEIGHT : state.onGround ? STEP_HEIGHT : 0;
+    if (this.moveHorizontal(body, 0, state.vx * STEP_SECONDS, stepHeight)) state.vx = 0;
+    if (this.moveHorizontal(body, 2, state.vz * STEP_SECONDS, stepHeight)) state.vz = 0;
   }
 
-  /** Moves a body along an axis, stopping at solid blocks; returns whether it was blocked. */
-  private move(body: Body, axis: Axis, delta: number): { blocked: boolean } {
+  /**
+   * Moves along a horizontal axis. When blocked, tries again raised by at most `stepHeight`
+   * and then lowered onto the step (plan F03 P4, PHYS-005.b). Returns whether it stays blocked.
+   */
+  private moveHorizontal(body: Body, axis: 0 | 2, delta: number, stepHeight: number): boolean {
+    const first = this.move(body, axis, delta);
+    if (!first.blocked || stepHeight === 0) return first.blocked;
+    const remaining = delta - first.moved;
+    const box = boxOf(body.state, body.size);
+    const up = moveAlongAxis(box, 1, stepHeight, this.solidAt);
+    const raised = shift(box, 1, up.moved);
+    const across = moveAlongAxis(raised, axis, remaining, this.solidAt);
+    if (Math.abs(across.moved) < 1e-6) return true;
+    const down = moveAlongAxis(shift(raised, axis, across.moved), 1, -up.moved, this.solidAt);
+    const { state } = body;
+    state.y = snap(state.y + up.moved + down.moved);
+    if (axis === 0) state.x += across.moved;
+    else state.z += across.moved;
+    return across.blocked;
+  }
+
+  /** Moves a body along an axis, stopping at solid blocks. */
+  private move(body: Body, axis: Axis, delta: number): { moved: number; blocked: boolean } {
     const box = boxOf(body.state, body.size);
     const { moved, blocked } = moveAlongAxis(box, axis, delta, this.solidAt);
     const { state } = body;
     if (axis === 0) state.x += moved;
     else if (axis === 1) state.y = blocked ? snap(state.y + moved) : state.y + moved;
     else state.z += moved;
-    return { blocked };
+    return { moved, blocked };
   }
 }

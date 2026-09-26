@@ -92,7 +92,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `collide.ts` (P3), gravità e velocità massima di caduta, stato "a terra", spawn nel primo spazio libero.
   - Fatto quando: test di PHYS-003.a–b, PHYS-004.a–d e PHYS-001.c verdi.
 
-- [ ] **T3.05** Salto e gradini
+- [x] **T3.05** Salto e gradini
   - Req: PHYS-005 · Dip: T3.04
   - Salto da terra, salita automatica (P4).
   - Fatto quando: test di PHYS-005.a–b verdi.
