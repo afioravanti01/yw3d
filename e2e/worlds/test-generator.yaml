@@ -1,0 +1,6 @@
+# End-to-end test world written for another terrain generator version (YAML-003.c).
+version: 1
+terrain:
+  seed: 7
+  generator: 99
+  size: [128, 96, 128]

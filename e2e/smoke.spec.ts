@@ -1,13 +1,20 @@
-import { mkdirSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { AIR } from '../src/core/blocks/builtin';
+import { composeWorld } from '../src/core/compose/composeWorld';
+import { createDefaultStructures } from '../src/core/structures/builtin';
 import { generateTerrain } from '../src/core/gen/terrain';
 
 /** The subset of the app test hook (src/app/testHook.ts) used here. */
 interface Hook {
   ready: boolean;
+  status: 'loading' | 'ready' | 'error';
+  world: string;
   seed: number;
   warning: string | null;
+  messages: string[];
+  structureCounts: Record<string, number>;
+  frames: number;
   worldHash(): number;
   getBlock(x: number, y: number, z: number): number;
   setBlock(x: number, y: number, z: number, id: number): boolean;
@@ -31,28 +38,102 @@ async function open(page: Page, search = ''): Promise<void> {
   );
 }
 
-test('APP-001.a: the seed comes from the URL, with 1 as the default', async ({ page }) => {
-  await open(page, '?seed=42');
-  expect(await page.evaluate(() => (globalThis as unknown as HookGlobal).__yw3d.seed)).toBe(42);
+/** Reads a plain value from the hook. */
+function hookValue<K extends keyof Hook>(page: Page, key: K): Promise<Hook[K]> {
+  return page.evaluate((k) => (globalThis as unknown as HookGlobal).__yw3d[k], key) as Promise<
+    Hook[K]
+  >;
+}
+
+const worldHash = (page: Page) =>
+  page.evaluate(() => (globalThis as unknown as HookGlobal).__yw3d.worldHash());
+
+function nodeWorld(path: string, seedOverride?: number) {
+  return composeWorld(readFileSync(path, 'utf8'), path, {
+    registry: createDefaultStructures(),
+    seedOverride,
+  });
+}
+
+test('APP-001.a: the seed comes from the world file; ?seed= replaces it with a notice', async ({
+  page,
+}) => {
   await open(page);
-  expect(await page.evaluate(() => (globalThis as unknown as HookGlobal).__yw3d.seed)).toBe(1);
+  expect(await hookValue(page, 'seed')).toBe(1);
+  await expect(page.locator('#notice')).toBeHidden();
+  await open(page, '?seed=42');
+  expect(await hookValue(page, 'seed')).toBe(42);
+  await expect(page.locator('#notice')).toBeVisible();
+  await expect(page.locator('#notice')).toContainText('seed 42 from the URL replaces');
+  expect(await worldHash(page)).toBe(nodeWorld('worlds/default.yaml', 42).world!.hash());
 });
 
-test('APP-001.b: an invalid seed shows a visible notice and uses the default', async ({ page }) => {
+test('APP-001.b: an invalid seed shows a visible notice and uses the seed of the file', async ({
+  page,
+}) => {
   await open(page, '?seed=abc');
   await expect(page.locator('#notice')).toBeVisible();
-  await expect(page.locator('#notice')).toContainText('abc');
-  expect(await page.evaluate(() => (globalThis as unknown as HookGlobal).__yw3d.seed)).toBe(1);
+  await expect(page.locator('#notice')).toContainText('"abc"');
+  expect(await hookValue(page, 'seed')).toBe(1);
 });
 
-test('WORLD-005.d: the browser world has the same hash as the Node world', async ({ page }) => {
-  for (const seed of [1, 7]) {
-    await open(page, `?seed=${seed}`);
-    const browserHash = await page.evaluate(() =>
-      (globalThis as unknown as HookGlobal).__yw3d.worldHash(),
-    );
-    expect(browserHash).toBe(generateTerrain(seed).hash());
-  }
+test('YAML-001.d: the world of a file has the same hash in the browser and in Node', async ({
+  page,
+}) => {
+  await open(page, '?world=test-valid');
+  expect(await worldHash(page)).toBe(nodeWorld('e2e/worlds/test-valid.yaml').world!.hash());
+  await open(page);
+  expect(await worldHash(page)).toBe(nodeWorld('worlds/default.yaml').world!.hash());
+});
+
+test('WORLD-005.d: the bare terrain has the same hash in the browser and in Node', async ({
+  page,
+}) => {
+  await open(page, '?world=test-terrain');
+  expect(await worldHash(page)).toBe(generateTerrain(7).hash());
+});
+
+test('YAML-002.d: with an invalid file there is no world and the errors are shown', async ({
+  page,
+}) => {
+  await open(page, '?world=test-invalid');
+  expect(await hookValue(page, 'status')).toBe('error');
+  expect(await hookValue(page, 'frames')).toBe(0);
+  const notice = page.locator('#notice');
+  await expect(notice).toBeVisible();
+  await expect(notice.locator('.error')).toHaveCount(2);
+  await expect(notice).toContainText('e2e/worlds/test-invalid.yaml:8  error  structures[0].type');
+  await expect(notice).toContainText('e2e/worlds/test-invalid.yaml:9  error  structures[1].at');
+});
+
+test('YAML-003.c: a different generator version gives a visible warning', async ({ page }) => {
+  await open(page, '?world=test-generator');
+  expect(await hookValue(page, 'status')).toBe('ready');
+  await expect(page.locator('#notice .warning')).toContainText(
+    'written for terrain generator 99, the current one is 1',
+  );
+});
+
+test('YAML-006.a: the default world loads without parameters, another one with ?world=', async ({
+  page,
+}) => {
+  await open(page);
+  expect(await hookValue(page, 'world')).toBe('default');
+  expect((await hookValue(page, 'structureCounts'))['stone_farmhouse']).toBeGreaterThan(0);
+  await open(page, '?world=test-valid');
+  expect(await hookValue(page, 'world')).toBe('test-valid');
+  expect(await hookValue(page, 'structureCounts')).toEqual(
+    nodeWorld('e2e/worlds/test-valid.yaml').structureCounts,
+  );
+});
+
+test('YAML-006.b: an unknown world gives a visible error listing the available ones', async ({
+  page,
+}) => {
+  await open(page, '?world=nowhere');
+  expect(await hookValue(page, 'status')).toBe('error');
+  await expect(page.locator('#notice .error')).toContainText('Unknown world "nowhere"');
+  await expect(page.locator('#notice .error')).toContainText('default');
 });
 
 test('RENDER-005.b: a block changed through the core is rebuilt by the next frame', async ({

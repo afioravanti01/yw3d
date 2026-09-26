@@ -182,12 +182,17 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `KeyZ` sale e `KeyX` scende, in aggiunta a `Space` e `Shift`; aiuto dell'overlay aggiornato.
   - Fatto quando: `npm run check` verde; volo con Z e X verificato a mano.
 
+- [x] **T2.18+** Tracciabilità dei requisiti MODIFICATI
+  - Req: SDD-001 · Dip: —
+  - `sdd-trace` univa male spec viva e spec di fase: per un requisito MODIFICATO teneva solo i criteri della fase, e segnalava come inesistenti quelli invariati (WORLD-004.b/d, CAM-001.d). Ora li fonde. Difetto di F01, di origine codice.
+  - Fatto quando: test di SDD-001.c verde; `sdd:trace -- F02` senza falsi errori.
+
 - [x] **T2.14** Mondo predefinito
   - Req: APP-002, PERF-002 · Dip: T2.07, T2.08, T2.09, T2.11, T2.13
   - `worlds/default.yaml`: borgo in una zona pianeggiante, bosco misto, alberi sparsi, laghetti con salici (P15). Tempi e triangoli misurati.
   - Fatto quando: test di PERF-002.b verde; **punto di controllo con l'utente**: demo del mondo predefinito e della ricarica a caldo.
 
-- [ ] **T2.15** Test end-to-end
+- [x] **T2.15** Test end-to-end
   - Req: YAML-001, YAML-002, YAML-003, YAML-006, APP-001 · Dip: T2.13
   - Mondi di prova in `e2e/worlds/`; test di YAML-001.d, YAML-002.d, YAML-003.c, YAML-006.a–b, APP-001.a–b (aggiornati); screenshot di borgo, bosco, laghetto.
   - Fatto quando: `npm run e2e` verde.

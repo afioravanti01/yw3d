@@ -64,7 +64,7 @@ describe('world composition', () => {
     ]);
   });
 
-  it('YAML-004.a/b: structures rest on the surface at their position, or at an explicit y', () => {
+  it('YAML-004.a, YAML-004.b: structures rest on the surface at their position, or at an explicit y', () => {
     const text = `${header()}structures:\n  - type: test_post\n    at: [40, 50]\n    params: { height: 4 }\n  - type: test_post\n    at: [60, 70]\n    y: 80\n`;
     const { world, structureCounts } = compose(text);
     const h = surface(3, 40, 50);
