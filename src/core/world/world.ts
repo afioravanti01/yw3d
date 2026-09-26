@@ -83,14 +83,7 @@ export class World {
       for (let x = 0; x < size.x; x++) {
         column.fill(AIR);
         fill(x, z, column);
-        for (let y = 0; y < size.y; y++) {
-          const id = column[y]!;
-          if (id !== AIR) {
-            world.chunkForWrite(x, y, z)[
-              chunkIndex(x & CHUNK_MASK, y & CHUNK_MASK, z & CHUNK_MASK)
-            ] = id;
-          }
-        }
+        world.writeColumn(x, z, column);
       }
     }
     return world;
@@ -187,6 +180,22 @@ export class World {
       hash = fnv1a(chunk ?? empty, hash);
     }
     return hash;
+  }
+
+  /** Copies a full column into the chunks, one chunk lookup per 32-block segment. */
+  private writeColumn(x: number, z: number, column: Uint8Array): void {
+    const columnOffset = chunkIndex(x & CHUNK_MASK, 0, z & CHUNK_MASK);
+    for (let cy = 0; cy < this.chunksY; cy++) {
+      const y0 = cy << CHUNK_SHIFT;
+      let chunk: Uint8Array | null = null;
+      for (let ly = 0; ly < CHUNK_SIZE; ly++) {
+        const id = column[y0 + ly]!;
+        if (id !== AIR) {
+          chunk ??= this.chunkForWrite(x, y0, z);
+          chunk[columnOffset | chunkIndex(0, ly, 0)] = id;
+        }
+      }
+    }
   }
 
   private chunkSlot(cx: number, cy: number, cz: number): number {

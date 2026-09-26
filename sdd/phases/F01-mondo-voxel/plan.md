@@ -136,7 +136,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Conversioni blocchi ↔ metri; validazione delle dimensioni; `getBlock`/`setBlock` con limiti; osservatori delle modifiche; `chunksAffectedBy(x, y, z)`; `hash()`.
   - Fatto quando: test WORLD-001, WORLD-002, WORLD-003 e RENDER-005.a verdi.
 
-- [ ] **T1.06** Generatore di terreno
+- [x] **T1.06** Generatore di terreno
   - Req: WORLD-005, WORLD-006 · Dip: T1.03, T1.05
   - Algoritmo della sezione "Generazione del terreno"; `TerrainParams` con i default; taratura; hash di riferimento per il seed 1.
   - Fatto quando: test WORLD-005.a–c e WORLD-006.a–f verdi su 5 seed; generazione del mondo di default in Node ≤ 1,5 s.
@@ -206,3 +206,5 @@ Decisa con l'utente alla revisione del piano:
 | T1.01 | `.npmrc` con `maxsockets=3` | Con molte connessioni in parallelo i download da npm si bloccano sulla rete di sviluppo; con 3 l'installazione dura pochi secondi | Nessuno |
 | T1.01 | Test di ARCH-001 in `tests/architecture.test.ts` e non accanto a un file; il controllo sul DOM usa il compilatore TypeScript | Il test è trasversale a tutto il core; così anche ARCH-001.a lato DOM è verificato in automatico | Nessuno |
 | T1.02 | Dati di prova dello script in `scripts/__fixtures__/` (spec, piano e test finti come file `.md`/`.txt`) | Scritti dentro il file di test, gli ID finti venivano letti come riferimenti reali | Nessuno |
+| T1.06 | Il generatore ha componenti in più rispetto alla formula del piano: un'onda lunga per valli e alture (λ ≈ 420), gli affioramenti sollevati fino a 3 blocchi, poggi sovrapposti combinati col massimo invece che sommati, limite morbido delle altezze invece del clamp, 3–6 poggi invece di 2–5 | Con la sola formula del piano il rilievo di alcuni seed era sotto i 16 blocchi (WORLD-006.c) e le cime venivano tagliate piatte a 72 | Nessuno |
+| T1.06 | `World.fromColumns` copia le colonne un segmento di chunk alla volta | La versione blocco per blocco portava la generazione a ~1 s; ora ~0,7 s | Nessuno |
