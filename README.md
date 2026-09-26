@@ -15,4 +15,4 @@ Mondo 3D a blocchi immerso nella natura, programmabile via YAML e codice, abitat
 | [sdd/decisions.md](sdd/decisions.md) | registro delle decisioni |
 | [sdd/experiment.md](sdd/experiment.md) | ipotesi e metriche dell'esperimento |
 
-**Stato:** F01, spec approvata; piano in attesa di approvazione.
+**Stato:** F01 in implementazione.

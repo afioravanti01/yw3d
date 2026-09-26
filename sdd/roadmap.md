@@ -4,7 +4,7 @@
 
 | Fase | Nome | Stato | Dipende da |
 |---|---|---|---|
-| F01 | Fondamenta e mondo voxel | `planning`: spec approvata, piano in bozza | — |
+| F01 | Fondamenta e mondo voxel | `implementing` | — |
 | F02 | Mondo da YAML e strutture programmabili | planned | F01 |
 | F03 | Fisica e giocatore | planned | F01, F02 |
 | F04 | Personaggi animati e comportamenti programmati | planned | F02, F03 |
