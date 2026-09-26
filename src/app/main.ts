@@ -7,7 +7,11 @@ import { createDefaultStructures } from '../core/structures/builtin';
 import type { StructureType } from '../core/structures/registry';
 import type { World } from '../core/world/world';
 import { formatDiagnostic, type Diagnostic } from '../core/yaml/report';
-import type { WorldMessage } from '../protocol/messages';
+import type { CharacterSnapshot, WorldMessage } from '../protocol/messages';
+import { CharacterViews } from './characterViews';
+import { SpeechBubbles } from './speechBubbles';
+import { spawnCharacters } from '../core/characters/characters';
+import { blocksToMeters } from '../core/world/units';
 import { ChunkRenderer } from '../render/chunkRenderer';
 import { FlyCamera } from '../render/flyCamera';
 import { createPalette } from '../render/meshing/palette';
@@ -90,7 +94,13 @@ async function main(): Promise<void> {
   const playerControls = new PlayerControls(canvas, (code) => {
     if (code === 'KeyV') playerView?.toggleThirdPerson();
     if (code === 'KeyC') playerView?.toggleFree(camera);
+    // E: the nearest character within 3 m reacts through its controller (PROTO-002.c).
+    if (code === 'KeyE' && playerView?.mode !== 'free') connection?.interact();
   });
+  const characterViews = new CharacterViews();
+  const bubbles = new SpeechBubbles(required<HTMLElement>('#bubbles'));
+  /** Characters of the browser-only mode: standing where they start (CHAR-001.d). */
+  let standingCharacters: CharacterSnapshot[] = [];
   let reloadMs = 0;
   let worldName = params.world;
 
@@ -122,6 +132,7 @@ async function main(): Promise<void> {
       rebuiltChunks: current?.chunks.stats.rebuiltChunks ?? 0,
     }),
     player: () => playerView?.source.state() ?? null,
+    characters: () => shownCharacters(),
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
     setView: (x, y, z, yaw, pitch) => {
       if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
@@ -171,11 +182,20 @@ async function main(): Promise<void> {
     current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
     if (!controls || !playerView) {
       controls = new FlyCamera(camera, canvas, result.world.size);
-      playerView = new PlayerView(result.world, registry, source(), playerControls, controls);
+      playerView = new PlayerView(
+        result.world,
+        registry,
+        source(),
+        playerControls,
+        controls,
+        result.playerAppearance!,
+      );
     } else {
       playerView.replaceWorld(result.world);
     }
-    scene.scene.add(playerView.figure);
+    scene.scene.add(playerView.animated.group);
+    characterViews.reset(result.characters, scene.scene);
+    standingCharacters = standingPlaces(result);
     renderer.shadowMap.needsUpdate = true;
     hook.seed = result.seed ?? 0;
     hook.structureCounts = result.structureCounts;
@@ -317,6 +337,10 @@ async function main(): Promise<void> {
     );
   }
 
+  /** Characters as shown now: from the host, or standing still without it. */
+  const shownCharacters = (): CharacterSnapshot[] =>
+    connection ? connection.interpolatedCharacters(performance.now()) : standingCharacters;
+
   const overlay = new DebugOverlay();
   const fpsMeter = new FpsMeter();
   const timer = new THREE.Timer();
@@ -324,12 +348,16 @@ async function main(): Promise<void> {
   renderer.setAnimationLoop((time) => {
     timer.update(time);
     if (!current || !playerView) return;
-    playerView.update(timer.getDelta(), camera);
+    const dt = timer.getDelta();
+    playerView.update(dt, camera);
+    const characters = shownCharacters();
+    characterViews.update(characters, dt);
     if (current.chunks.update() > 0) {
       renderer.shadowMap.needsUpdate = true;
     }
     current.scene.update(camera);
     renderer.render(current.scene.scene, camera);
+    bubbles.update(characters, camera);
 
     hook.frames++;
     if (!hook.ready) {
@@ -361,6 +389,7 @@ async function main(): Promise<void> {
             rttMs: connection.rttMs,
           }
         : null,
+      characters: describeNearest(characters, view.source.state(), shown.result),
       seed: hook.seed,
       world: worldName,
       structureCounts: shown.result.structureCounts,
@@ -375,6 +404,54 @@ async function main(): Promise<void> {
       lastChunkRebuildMs: shown.chunks.stats.lastChunkRebuildMs,
     }));
   });
+}
+
+/** Where the characters stand at the start, without a host to move them (CHAR-001.d). */
+function standingPlaces(result: ComposeResult & { world: World }): CharacterSnapshot[] {
+  const physics = new PhysicsWorld(result.world, createDefaultRegistry());
+  const characters = spawnCharacters(physics, result.characters);
+  physics.step();
+  return characters.map(({ start, entity }) => ({
+    id: start.id,
+    x: entity.state.x,
+    y: entity.state.y,
+    z: entity.state.z,
+    speed: 0,
+    onGround: entity.state.onGround,
+    submerged: entity.state.submerged,
+    yaw: start.yaw,
+    speech: null,
+    controlled: false,
+    action: null,
+  }));
+}
+
+/** The overlay line about the characters (DEBUG-001.a): how many, and the nearest one. */
+function describeNearest(
+  characters: readonly CharacterSnapshot[],
+  player: { x: number; y: number; z: number },
+  result: ComposeResult,
+): { count: number; nearest: string | null } {
+  let nearest: CharacterSnapshot | undefined;
+  let best = Infinity;
+  for (const c of characters) {
+    const d = Math.hypot(c.x - player.x, c.y - player.y, c.z - player.z);
+    if (d < best) {
+      best = d;
+      nearest = c;
+    }
+  }
+  if (!nearest) return { count: 0, nearest: null };
+  const command = result.characters.find((c) => c.id === nearest!.id)?.command;
+  const controller = nearest.controlled
+    ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
+    : command
+      ? `controller not running (${command})`
+      : 'no controller';
+  return {
+    count: characters.length,
+    nearest: `${nearest.id} · ${blocksToMeters(best).toFixed(1)} m · ${controller} · ${nearest.action ?? 'no action'}`,
+  };
 }
 
 void main();

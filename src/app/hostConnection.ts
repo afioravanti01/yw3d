@@ -1,6 +1,7 @@
 import type { Intent } from '../core/physics/entity';
 import type { Diagnostic } from '../core/yaml/report';
 import type {
+  CharacterSnapshot,
   HostMessage,
   PlayerSnapshot,
   Role,
@@ -50,6 +51,8 @@ export class HostConnection {
   private readonly socket: WebSocket;
   private previous: { at: number; player: PlayerSnapshot } | undefined;
   private last: { at: number; player: PlayerSnapshot } | undefined;
+  private previousCharacters: { at: number; list: readonly CharacterSnapshot[] } | undefined;
+  private lastCharacters: { at: number; list: readonly CharacterSnapshot[] } | undefined;
   private lastSent: { at: number; key: string } | undefined;
   private readonly pings = new Map<number, number>();
   private nextPing = 1;
@@ -94,6 +97,31 @@ export class HostConnection {
     };
   }
 
+  /** Characters to draw at `now`, interpolated like the player (plan F05 P15). */
+  interpolatedCharacters(now: number): CharacterSnapshot[] {
+    const last = this.lastCharacters;
+    if (!last) return [];
+    const previous = this.previousCharacters;
+    if (!previous || last.at <= previous.at) return [...last.list];
+    const alpha = Math.min(1, (now - last.at) / (last.at - previous.at));
+    const before = new Map(previous.list.map((c) => [c.id, c]));
+    return last.list.map((c) => {
+      const a = before.get(c.id);
+      if (!a) return c;
+      return {
+        ...c,
+        x: a.x + (c.x - a.x) * alpha,
+        y: a.y + (c.y - a.y) * alpha,
+        z: a.z + (c.z - a.z) * alpha,
+      };
+    });
+  }
+
+  /** The player pressed E (PROTO-002.c). */
+  interact(): void {
+    this.send({ type: 'interact' });
+  }
+
   /** Sends the intent of the driving view when it changes, or periodically (plan F04 P9). */
   sendIntent(intent: Intent, yaw: number, pitch: number, now: number): void {
     const key = JSON.stringify(intent);
@@ -124,6 +152,7 @@ export class HostConnection {
         this.role = message.role;
         this.views = message.views;
         if (message.player) this.record(message.player);
+        this.recordCharacters(message.characters);
         this.handlers.hello(message);
         break;
       case 'world':
@@ -135,6 +164,7 @@ export class HostConnection {
       case 'state':
         this.views = message.views;
         this.record(message.player);
+        this.recordCharacters(message.characters);
         break;
       case 'role':
         this.role = message.role;
@@ -147,6 +177,11 @@ export class HostConnection {
         break;
       }
     }
+  }
+
+  private recordCharacters(list: readonly CharacterSnapshot[]): void {
+    this.previousCharacters = this.lastCharacters;
+    this.lastCharacters = { at: this.now(), list };
   }
 
   private record(player: PlayerSnapshot): void {

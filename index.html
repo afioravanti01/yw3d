@@ -59,6 +59,27 @@
         line-height: 1.45;
         pointer-events: none;
       }
+      #bubbles {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .bubble {
+        position: absolute;
+        left: 0;
+        top: 0;
+        max-width: 260px;
+        padding: 6px 10px;
+        background: rgb(255 252 244 / 0.94);
+        color: #2e2a24;
+        border-radius: 10px;
+        font:
+          13px/1.35 system-ui,
+          sans-serif;
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.18);
+        white-space: pre-wrap;
+      }
       [hidden] {
         display: none !important;
       }
@@ -67,6 +88,7 @@
   <body>
     <canvas id="world"></canvas>
     <div id="loading">Generating the world…</div>
+    <div id="bubbles"></div>
     <div id="notice" role="alert" hidden></div>
     <script type="module" src="/src/app/main.ts"></script>
   </body>

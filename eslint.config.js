@@ -5,6 +5,11 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   { ignores: ['dist/', 'test-results/', 'playwright-report/', 'e2e/screenshots/'] },
   js.configs.recommended,
+  {
+    // Controllers of characters are Node programs (F05): examples and test worlds.
+    files: ['examples/**/*.{js,mjs}', 'e2e/host/controllers/**/*.{js,mjs}'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
+  },
   tseslint.configs.recommended,
   {
     // ARCH-001: the core is pure simulation code, independent of rendering and of the app shell.

@@ -16,6 +16,8 @@ export interface OverlayData {
   };
   /** Duration of the last simulation step (PERF-003.a). */
   stepMs: number;
+  /** Characters and the nearest one (DEBUG-001.a). */
+  characters: { count: number; nearest: string | null };
   /** Connection to the host (DEBUG-001.a), null in browser-only mode. */
   connection: {
     address: string;
@@ -78,6 +80,7 @@ export class DebugOverlay {
       }`,
       `mode       ${MODE_NAMES[d.mode]}`,
       `player     ${block(d.player.x)}, ${block(d.player.y)}, ${block(d.player.z)} blocks · ${meters(Math.hypot(d.player.vx, d.player.vz))} m/s${d.player.onGround ? ' · on ground' : ''}${d.player.submerged >= 0.5 ? ' · in water' : ''}`,
+      `characters ${d.characters.count}${d.characters.nearest ? ` · nearest: ${d.characters.nearest}` : ''}`,
       `step       ${d.stepMs.toFixed(3)} ms (physics, last step)`,
       `free cam   ${d.speedMps.toFixed(1)} m/s`,
       `world      ${d.world} · seed ${d.seed} · ${d.warnings} warning${d.warnings === 1 ? '' : 's'}`,
@@ -92,7 +95,7 @@ export class DebugOverlay {
       ``,
       d.mode === 'free'
         ? `F3 hide · C player · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`
-        : `F3 hide · click to look · WASD/↑↓ walk · ←→ turn · Shift run · Space jump/swim up · X swim down · V view · C free camera`,
+        : `F3 hide · click to look · WASD/↑↓ walk · ←→ turn · Shift run · Space jump/swim up · X swim down · E talk · V view · C free camera`,
     ].join('\n');
   }
 }

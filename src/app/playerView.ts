@@ -6,7 +6,8 @@ import { PhysicsWorld, type EntityHandle } from '../core/physics/physicsWorld';
 import { EYE_HEIGHT, PLAYER_SIZE, spawnAtStart, thirdPersonCamera } from '../core/player/player';
 import type { World } from '../core/world/world';
 import type { FlyCamera } from '../render/flyCamera';
-import { createPlayerFigure } from '../render/playerFigure';
+import type { Appearance } from '../core/characters/appearance';
+import { AnimatedFigure } from '../render/figure';
 import type { HostConnection } from './hostConnection';
 import type { PlayerControls } from './input';
 
@@ -148,7 +149,9 @@ export class RemotePlayer implements PlayerSource {
  */
 export class PlayerView {
   mode: ViewMode = 'first';
-  readonly figure = createPlayerFigure();
+  /** The player as others see it: the animated figure of the characters, in its colors (F05 Q7). */
+  readonly animated: AnimatedFigure;
+  private time = 0;
   private spectator = false;
   private world: World;
   private eyeY: number | undefined;
@@ -160,8 +163,10 @@ export class PlayerView {
     public source: PlayerSource,
     private readonly controls: PlayerControls,
     private readonly freeCamera: FlyCamera,
+    appearance: Appearance,
   ) {
     this.world = world;
+    this.animated = new AnimatedFigure(appearance, 'player');
     this.setMode('first');
   }
 
@@ -218,7 +223,15 @@ export class PlayerView {
     if (this.mode !== 'free') this.controls.turn(dt);
     this.source.advance(dt, this.controls.intent(), this.controls.yaw, this.controls.pitch);
     const { x, y, z } = this.source.render();
-    this.placeFigure(x, y, z);
+    this.time += dt;
+    const state = this.source.state();
+    this.animated.update(
+      { x, y, z, onGround: state.onGround, submerged: state.submerged },
+      this.source.figureYaw() ?? this.controls.yaw,
+      false,
+      dt,
+      this.time,
+    );
     if (this.mode === 'free') {
       this.freeCamera.update(dt);
       return;
@@ -258,11 +271,6 @@ export class PlayerView {
     this.freeCamera.enabled = mode === 'free';
     // Visible in third person; hidden in first person and in the free camera (A3.3), except
     // for spectators, who watch the player.
-    this.figure.visible = mode === 'third' || (mode === 'free' && this.spectator);
-  }
-
-  private placeFigure(x: number, y: number, z: number): void {
-    this.figure.position.set(x, y, z);
-    this.figure.rotation.set(0, this.source.figureYaw() ?? this.controls.yaw, 0);
+    this.animated.group.visible = mode === 'third' || (mode === 'free' && this.spectator);
   }
 }

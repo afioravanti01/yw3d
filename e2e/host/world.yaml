@@ -12,3 +12,8 @@ structures:
   - { type: stone_farmhouse, at: [40, 40] }
   - { type: pond, at: [60, 95], params: { radius: 8 } }
   - { type: oak, at: [80, 80] }
+characters:
+  - id: pino
+    at: [66, 62]
+    appearance: { shirt: '#3f6f9e', hair: '#c9b28a' }
+    controller: { command: node controllers/pino.mjs }

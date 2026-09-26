@@ -17,6 +17,8 @@ export interface TestHook {
   connection: { role: 'driver' | 'spectator' } | null;
   /** State of the player shown by this view. */
   player(): { x: number; y: number; z: number; onGround: boolean } | null;
+  /** Characters as shown by this view (CHAR-001.d). */
+  characters(): { id: string; x: number; y: number; z: number; speech: string | null }[];
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

@@ -140,7 +140,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `pose.ts` (P13) e `figure.ts`: parti articolate, colori, pose per fermo, camminata, corsa, salto, nuoto, parlata.
   - Fatto quando: test di CHAR-002.a verde; screenshot delle pose.
 
-- [ ] **T5.11** Personaggi nelle viste
+- [x] **T5.11** Personaggi nelle viste
   - Req: CHAR-001, CHAR-002, DEBUG-001 · Dip: T5.06, T5.10
   - Figure dei personaggi e del giocatore, fumetti (P14), tasto E, overlay; modalità solo browser con personaggi fermi. **Punto di controllo con l'utente**: demo con un controllore di prova.
   - Fatto quando: si vedono i personaggi muoversi, parlare e reagire al tasto E.

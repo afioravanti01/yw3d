@@ -51,6 +51,9 @@ export interface CharacterSnapshot {
   readonly yaw: number;
   /** What it is saying, shown in a speech bubble (CHAR-002.c). */
   readonly speech: string | null;
+  /** Whether a controller drives it now, and its running action (DEBUG-001.a). */
+  readonly controlled: boolean;
+  readonly action: string | null;
 }
 
 export type HostMessage =

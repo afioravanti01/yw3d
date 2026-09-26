@@ -291,6 +291,8 @@ export class HostSession {
       submerged: c.state.submerged,
       yaw: c.yaw,
       speech: c.speech,
+      controlled: this.controllerSinks.has(c.id),
+      action: this.agents?.perceive(c.id).action?.kind ?? null,
     }));
   }
 
