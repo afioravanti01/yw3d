@@ -147,7 +147,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Quercia, betulla, salice con chiome irregolari (P12).
   - Fatto quando: test di STRUCT-005.a–c e STRUCT-002.b verdi; screenshot delle 3 specie allegati al commit.
 
-- [ ] **T2.08** Case
+- [x] **T2.08** Case
   - Req: STRUCT-006 · Dip: T2.04, T2.06, T2.01
   - Casolare in pietra e capanno in legno: porta, finestre, pavimento, tetto a falde, comignolo, travi agli angoli, basamento.
   - Fatto quando: test di STRUCT-006.a–e verdi su 20 seed e 4 rotazioni; screenshot allegati.
