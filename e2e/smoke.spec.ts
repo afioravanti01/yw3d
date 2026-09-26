@@ -119,6 +119,19 @@ test('YAML-003.c: a different generator version gives a visible warning', async 
   );
 });
 
+test('APP-003.a: without the host the app runs on its own with the worlds of the project', async ({
+  page,
+}) => {
+  await open(page);
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { __yw3d: { connection: unknown } }).__yw3d.connection,
+    ),
+  ).toBeNull();
+  expect(await hookValue(page, 'world')).toBe('default');
+  expect(await hookValue(page, 'status')).toBe('ready');
+});
+
 test('YAML-006.a: the default world loads without parameters, another one with ?world=', async ({
   page,
 }) => {

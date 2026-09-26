@@ -8,6 +8,7 @@ terrain:
 player:
   at: [64, 64]
 structures:
-  - { type: tower, at: [70, 58] }
+  - { type: tower, at: [70, 70] }
   - { type: stone_farmhouse, at: [40, 40] }
   - { type: pond, at: [60, 95], params: { radius: 8 } }
+  - { type: oak, at: [80, 80] }

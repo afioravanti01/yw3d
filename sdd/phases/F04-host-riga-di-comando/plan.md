@@ -119,7 +119,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Campo `bin` di `package.json`, `npm link`, istruzioni nel README.
   - Fatto quando: `yw3d --help` funziona da una cartella qualunque dopo `npm link`.
 
-- [ ] **T4.09** Test end-to-end con l'host
+- [x] **T4.09** Test end-to-end con l'host
   - Req: HOST-002, STRUCT-008, APP-003 · Dip: T4.07
   - Secondo progetto Playwright con l'host come server; cartella `e2e/host` con una struttura dell'autore.
   - Fatto quando: `npm run e2e` verde con entrambi i progetti.
