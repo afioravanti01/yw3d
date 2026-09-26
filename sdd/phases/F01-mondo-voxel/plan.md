@@ -156,7 +156,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `chunkRenderer.ts`: una `Mesh` per chunk, coda dei chunk sporchi alimentata dagli osservatori del World, ricostruzione a inizio frame, misura della durata.
   - Fatto quando: nel browser si vede il terreno; una `setBlock` da console aggiorna la scena; tempi di ricostruzione misurati.
 
-- [ ] **T1.10** Scena: luci, ombre, cielo, nebbia
+- [x] **T1.10** Scena: luci, ombre, cielo, nebbia
   - Req: RENDER-003, RENDER-004 · Dip: T1.09
   - Luce emisferica + direzionale con ombre statiche (P7); cielo a gradiente e nebbia (P8); prima taratura dei colori. Valori di partenza: cielo da `#DCE8EC` (orizzonte, = nebbia) a `#86B4DC` (zenit), sole `#FFE8C4` basso sull'orizzonte.
   - Fatto quando: la scena mostra ombre, cielo e nebbia; screenshot allegato al commit per la revisione.
@@ -212,3 +212,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.08 | Aggiunto `World.readColumn` (lettura di una colonna con un accesso per chunk), usato dai test del terreno | Il test degli strati di WORLD-006.d superava il timeout di 5 s quando girava in parallelo agli altri; servirà anche a fisica e navigazione | Nessuno |
 | T1.09 | Unità della scena Three.js = 1 blocco (non 1 metro) | Le coordinate della scena coincidono con quelle del core; le conversioni in metri restano confinate a camera, nebbia e overlay | Nessuno |
 | T1.09 | `@playwright/test` e Chromium headless installati in T1.09 invece che in T1.13 | Servono per controllare il risultato visivo con screenshot già durante T1.09–T1.12. Chromium headless parte in WSL anche senza `install-deps` | Nessuno |
+| T1.10 | Ombre `PCFShadowMap` invece di PCF soft | Three.js r186 ha rimosso `PCFSoftShadowMap` | Nessuno |
