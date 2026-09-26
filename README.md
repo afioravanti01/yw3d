@@ -50,6 +50,12 @@ export default defineStructure({
 });
 ```
 
-Un esempio completo è in [e2e/host/](e2e/host/). Senza host, `npm run dev` apre l'app da sola con i mondi del progetto (`?world=`).
+I personaggi si dichiarano nel `world.yaml` e si guidano con programmi in qualunque linguaggio, lanciati dall'host o collegati via WebSocket: il protocollo è in [docs/controllori.md](docs/controllori.md). Un esempio completo, con un controllore in Python e uno in JavaScript, è in [examples/valle/](examples/valle/):
+
+```sh
+yw3d examples/valle
+```
+
+Senza host, `npm run dev` apre l'app da sola con i mondi del progetto (`?world=`).
 
 **Stato:** vedi [sdd/roadmap.md](sdd/roadmap.md).

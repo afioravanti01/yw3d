@@ -150,7 +150,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Campo `speed` di `walk_to` e `follow` (A5.1): il vettore dell'intenzione si accorcia in proporzione, la fisica resta com'è; tempo limite calcolato sulla velocità richiesta.
   - Fatto quando: test della velocità verde; Pino passeggia a 1,5 m/s.
 
-- [ ] **T5.12** Esempi e documentazione
+- [x] **T5.12** Esempi e documentazione
   - Req: PROTO-003 · Dip: T5.08, T5.09, T5.11
   - `examples/valle/` con il guardiano in Python e un secondo personaggio in JavaScript; `docs/controllori.md`; README aggiornato.
   - Fatto quando: `yw3d examples/valle` mostra la demo della roadmap.
