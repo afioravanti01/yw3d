@@ -84,7 +84,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `src/api/index.ts` (P3), confine di `src/host` (P13), dipendenze (`ws`, `vite` e `tsx` di esecuzione).
   - Fatto quando: un file di prova importa `yw3d` e definisce una struttura; `npm run check` verde.
 
-- [ ] **T4.02** Argomenti e cartella del mondo
+- [x] **T4.02** Argomenti e cartella del mondo
   - Req: CLI-001 · Dip: —
   - `args.ts` e `worldFolder.ts`: cartella, `world.yaml`, `structures/`, opzioni, aiuto, messaggi d'errore.
   - Fatto quando: test di CLI-001.a e CLI-001.c verdi.
