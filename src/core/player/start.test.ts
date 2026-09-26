@@ -7,7 +7,7 @@ import { generateHeightmap, TERRAIN_GENERATOR_VERSION } from '../gen/terrain';
 import { createDefaultStructures } from '../structures/builtin';
 import { PLAYER_SIZE, spawnAtStart } from './player';
 
-const header = `version: 1\nterrain: { seed: 3, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\n`;
+const header = `version: 2\nname: Test\nterrain: { seed: 3, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\n`;
 const compose = (body: string) =>
   composeWorld(header + body, 'w.yaml', { registry: createDefaultStructures() });
 
@@ -24,7 +24,7 @@ describe('player start', () => {
     const result = compose('player:\n  at: [130, 40]\n');
     expect(result.world).toBeUndefined();
     expect(result.diagnostics).toEqual([
-      expect.objectContaining({ severity: 'error', line: 4, path: 'player.at' }),
+      expect.objectContaining({ severity: 'error', line: 5, path: 'player.at' }),
     ]);
   });
 

@@ -14,6 +14,8 @@ const registry = createDefaultRegistry();
 
 const start = (id: string, x: number, z: number): CharacterStart => ({
   id,
+  name: id,
+  description: undefined,
   x,
   z,
   yaw: 0,

@@ -47,7 +47,7 @@ async function session(characters: string) {
   for (const [name, text] of Object.entries(SCRIPTS)) writeFileSync(path.join(root, name), text);
   writeFileSync(
     path.join(root, WORLD_FILE),
-    `version: 1\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\ncharacters:\n${characters}`,
+    `version: 2\nname: Test\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\ncharacters:\n${characters}`,
   );
   const resolved = resolveWorldFolder(root);
   if (!resolved.ok) throw new Error(resolved.message);
@@ -81,7 +81,7 @@ async function until(
 describe('controllers on stdio', () => {
   it('PROTO-003.a: a process of the folder drives its character with JSON lines; stderr goes to the terminal', async () => {
     const { s, lines } = await session(
-      '  - { id: guardiano, at: [30, 30], controller: { command: node greeter.mjs } }\n',
+      '  - { id: guardiano, name: guardiano, at: [30, 30], controller: { command: node greeter.mjs } }\n',
     );
     expect(lines).toContain('yw3d  [guardiano] controller started: node greeter.mjs');
     await until(s, () => s.characterSnapshots()[0]?.speech === 'Buongiorno');
@@ -92,7 +92,7 @@ describe('controllers on stdio', () => {
 
   it('PROTO-003.b: when the process ends the character stops; controllers restart on reload', async () => {
     const { s, lines } = await session(
-      '  - { id: marta, at: [30, 30], controller: { command: node quitter.mjs } }\n',
+      '  - { id: marta, name: marta, at: [30, 30], controller: { command: node quitter.mjs } }\n',
     );
     await until(s, () => lines.some((l) => l.includes('controller ended (exit code 3)')));
     expect(lines).toContain('yw3d  [marta] controller ended (exit code 3): the character stops');
@@ -105,7 +105,7 @@ describe('controllers on stdio', () => {
 
   it('PROTO-001.d: an invalid line from a controller gets an error back; the host goes on', async () => {
     const { s, lines } = await session(
-      '  - { id: pino, at: [30, 30], controller: { command: node confused.mjs } }\n',
+      '  - { id: pino, name: pino, at: [30, 30], controller: { command: node confused.mjs } }\n',
     );
     await until(s, () => lines.some((l) => l.includes('got error')));
     expect(lines).toContain('yw3d  [pino] got error: not valid JSON: this is not json');
@@ -116,7 +116,7 @@ describe('controllers on stdio', () => {
     { timeout: 60_000 },
     async () => {
       const { s, lines } = await session(
-        '  - { id: sordo, at: [30, 30], controller: { command: node deaf.mjs } }\n',
+        '  - { id: sordo, name: sordo, at: [30, 30], controller: { command: node deaf.mjs } }\n',
       );
       const steps = s.steps;
       // Two simulated minutes of perception, far more than the pipe between the processes holds.

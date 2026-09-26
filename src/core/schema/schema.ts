@@ -115,6 +115,41 @@ export function str(): Schema<string> {
   };
 }
 
+/**
+ * Free text with a length limit, such as a name or a description (YAML-009.a). With `min` ≥ 1,
+ * text made only of spaces counts as empty.
+ */
+export function text(
+  options: { readonly min?: number; readonly max?: number; readonly default?: string } = {},
+): Schema<string> {
+  const { min = 0, max } = options;
+  const description = max === undefined ? 'a text' : `a text of at most ${max} characters`;
+  return withFallback(
+    {
+      description,
+      parse(value, path, issues) {
+        if (typeof value !== 'string') {
+          issues.push({ path, message: `expected ${description}, got ${describeValue(value)}` });
+          return undefined;
+        }
+        if (value.trim().length < min) {
+          issues.push({
+            path,
+            message: min === 1 ? 'must not be empty' : `expected at least ${min} characters`,
+          });
+          return undefined;
+        }
+        if (max !== undefined && value.length > max) {
+          issues.push({ path, message: `too long: ${value.length} characters, at most ${max}` });
+          return undefined;
+        }
+        return value;
+      },
+    },
+    options.default,
+  );
+}
+
 /** A color written as `#rrggbb`, parsed to the number 0xRRGGBB. */
 export function color(): Schema<number> {
   return {

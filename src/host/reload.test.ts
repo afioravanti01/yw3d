@@ -15,7 +15,7 @@ const noModules: ModuleLoader = {
   load: () => Promise.reject(new Error('no modules')),
   invalidate: () => {},
 };
-const header = `version: 1\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nplayer: { at: [20, 32] }\n`;
+const header = `version: 2\nname: Test\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nplayer: { at: [20, 32] }\n`;
 
 function run(s: HostSession, seconds: number): void {
   for (let t = 0; t < seconds - 1e-9; t += 1 / 60) s.advance(1 / 60);
@@ -47,7 +47,7 @@ describe('reloading from the folder', () => {
     driver.receive({ type: 'intent', intent: { ...IDLE, moveX: 1 }, yaw: 0, pitch: 0 });
     run(session, 0.3);
     const moved = session.snapshot()!;
-    writeFileSync(file, `${header}structures:\n  - { type: oak, at: [40, 20] }\n`);
+    writeFileSync(file, `${header}structures:\n  - { type: oak, name: Test, at: [40, 20] }\n`);
     expect(await session.load()).toBe(true);
     expect(session.world!.hash).not.toBe(before);
     const update = received.find((m) => m.type === 'world');
@@ -59,7 +59,7 @@ describe('reloading from the folder', () => {
   it('HOST-003.b: an invalid save keeps the previous world and reports errors until fixed', async () => {
     const { session, file, received, lines } = await setup();
     const good = session.world!.hash;
-    writeFileSync(file, `${header}structures:\n  - { type: oka, at: [40, 20] }\n`);
+    writeFileSync(file, `${header}structures:\n  - { type: oka, name: Test, at: [40, 20] }\n`);
     expect(await session.load()).toBe(false);
     expect(session.world!.hash).toBe(good);
     const report = received.filter((m) => m.type === 'diagnostics').at(-1);

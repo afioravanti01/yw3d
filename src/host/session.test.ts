@@ -8,11 +8,12 @@ import { createModuleServer, viteModuleLoader } from './moduleLoader';
 import { HostSession } from './session';
 import { resolveWorldFolder, WORLD_FILE } from './worldFolder';
 
-const WORLD = `version: 1
+const WORLD = `version: 2
+name: Test
 terrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }
 structures:
-  - { type: tower, at: [20, 20] }
-  - { type: oak, at: [40, 40] }
+  - { type: tower, name: Test, at: [20, 20] }
+  - { type: oak, name: Test, at: [40, 40] }
 `;
 
 const TOWER = `import { COBBLESTONE, defineStructure, int, object } from 'yw3d';
@@ -61,7 +62,7 @@ describe('host session', () => {
     const out = lines.join('\n');
     expect(out).toContain('world world.yaml · seed 5');
     expect(out).toContain('2 structures (oak 1, tower 1) · 1 warning');
-    expect(out).toContain('world.yaml:2  warning  terrain.generator');
+    expect(out).toContain('world.yaml:3  warning  terrain.generator');
   });
 
   it('CLI-001.b: with errors the host prints them and waits for a valid file', async () => {
@@ -71,7 +72,7 @@ describe('host session', () => {
     expect(await session.load()).toBe(false);
     expect(session.world).toBeUndefined();
     const out = lines.join('\n');
-    expect(out).toContain('world.yaml:5  error  structures[1].type');
+    expect(out).toContain('world.yaml:6  error  structures[1].type');
     expect(out).toContain('waiting for a valid world.yaml');
   });
 
@@ -85,7 +86,7 @@ describe('host session', () => {
 
   it('STRUCT-008.b: a broken structure file is reported with file and cause; the host goes on', async () => {
     const { session } = folderWith({
-      [WORLD_FILE]: WORLD.replace('  - { type: tower, at: [20, 20] }\n', ''),
+      [WORLD_FILE]: WORLD.replace('  - { type: tower, name: Test, at: [20, 20] }\n', ''),
       'structures/a-syntax.ts': 'export default defineStructure({ name: ',
       'structures/b-throws.ts': "throw new Error('boom at load');",
       'structures/c-duplicate.ts': TOWER.replace("name: 'tower'", "name: 'oak'"),
@@ -105,7 +106,7 @@ describe('host session', () => {
     await withCode.session.load();
     expect(withCode.lines[0]).toBe('yw3d  running the code of this folder: structures/tower.ts');
     const withoutCode = folderWith({
-      [WORLD_FILE]: WORLD.replace('  - { type: tower, at: [20, 20] }\n', ''),
+      [WORLD_FILE]: WORLD.replace('  - { type: tower, name: Test, at: [20, 20] }\n', ''),
     });
     await withoutCode.session.load();
     expect(withoutCode.lines.join('\n')).not.toContain('running the code');

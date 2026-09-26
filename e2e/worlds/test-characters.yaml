@@ -1,9 +1,10 @@
 # End-to-end test world with characters, for the browser-only mode (CHAR-001.d).
-version: 1
+version: 2
+name: Mondo di prova
 terrain:
   seed: 7
   generator: 1
   size: [128, 96, 128]
 characters:
-  - { id: anna, at: [60, 60] }
-  - { id: bruno, at: [70, 64], appearance: { shirt: '#3f6f9e' } }
+  - { id: anna, name: Anna, at: [60, 60] }
+  - { id: bruno, name: Bruno, at: [70, 64], appearance: { shirt: '#3f6f9e' } }

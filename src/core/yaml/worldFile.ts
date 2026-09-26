@@ -10,6 +10,7 @@ import {
   pattern,
   record,
   str,
+  text,
   unknownValue,
   variant,
   type Infer,
@@ -19,7 +20,41 @@ import { parseYaml } from './parse';
 import { diagnostic, type Diagnostic } from './report';
 
 /** Versions of the world file schema this code can read (YAML-001.a). */
-export const WORLD_FILE_VERSIONS = [1] as const;
+export const WORLD_FILE_VERSIONS = [2] as const;
+
+/** What a file of version 1 needs to become a version 2 file (YAML-001.e, plan F06 P18). */
+export const VERSION_1_MESSAGE =
+  'version 1 is no longer supported: write "version: 2", add a "name" to the world and to every structure, distribution and character (a "description" is optional), and give places an "id" (see worlds/README.md)';
+
+/** The player's name when the file gives none (YAML-009.b, F06 Q8). */
+export const DEFAULT_PLAYER_NAME = 'viandante';
+/** Longest name and description (YAML-009.a, F06 Q8). */
+export const MAX_NAME_LENGTH = 60;
+export const MAX_DESCRIPTION_LENGTH = 1000;
+
+/**
+ * Identifiers of characters, places, structures and distributions (MAP-001.a). `#` is not
+ * allowed: it marks the identifiers generated for structures without one (MAP-001.b).
+ */
+export const IDENTIFIER = /^[a-z][a-z0-9_-]{0,31}$/;
+const identifier = () =>
+  pattern(IDENTIFIER, 'an identifier of lowercase letters, digits, "_" or "-"');
+const name = () => text({ min: 1, max: MAX_NAME_LENGTH });
+const description = () => optional(text({ max: MAX_DESCRIPTION_LENGTH }));
+
+const versionSchema = (() => {
+  const versions = oneOf(WORLD_FILE_VERSIONS);
+  return {
+    ...versions,
+    parse(value: unknown, path: readonly (string | number)[], issues: Issue[]) {
+      if (value === 1) {
+        issues.push({ path, message: VERSION_1_MESSAGE });
+        return undefined;
+      }
+      return versions.parse(value, path, issues);
+    },
+  };
+})();
 
 const MAX_SEED = 0xffffffff;
 const seed = () => int({ min: 0, max: MAX_SEED });
@@ -32,6 +67,9 @@ const terrainSchema = object({
 
 const structureSchema = object({
   type: str(),
+  id: optional(identifier()),
+  name: name(),
+  description: description(),
   at: pair(),
   y: optional(int()),
   rotation: oneOf([0, 90, 180, 270], { default: 0 }),
@@ -53,6 +91,9 @@ const areaSchema = variant({
 
 const scatterSchema = object(
   {
+    id: optional(identifier()),
+    name: name(),
+    description: description(),
     types: record(number({ min: 0 }), { minEntries: 1 }),
     area: areaSchema,
     density: optional(number({ min: 0 })),
@@ -78,29 +119,74 @@ const appearanceSchema = object({
   trousers: optional(color()),
 });
 
-/** Start of the player (YAML-008): column, view direction in degrees (0 = north, 90 = east), colors. */
+/** A named point or area that is not a structure (YAML-010.a). */
+const placeSchema = object(
+  {
+    id: identifier(),
+    name: name(),
+    description: description(),
+    at: optional(pair()),
+    area: optional(areaSchema),
+  },
+  (place, path, issues) => {
+    if ((place.at === undefined) === (place.area === undefined)) {
+      issues.push({
+        path,
+        message: 'declare exactly one of "at" (a point) and "area" (rect or circle)',
+      });
+    }
+  },
+);
+
+/**
+ * Start of the player (YAML-008): column, view direction in degrees (0 = north, 90 = east),
+ * colors; name and description (YAML-009.b).
+ */
 const playerSchema = object({
+  name: text({ min: 1, max: MAX_NAME_LENGTH, default: DEFAULT_PLAYER_NAME }),
+  description: description(),
   at: pair(),
   yaw: number({ min: -360, max: 360, default: 0 }),
   appearance: optional(appearanceSchema),
 });
 
-/** A character (CHAR-001.a), optionally driven by a command (PROTO-003). */
-const characterSchema = object({
-  id: pattern(/^[a-z][a-z0-9_-]{0,31}$/, 'an identifier of lowercase letters, digits, "_" or "-"'),
-  at: pair(),
-  yaw: number({ min: -360, max: 360, default: 0 }),
-  appearance: optional(appearanceSchema),
-  controller: optional(object({ command: str() })),
-});
+/**
+ * A character (CHAR-001.a), driven by a behavior (BEHAV-001, checked when compiled) or by a
+ * command (PROTO-003), not both (BEHAV-001.b).
+ */
+const characterSchema = object(
+  {
+    id: identifier(),
+    name: name(),
+    description: description(),
+    at: pair(),
+    yaw: number({ min: -360, max: 360, default: 0 }),
+    appearance: optional(appearanceSchema),
+    behavior: optional(unknownValue()),
+    controller: optional(object({ command: str() })),
+  },
+  (character, path, issues) => {
+    if (character.behavior !== undefined && character.controller !== undefined) {
+      issues.push({
+        path: [...path, 'controller'],
+        message: 'a character has either a behavior or a controller, not both',
+      });
+    }
+  },
+);
 
 const worldFileSchema = object({
-  version: oneOf(WORLD_FILE_VERSIONS),
+  version: versionSchema,
+  name: name(),
+  description: description(),
   terrain: terrainSchema,
   player: optional(playerSchema),
+  places: optional(list(placeSchema)),
   characters: optional(list(characterSchema)),
   structures: optional(list(structureSchema)),
   scatter: optional(list(scatterSchema)),
+  /** Library of behaviors (BEHAV-006), checked when compiled. */
+  behaviors: optional(list(unknownValue())),
 });
 
 export type WorldFile = Infer<typeof worldFileSchema>;
@@ -110,6 +196,7 @@ export type PlayerDecl = Infer<typeof playerSchema>;
 export type CharacterDecl = Infer<typeof characterSchema>;
 export type AppearanceDecl = Infer<typeof appearanceSchema>;
 export type AreaDecl = Infer<typeof areaSchema>;
+export type PlaceDecl = Infer<typeof placeSchema>;
 
 export interface LoadedWorldFile {
   /** The validated file; undefined when there are errors. */

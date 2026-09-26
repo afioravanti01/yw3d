@@ -4,43 +4,13 @@ import { rectsOverlap, type Rect, type Rotation } from '../structures/builder';
 import { parseParams, structureSeed, type StructureRegistry } from '../structures/registry';
 import type { WorldSize } from '../world/world';
 import type { AreaDecl, ScatterDecl } from '../yaml/worldFile';
+import { areaBounds, areaContains, areaInBlocks } from './areas';
 import { footprintOf, rectInside, type Placement } from './placement';
 
 /** Square blocks in 100 m²: a block is 0.5 m × 0.5 m. */
 const BLOCKS_PER_100_M2 = 400;
 const ATTEMPTS = 30;
 const ROTATIONS: readonly Rotation[] = [0, 90, 180, 270];
-
-function bounds(area: AreaDecl): Rect {
-  if (area.kind === 'rect') {
-    const { from, to } = area.value;
-    return { minX: from[0], minZ: from[1], maxX: to[0], maxZ: to[1] };
-  }
-  const { center, radius } = area.value;
-  return {
-    minX: center[0] - radius,
-    minZ: center[1] - radius,
-    maxX: center[0] + radius,
-    maxZ: center[1] + radius,
-  };
-}
-
-function contains(area: AreaDecl, x: number, z: number): boolean {
-  if (area.kind === 'rect') {
-    const { from, to } = area.value;
-    return x >= from[0] && x < to[0] && z >= from[1] && z < to[1];
-  }
-  const { center, radius } = area.value;
-  return (x - center[0]) ** 2 + (z - center[1]) ** 2 <= radius * radius;
-}
-
-function areaInBlocks(area: AreaDecl): number {
-  if (area.kind === 'rect') {
-    const { from, to } = area.value;
-    return (to[0] - from[0]) * (to[1] - from[1]);
-  }
-  return Math.PI * area.value.radius ** 2;
-}
 
 /**
  * Poisson disk sampling on a grid (Bridson), plan F02 P7: points at least `minDistance` apart,
@@ -51,7 +21,7 @@ export function poissonDisk(
   minDistance: number,
   random: Random,
 ): [number, number][] {
-  const box = bounds(area);
+  const box = areaBounds(area);
   const cell = minDistance / Math.SQRT2;
   const cols = Math.max(1, Math.ceil((box.maxX - box.minX) / cell));
   const rows = Math.max(1, Math.ceil((box.maxZ - box.minZ) / cell));
@@ -115,7 +85,7 @@ export function poissonDisk(
     const j = randomInt(random, 0, i);
     [points[i], points[j]] = [points[j]!, points[i]!];
   }
-  return points.filter(([x, z]) => contains(area, x, z));
+  return points.filter(([x, z]) => areaContains(area, x, z));
 }
 
 function pickType(weights: readonly [string, number][], random: Random): string {

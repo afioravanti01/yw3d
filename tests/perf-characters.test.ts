@@ -21,6 +21,8 @@ describe('performance with characters', () => {
     const finder = new Pathfinder(new NavGrid(world!, registry.solid));
     const starts = Array.from({ length: 20 }, (_, i) => ({
       id: `c${i}`,
+      name: `c${i}`,
+      description: undefined,
       x: 130 + (i % 5) * 8 + 0.5,
       z: 40 + Math.floor(i / 5) * 8 + 0.5,
       yaw: 0,

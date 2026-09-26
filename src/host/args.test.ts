@@ -16,7 +16,7 @@ function tempFolder(files: Record<string, string>): string {
 
 describe('yw3d command line', () => {
   it('CLI-001.a: the world is world.yaml of the given folder; errors are clear', () => {
-    const root = tempFolder({ [WORLD_FILE]: 'version: 1\n' });
+    const root = tempFolder({ [WORLD_FILE]: 'version: 2\nname: Test\n' });
     const resolved = resolveWorldFolder(root);
     expect(resolved).toEqual({
       ok: true,

@@ -9,34 +9,44 @@ import { createDefaultStructures } from '../structures/builtin';
 import { resolveAppearance } from './appearance';
 import { spawnCharacters } from './characters';
 
-const header = `version: 1\nterrain: { seed: 3, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\n`;
+const header = `version: 2\nname: Test\nterrain: { seed: 3, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\n`;
 const compose = (body: string) =>
   composeWorld(header + body, 'w.yaml', { registry: createDefaultStructures() });
 
 const CHARACTERS = `characters:
   - id: guardiano
+    name: Guardiano
+    description: Il guardiano del borgo.
     at: [20, 30]
     yaw: 90
     appearance: { shirt: "#3a5f8e" }
     controller: { command: python guardiano.py }
   - id: marta
+    name: Marta
     at: [40, 12]
 `;
 
 describe('characters', () => {
-  it('CHAR-001.a: characters declare id, start, orientation, colors and controller', () => {
+  it('CHAR-001.a: characters declare id, name, description, start, orientation, colors and controller', () => {
     const result = compose(CHARACTERS);
     expect(result.diagnostics).toEqual([]);
     expect(result.characters).toEqual([
       {
         id: 'guardiano',
+        name: 'Guardiano',
+        description: 'Il guardiano del borgo.',
         x: 20.5,
         z: 30.5,
         yaw: -Math.PI / 2,
         appearance: expect.objectContaining({ shirt: 0x3a5f8e }),
         command: 'python guardiano.py',
       },
-      expect.objectContaining({ id: 'marta', yaw: -0, command: undefined }),
+      expect.objectContaining({
+        id: 'marta',
+        name: 'Marta',
+        description: undefined,
+        command: undefined,
+      }),
     ]);
     // Missing colors come from the seed: stable for a character, different between characters.
     const marta = result.characters[1]!.appearance;
@@ -49,9 +59,9 @@ describe('characters', () => {
       compose(body).diagnostics.map((d) => ({ line: d.line, path: d.path, message: d.message }));
     expect(errors(CHARACTERS.replace('id: marta', 'id: guardiano'))).toEqual([
       {
-        line: 9,
+        line: 12,
         path: 'characters[1].id',
-        message: 'the id "guardiano" is already used by characters[0] (line 4)',
+        message: 'the id "guardiano" is already used by characters[0] (line 5)',
       },
     ]);
     expect(errors(CHARACTERS.replace('[40, 12]', '[40, 64]'))[0]).toMatchObject({

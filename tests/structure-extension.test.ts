@@ -16,7 +16,7 @@ describe('structure extension from outside the core', () => {
     });
     const registry = new StructureRegistry();
     registry.register(cairn);
-    const text = `version: 1\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nstructures:\n  - type: cairn\n    at: [20, 20]\n    y: 90\n`;
+    const text = `version: 2\nname: Test\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nstructures:\n  - type: cairn\n    name: Test\n    at: [20, 20]\n    y: 90\n`;
     const result = composeWorld(text, 'worlds/cairn.yaml', { registry });
     expect(result.diagnostics).toEqual([]);
     expect(result.world!.getBlock(20, 91, 20)).toBe(COBBLESTONE);

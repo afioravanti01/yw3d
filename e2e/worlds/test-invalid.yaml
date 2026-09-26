@@ -1,9 +1,10 @@
 # End-to-end test world with errors (YAML-002.d).
-version: 1
+version: 2
+name: Mondo di prova
 terrain:
   seed: 7
   generator: 1
   size: [128, 96, 128]
 structures:
-  - { type: oka, at: [40, 40] }
-  - { type: pond, at: [60], params: { radius: 8 } }
+  - { type: oka, name: oka 1, at: [40, 40] }
+  - { type: pond, name: Laghetto 1, at: [60], params: { radius: 8 } }

@@ -107,8 +107,8 @@ test('YAML-002.d: with an invalid file there is no world and the errors are show
   const notice = page.locator('#notice');
   await expect(notice).toBeVisible();
   await expect(notice.locator('.error')).toHaveCount(2);
-  await expect(notice).toContainText('e2e/worlds/test-invalid.yaml:8  error  structures[0].type');
-  await expect(notice).toContainText('e2e/worlds/test-invalid.yaml:9  error  structures[1].at');
+  await expect(notice).toContainText('e2e/worlds/test-invalid.yaml:9  error  structures[0].type');
+  await expect(notice).toContainText('e2e/worlds/test-invalid.yaml:10  error  structures[1].at');
 });
 
 test('YAML-003.c: a different generator version gives a visible warning', async ({ page }) => {

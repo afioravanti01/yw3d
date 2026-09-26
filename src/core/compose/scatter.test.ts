@@ -8,7 +8,7 @@ import { composeWorld, type PlacedStructure } from './composeWorld';
 const registry = createDefaultStructures();
 
 function compose(body: string, seed = 4, size = '[128, 96, 128]') {
-  const text = `version: 1\nterrain: { seed: ${seed}, generator: ${TERRAIN_GENERATOR_VERSION}, size: ${size} }\n${body}`;
+  const text = `version: 2\nname: Test\nterrain: { seed: ${seed}, generator: ${TERRAIN_GENERATOR_VERSION}, size: ${size} }\n${body}`;
   return composeWorld(text, 'w.yaml', { registry });
 }
 
@@ -18,7 +18,7 @@ const scattered = (placements: readonly PlacedStructure[]) =>
 describe('distributions', () => {
   it('YAML-005.a: types with weights, rectangle or circle, density or count', () => {
     const byCount = compose(
-      'scatter:\n  - types: { oak: 3, birch: 1 }\n    area: { rect: { from: [10, 10], to: [118, 118] } }\n    count: 80\n    minDistance: 6\n',
+      'scatter:\n  - types: { oak: 3, birch: 1 }\n    name: Test\n    area: { rect: { from: [10, 10], to: [118, 118] } }\n    count: 80\n    minDistance: 6\n',
     );
     expect(byCount.diagnostics).toEqual([]);
     const trees = scattered(byCount.placements);
@@ -31,7 +31,7 @@ describe('distributions', () => {
     }
     // Density: structures per 100 m², i.e. per 400 square blocks.
     const byDensity = compose(
-      'scatter:\n  - types: { birch: 1 }\n    area: { circle: { center: [64, 64], radius: 40 } }\n    density: 0.5\n    minDistance: 5\n',
+      'scatter:\n  - types: { birch: 1 }\n    name: Test\n    area: { circle: { center: [64, 64], radius: 40 } }\n    density: 0.5\n    minDistance: 5\n',
     );
     const expected = Math.round((0.5 * Math.PI * 40 * 40) / 400);
     const birches = scattered(byDensity.placements);
@@ -39,17 +39,17 @@ describe('distributions', () => {
     for (const b of birches) expect((b.x - 64) ** 2 + (b.z - 64) ** 2).toBeLessThanOrEqual(1600);
     // Asking for more than fits gives a warning, not an error.
     const crowded = compose(
-      'scatter:\n  - types: { oak: 1 }\n    area: { circle: { center: [64, 64], radius: 10 } }\n    count: 50\n    minDistance: 8\n',
+      'scatter:\n  - types: { oak: 1 }\n    name: Test\n    area: { circle: { center: [64, 64], radius: 10 } }\n    count: 50\n    minDistance: 8\n',
     );
     expect(crowded.world).toBeDefined();
     expect(crowded.diagnostics).toEqual([
-      expect.objectContaining({ severity: 'warning', path: 'scatter[0]', line: 4 }),
+      expect.objectContaining({ severity: 'warning', path: 'scatter[0]', line: 5 }),
     ]);
   });
 
   it('YAML-005.b: positions depend on the declaration and seed, not on the terrain', () => {
     const body =
-      'scatter:\n  - types: { oak: 1, willow: 1 }\n    area: { rect: { from: [20, 20], to: [100, 100] } }\n    count: 30\n    minDistance: 7\n';
+      'scatter:\n  - types: { oak: 1, willow: 1 }\n    name: Test\n    area: { rect: { from: [20, 20], to: [100, 100] } }\n    count: 30\n    minDistance: 7\n';
     const positions = (size: string) =>
       scattered(compose(body, 4, size).placements).map((p) => [p.type, p.x, p.z, p.rotation]);
     // A different world size gives a different terrain, but the same positions.
@@ -64,14 +64,16 @@ describe('distributions', () => {
     const result = compose(
       [
         'structures:',
-        '  - { type: stone_farmhouse, at: [40, 40] }',
-        '  - { type: pond, at: [85, 80], params: { radius: 12 } }',
+        '  - { type: stone_farmhouse, name: Test, at: [40, 40] }',
+        '  - { type: pond, name: Test, at: [85, 80], params: { radius: 12 } }',
         'scatter:',
         '  - types: { oak: 2, birch: 1, wooden_hut: 1 }',
+        '    name: Test',
         '    area: { rect: { from: [4, 4], to: [124, 124] } }',
         '    density: 2',
         '    minDistance: 6',
         '  - types: { willow: 1 }',
+        '    name: Test',
         '    area: { circle: { center: [85, 80], radius: 30 } }',
         '    count: 12',
         '    minDistance: 5',
@@ -98,7 +100,7 @@ describe('distributions', () => {
     for (const seed of [1, 2, 3]) {
       const trees = scattered(
         compose(
-          'scatter:\n  - types: { oak: 1, birch: 1 }\n    area: { circle: { center: [64, 64], radius: 60 } }\n    density: 3\n    minDistance: 7\n',
+          'scatter:\n  - types: { oak: 1, birch: 1 }\n    name: Test\n    area: { circle: { center: [64, 64], radius: 60 } }\n    density: 3\n    minDistance: 7\n',
           seed,
         ).placements,
       );

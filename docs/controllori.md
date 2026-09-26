@@ -9,6 +9,7 @@ Un **controllore** è un programma che guida un personaggio: riceve quello che i
 ```yaml
 characters:
   - id: guardiano
+    name: Bruno
     at: [160, 70]
     controller: { command: python3 controllers/guardiano.py }
 ```

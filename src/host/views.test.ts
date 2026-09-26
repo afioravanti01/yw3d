@@ -23,7 +23,7 @@ async function session() {
   const root = mkdtempSync(path.join(tmpdir(), 'yw3d-views-'));
   writeFileSync(
     path.join(root, WORLD_FILE),
-    `version: 1\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nplayer: { at: [32, 32] }\n`,
+    `version: 2\nname: Test\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nplayer: { at: [32, 32] }\n`,
   );
   const resolved = resolveWorldFolder(root);
   if (!resolved.ok) throw new Error(resolved.message);

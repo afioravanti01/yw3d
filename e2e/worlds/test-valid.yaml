@@ -1,15 +1,17 @@
 # End-to-end test world: small, with every kind of structure.
-version: 1
+version: 2
+name: Mondo di prova
 terrain:
   seed: 7
   generator: 1
   size: [128, 96, 128]
 structures:
-  - { type: stone_farmhouse, at: [40, 40] }
-  - { type: wooden_hut, at: [80, 44], rotation: 90 }
-  - { type: pond, at: [60, 90], params: { radius: 8 } }
+  - { type: stone_farmhouse, name: Casolare 1, at: [40, 40] }
+  - { type: wooden_hut, name: Capanno 1, at: [80, 44], rotation: 90 }
+  - { type: pond, name: Laghetto 1, at: [60, 90], params: { radius: 8 } }
 scatter:
-  - types: { oak: 1, birch: 1, willow: 1 }
+  - name: Gruppo 1
+    types: { oak: 1, birch: 1, willow: 1 }
     area: { rect: { from: [8, 8], to: [120, 120] } }
     count: 20
     minDistance: 8

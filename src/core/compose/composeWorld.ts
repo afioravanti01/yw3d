@@ -13,7 +13,8 @@ import { basinOf, buildStructure, type StructureRegistry } from '../structures/r
 import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
-import { loadWorldFile } from '../yaml/worldFile';
+import { DEFAULT_PLAYER_NAME, loadWorldFile, type PlaceDecl } from '../yaml/worldFile';
+import { areaInsideWorld } from './areas';
 import { checkStructureTypes, findConflicts, placeStructures, type Placement } from './placement';
 import { scatterStructures } from './scatter';
 
@@ -28,6 +29,9 @@ export interface ComposeOptions {
 /** A character as declared, ready to be spawned (CHAR-001). */
 export interface CharacterStart {
   readonly id: string;
+  /** Name and description from the file (YAML-009.a). */
+  readonly name: string;
+  readonly description: string | undefined;
   /** Center of the declared column. */
   readonly x: number;
   readonly z: number;
@@ -54,6 +58,9 @@ export interface PlacedStructure {
 export interface ComposeResult {
   /** The world, or undefined when the file has errors (YAML-002.d). */
   readonly world: World | undefined;
+  /** Name and description of the world (YAML-009.a); undefined when the file has errors. */
+  readonly name: string | undefined;
+  readonly description: string | undefined;
   readonly diagnostics: Diagnostic[];
   /** Terrain seed actually used. */
   readonly seed: number | undefined;
@@ -73,6 +80,11 @@ export interface ComposeResult {
     | undefined;
   /** Colors of the player, declared or derived from the seed (YAML-008.a). */
   readonly playerAppearance: Appearance | undefined;
+  /** Name and description of the player, «viandante» by default (YAML-009.b). */
+  readonly playerName: string | undefined;
+  readonly playerDescription: string | undefined;
+  /** Named points and areas (YAML-010.a), in order. */
+  readonly places: readonly PlaceDecl[];
   /** Characters declared in the file (CHAR-001.a), in order. */
   readonly characters: readonly CharacterStart[];
   /** Structures built, in order: declared one by one first, then distributed. */
@@ -96,11 +108,16 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
   };
   const failed = (diagnostics: Diagnostic[], seed?: number): ComposeResult => ({
     world: undefined,
+    name: undefined,
+    description: undefined,
     diagnostics,
     seed,
     structureCounts: {},
     player: undefined,
     playerAppearance: undefined,
+    playerName: undefined,
+    playerDescription: undefined,
+    places: [],
     characters: [],
     placements: [],
     timings,
@@ -152,6 +169,17 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       });
     }
   }
+  (decl.places ?? []).forEach((place, i) => {
+    const inside = place.at
+      ? place.at[0] >= 0 && place.at[1] >= 0 && place.at[0] < size.x && place.at[1] < size.z
+      : areaInsideWorld(place.area!, size);
+    if (!inside) {
+      issues.push({
+        path: ['places', i, place.at ? 'at' : 'area'],
+        message: `the place is outside the world: x and z must be within 0..${size.x - 1} and 0..${size.z - 1}`,
+      });
+    }
+  });
   const ids = new Map<string, number>();
   (decl.characters ?? []).forEach((character, i) => {
     const [cx, cz] = character.at;
@@ -254,6 +282,8 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
   const diagnostics = toDiagnostics();
   return {
     world: hasErrors(diagnostics) ? undefined : world,
+    name: decl.name,
+    description: decl.description,
     diagnostics,
     seed,
     structureCounts,
@@ -264,8 +294,13 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       appearance: resolveAppearance(decl.player.appearance, seed, 'player'),
     },
     playerAppearance: resolveAppearance(decl.player?.appearance, seed, 'player'),
+    playerName: decl.player?.name ?? DEFAULT_PLAYER_NAME,
+    playerDescription: decl.player?.description,
+    places: decl.places ?? [],
     characters: (decl.characters ?? []).map((c) => ({
       id: c.id,
+      name: c.name,
+      description: c.description,
       x: c.at[0] + 0.5,
       z: c.at[1] + 0.5,
       yaw: (-c.yaw * Math.PI) / 180,

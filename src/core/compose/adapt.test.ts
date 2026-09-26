@@ -19,12 +19,15 @@ const TERRAIN = new Set([GRASS, DIRT, STONE, SAND]);
 
 function fileFor(seed: number): string {
   return [
-    'version: 1',
+    'version: 2',
+    'name: Test',
     `terrain: { seed: ${seed}, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }`,
     'structures:',
-    `  - { type: test_pad, at: [${PAD.x}, ${PAD.z}], params: { width: ${PAD.width}, depth: ${PAD.depth} } }`,
-    `  - { type: test_basin, at: [${BASIN.x}, ${BASIN.z}], params: { size: ${BASIN.size} } }`,
-    ...POSTS.map(([x, z]) => `  - { type: test_post, at: [${x}, ${z}], params: { width: 2 } }`),
+    `  - { type: test_pad, name: Test, at: [${PAD.x}, ${PAD.z}], params: { width: ${PAD.width}, depth: ${PAD.depth} } }`,
+    `  - { type: test_basin, name: Test, at: [${BASIN.x}, ${BASIN.z}], params: { size: ${BASIN.size} } }`,
+    ...POSTS.map(
+      ([x, z]) => `  - { type: test_post, name: Test, at: [${x}, ${z}], params: { width: 2 } }`,
+    ),
     '',
   ].join('\n');
 }

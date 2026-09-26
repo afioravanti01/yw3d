@@ -22,7 +22,7 @@ describe('ponds', () => {
 
   beforeAll(() => {
     for (const seed of SEEDS) {
-      const text = `version: 1\nterrain: { seed: ${seed}, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\nstructures:\n  - { type: pond, at: [${CENTER}, ${CENTER}], params: { radius: 12, depth: 4 } }\n`;
+      const text = `version: 2\nname: Test\nterrain: { seed: ${seed}, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\nstructures:\n  - { type: pond, name: Test, at: [${CENTER}, ${CENTER}], params: { radius: 12, depth: 4 } }\n`;
       const { world, diagnostics } = composeWorld(text, 'w.yaml', { registry });
       expect(diagnostics).toEqual([]);
       worlds.set(seed, world!);

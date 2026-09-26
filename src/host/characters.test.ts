@@ -18,7 +18,7 @@ async function session(characters = '') {
   const root = mkdtempSync(path.join(tmpdir(), 'yw3d-chars-'));
   writeFileSync(
     path.join(root, WORLD_FILE),
-    `version: 1\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nplayer: { at: [30, 30] }\n${characters}`,
+    `version: 2\nname: Test\nterrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }\nplayer: { at: [30, 30] }\n${characters}`,
   );
   const resolved = resolveWorldFolder(root);
   if (!resolved.ok) throw new Error(resolved.message);
@@ -33,8 +33,8 @@ const run = (s: HostSession, seconds: number) => {
 };
 
 const TWO = `characters:
-  - { id: guardiano, at: [32, 30], controller: { command: python guardiano.py } }
-  - { id: marta, at: [20, 20] }
+  - { id: guardiano, name: guardiano, at: [32, 30], controller: { command: python guardiano.py } }
+  - { id: marta, name: marta, at: [20, 20] }
 `;
 
 describe('characters in the host', () => {

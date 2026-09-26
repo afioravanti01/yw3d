@@ -1,7 +1,9 @@
 # Example world folder: the default valley with a crowd of 20 wandering characters, each
 # driven by its own process. Used to measure PERF-005.a. Run it with: yw3d examples/folla
 # Coordinates are in blocks (1 block = 0.5 m); see worlds/README.md for the format.
-version: 1
+version: 2
+name: La valle affollata
+description: La valle con venti abitanti che passeggiano per il borgo.
 terrain:
   seed: 1
   generator: 1
@@ -14,78 +16,192 @@ player:
 structures:
   # The village, on the flat land in the north.
   - type: stone_farmhouse
+    name: Casolare grande
     at: [140, 42]
     params: { width: 16, depth: 10 }
   - type: stone_farmhouse
+    name: Casolare di levante
     at: [178, 50]
     rotation: 90
     params: { width: 13, depth: 9 }
   - type: wooden_hut
+    name: Capanno della piazza
     at: [150, 76]
     rotation: 180
   - type: wooden_hut
+    name: Capanno di ponente
     at: [112, 74]
     rotation: 270
   - type: wooden_hut
+    name: Capanno del nord
     at: [208, 30]
   - type: wooden_hut
+    name: Capanno del laghetto
     at: [205, 78]
     rotation: 180
   - type: oak
+    name: Quercia della piazza
     at: [158, 58]
     params: { height: 19 }
 
   # Ponds: one south of the village, one in the south-western meadow.
   - type: pond
+    name: Laghetto del borgo
     at: [196, 112]
     params: { radius: 10, depth: 3 }
   - type: pond
+    name: Stagno di ponente
     at: [88, 330]
     params: { radius: 15, depth: 5 }
 
 scatter:
   # Mixed woods in the east and in the south.
-  - types: { oak: 3, birch: 2 }
+  - name: Bosco di levante
+    types: { oak: 3, birch: 2 }
     area: { circle: { center: [450, 66], radius: 46 } }
     density: 4
     minDistance: 6
-  - types: { oak: 2, birch: 3 }
+  - name: Bosco del sud
+    types: { oak: 2, birch: 3 }
     area: { circle: { center: [340, 405], radius: 60 } }
     density: 3
     minDistance: 6
   # Willows along the shores.
-  - types: { willow: 1 }
+  - name: Salici del laghetto
+    types: { willow: 1 }
     area: { circle: { center: [196, 112], radius: 20 } }
     count: 4
     minDistance: 7
-  - types: { willow: 1 }
+  - name: Salici dello stagno
+    types: { willow: 1 }
     area: { circle: { center: [88, 330], radius: 27 } }
     count: 5
     minDistance: 7
   # Lone trees in the meadows, all over the valley.
-  - types: { oak: 2, birch: 1 }
+  - name: Alberi dei prati
+    types: { oak: 2, birch: 1 }
     area: { rect: { from: [8, 8], to: [504, 504] } }
     density: 0.15
     minDistance: 22
 
 characters:
-  - { id: p01, at: [120, 40], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p02, at: [140, 40], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p03, at: [160, 40], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p04, at: [180, 40], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p05, at: [200, 40], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p06, at: [120, 54], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p07, at: [140, 54], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p08, at: [160, 54], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p09, at: [180, 54], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p10, at: [200, 54], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p11, at: [120, 68], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p12, at: [140, 68], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p13, at: [160, 68], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p14, at: [180, 68], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p15, at: [200, 68], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p16, at: [120, 82], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p17, at: [140, 82], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p18, at: [160, 82], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p19, at: [180, 82], controller: { command: node controllers/passeggia.mjs } }
-  - { id: p20, at: [200, 82], controller: { command: node controllers/passeggia.mjs } }
+  - {
+      id: p01,
+      name: Abitante 1,
+      at: [120, 40],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p02,
+      name: Abitante 2,
+      at: [140, 40],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p03,
+      name: Abitante 3,
+      at: [160, 40],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p04,
+      name: Abitante 4,
+      at: [180, 40],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p05,
+      name: Abitante 5,
+      at: [200, 40],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p06,
+      name: Abitante 6,
+      at: [120, 54],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p07,
+      name: Abitante 7,
+      at: [140, 54],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p08,
+      name: Abitante 8,
+      at: [160, 54],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p09,
+      name: Abitante 9,
+      at: [180, 54],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p10,
+      name: Abitante 10,
+      at: [200, 54],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p11,
+      name: Abitante 11,
+      at: [120, 68],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p12,
+      name: Abitante 12,
+      at: [140, 68],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p13,
+      name: Abitante 13,
+      at: [160, 68],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p14,
+      name: Abitante 14,
+      at: [180, 68],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p15,
+      name: Abitante 15,
+      at: [200, 68],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p16,
+      name: Abitante 16,
+      at: [120, 82],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p17,
+      name: Abitante 17,
+      at: [140, 82],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p18,
+      name: Abitante 18,
+      at: [160, 82],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p19,
+      name: Abitante 19,
+      at: [180, 82],
+      controller: { command: node controllers/passeggia.mjs },
+    }
+  - {
+      id: p20,
+      name: Abitante 20,
+      at: [200, 82],
+      controller: { command: node controllers/passeggia.mjs },
+    }

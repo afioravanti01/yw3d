@@ -73,7 +73,7 @@ describe('houses', () => {
     for (const rotation of [0, 90, 180, 270] as Rotation[]) {
       for (const style of NAMES) {
         const [ax, az] = [64, 64];
-        const text = `version: 1\nterrain: { seed: 11, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\nstructures:\n  - { type: ${style}, at: [${ax}, ${az}], rotation: ${rotation} }\n`;
+        const text = `version: 2\nname: Test\nterrain: { seed: 11, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\nstructures:\n  - { type: ${style}, name: Test, at: [${ax}, ${az}], rotation: ${rotation} }\n`;
         const { world, diagnostics } = composeWorld(text, 'w.yaml', { registry });
         expect(diagnostics).toEqual([]);
         const s = STYLES[style];

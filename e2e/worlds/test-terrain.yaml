@@ -1,5 +1,6 @@
 # End-to-end test world with the bare terrain, compared with the F01 generator (WORLD-005.d).
-version: 1
+version: 2
+name: Mondo di prova
 terrain:
   seed: 7
   generator: 1
