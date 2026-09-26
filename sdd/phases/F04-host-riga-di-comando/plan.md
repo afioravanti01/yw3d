@@ -124,7 +124,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Secondo progetto Playwright con l'host come server; cartella `e2e/host` con una struttura dell'autore.
   - Fatto quando: `npm run e2e` verde con entrambi i progetti.
 
-- [ ] **T4.10** Verifica di accettazione e chiusura della fase
+- [x] **T4.10** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T4.06, T4.08, T4.09
   - `check`, `e2e`, `sdd:trace -- F04`; checklist dei criteri `[manuale]` con i valori misurati; spec vive; `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

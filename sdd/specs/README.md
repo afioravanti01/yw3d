@@ -18,7 +18,9 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | STRUCT | [`structures.md`](structures.md) | registro e generazione delle strutture, adattamento al terreno | F02 |
 | PHYS | [`physics.md`](physics.md) | entità fisiche, collisioni, salto, gradini, acqua | F03 |
 | PLAYER | [`player.md`](player.md) | giocatore: misure, controlli, visuali | F03 |
-| CHAR, NAV, BEHAV | — | personaggi, navigazione, comportamenti | F04 (prevista) |
-| AI, UI | — | personaggi AI, interfaccia di dialogo | F05 (prevista) |
+| CLI | [`cli.md`](cli.md) | comando `yw3d`, cartella del mondo | F04 |
+| HOST | [`host.md`](host.md) | host headless, viste collegate, ricaricamento | F04 |
+| CHAR, NAV, PROTO | — | personaggi, navigazione, protocollo dei controllori | F05 (prevista) |
+| AGENT, MCP, UI | — | agenti LLM, server MCP, dialogo | F06 (prevista) |
 
-*Aggiornate alla chiusura di F03 (2026-09-26).*
+*Aggiornate alla chiusura di F04 (2026-09-26).*

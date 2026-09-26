@@ -21,3 +21,9 @@ Stesso hardware di riferimento di PERF-001.
 Stesso hardware di riferimento di PERF-001.
 - **a** `[manuale]` Un passo di simulazione del giocatore costa al più 1 ms (valore mostrato nell'overlay).
 - **b** `[manuale]` Con il giocatore nel mondo predefinito valgono i budget di PERF-001 (caricamento ≤ 5 s, ≥ 60 fps camminando e nuotando).
+
+### PERF-004 — Host
+*Introdotto in F04 · ultima modifica: F04.*
+Stesso hardware di riferimento di PERF-001.
+- **a** `[manuale]` Da `yw3d` al mondo visibile nel browser passano al più 8 s, compresa la validazione e l'avvio dell'host.
+- **b** `[manuale]` Con l'host valgono i budget di PERF-001.b nel browser (≥ 60 fps camminando).

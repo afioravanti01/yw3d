@@ -53,3 +53,10 @@ Ogni tipo dichiara un modo di adattamento.
 - **b** `[unit]` L'acqua è contenuta: ogni blocco d'acqua ha sotto di sé e ai lati acqua o blocchi solidi.
 - **c** `[unit]` Le sponde sono di sabbia o ghiaia, entro una fascia di 1–3 blocchi intorno all'acqua.
 - **d** `[manuale]` Il laghetto appare naturale, con fondale e sponde digradanti.
+
+### STRUCT-008 — Strutture dell'autore
+*Introdotto in F04 · ultima modifica: F04.*
+- **a** `[unit]` I file TypeScript o JavaScript nella sottocartella `structures/` della cartella del mondo registrano strutture (STRUCT-001) utilizzabili nel YAML, senza modificare il progetto yw3d.
+- **b** `[unit]` Un errore in uno di questi file (sintassi, eccezione, nome già usato) produce un messaggio con il file e la causa; l'host non si ferma.
+- **c** `[e2e]` Con le strutture dell'autore il browser ottiene lo stesso mondo dell'host (stesso hash).
+- **d** `[unit]` Lanciare `yw3d` su una cartella equivale ad accettare di eseguirne il codice delle strutture; il comando lo ricorda nel terminale quando la cartella ne contiene (Q5).

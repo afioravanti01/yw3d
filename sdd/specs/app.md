@@ -12,3 +12,8 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 ### APP-002 — Mondo predefinito
 *Introdotto in F02 · ultima modifica: F02.*
 - **a** `[manuale]` Il mondo predefinito del progetto è una valle con almeno un bosco misto, alberi sparsi nei prati, un piccolo borgo di case con entrambi gli stili e laghetti con salici sulle sponde.
+
+### APP-003 — Modalità solo browser
+*Introdotto in F04 · ultima modifica: F04.*
+- **a** `[e2e]` Aperta senza host (server di sviluppo o build statica del progetto), l'app funziona come in F03 con i mondi del progetto, `?world=` e `?seed=`.
+- **b** `[e2e]` Aperta dall'host, l'app si collega all'host e ignora `?world=`; il seed può essere sostituito solo con `--seed` del comando.
