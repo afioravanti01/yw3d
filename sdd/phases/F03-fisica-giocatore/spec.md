@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | draft |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-26 |
 | Piano | [plan.md](plan.md) (dopo G1) |
 
@@ -116,13 +116,17 @@ Stesso hardware di riferimento di PERF-001.
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Domande aperte
-- **Q1** Gravità e salto. Un salto realistico (gravità 9,81 m/s²) sembra lento e "lunare" in un gioco. Proposta: **gravità 20 m/s²**, salto fino a circa 1,1 m (2,2 blocchi), tempo in aria circa 0,65 s; velocità massima di caduta 40 m/s. Con 2,2 blocchi si sale su un rialzo di 2 blocchi saltando.
-- **Q2** Velocità: **camminata 4 m/s, corsa 7 m/s con Shift**. In F01 Shift faceva scendere la camera libera: lì resta così.
-- **Q3** Posizione di partenza nel YAML (YAML-008): proposta **sì**, sezione `player` con `at: [x, z]` e `yaw` facoltativo; senza sezione, il giocatore parte dal centro del mondo. Nel mondo predefinito partirebbe nel borgo.
-- **Q4** Corpo in terza persona: proposta **figura statica a blocchi** (testa, busto, gambe, nei colori della palette), sostituita dai personaggi animati di F04.
-- **Q5** Foglie non solide (WORLD-004 modificato): proposta **sì**. Alternativa: foglie solide e salici con tende più corte.
-- **Q6** Tasti: proposta **V** per prima/terza persona, **F4** per la camera libera (F3 resta l'overlay). In acqua Spazio/Z salgono e X scende, coerenti con la camera libera.
+## Domande risolte
+Chiuse con l'utente il 2026-09-26, prima di G1. Tutte le proposte sono state accettate.
+
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Gravità e salto | Da gioco: gravità 20 m/s², salto fino a circa 1,1 m, caduta massima 40 m/s | PHYS-003.a, PHYS-005.a invariati |
+| Q2 | Velocità | Camminata 4 m/s, corsa 7 m/s con Shift | PLAYER-002.a invariato |
+| Q3 | Partenza nel YAML | Sezione `player` con `at: [x, z]` e `yaw` facoltativo; senza sezione, centro del mondo | YAML-008 invariato |
+| Q4 | Corpo in terza persona | Figura statica a blocchi, fino ai personaggi di F04 | PLAYER-003.c invariato |
+| Q5 | Foglie | Non solide, restano opache | WORLD-004 modificato come proposto |
+| Q6 | Tasti | V prima/terza persona, F4 camera libera; in acqua Spazio/Z salgono, X scende | PLAYER-002.b, PLAYER-003.a, CAM-001.f invariati |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
