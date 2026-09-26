@@ -142,7 +142,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Tenendo premuto un tasto e premendo Esc, il browser rilascia il mouse e non sempre invia il rilascio del tasto: il giocatore continuava a camminare. I tasti premuti si azzerano al cambio di cattura del mouse, alla perdita del focus e quando la scheda è nascosta. Difetto trovato in verifica, di origine codice.
   - Fatto quando: `npm run check` verde; verificato a mano.
 
-- [ ] **T3.13** Verifica di accettazione e chiusura della fase
+- [x] **T3.13** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T3.11, T3.12, T3.01
   - `check`, `e2e`, `sdd:trace -- F03`; checklist dei criteri `[manuale]` con i valori misurati; spec vive; `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

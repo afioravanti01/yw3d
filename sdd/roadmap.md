@@ -6,7 +6,7 @@
 |---|---|---|---|
 | F01 | Fondamenta e mondo voxel | `done` (G3, 2026-09-26) | — |
 | F02 | Mondo da YAML e strutture programmabili | `done` (G3, 2026-09-26) | F01 |
-| F03 | Fisica e giocatore | `verifying` | F01, F02 |
+| F03 | Fisica e giocatore | `done` (G3, 2026-09-26) | F01, F02 |
 | F04 | Personaggi animati e comportamenti programmati | planned | F02, F03 |
 | F05 | Personaggi AI e interazione | planned | F04 |
 | F06 | Natura viva | planned | F02 |

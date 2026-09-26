@@ -48,3 +48,8 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 *Introdotto in F02 · ultima modifica: F02.*
 - **a** `[manuale]` In sviluppo, salvando il file in uso il mondo si rigenera senza ricaricare la pagina, entro il budget di PERF-001.a, e la camera mantiene posizione e orientamento.
 - **b** `[manuale]` Se il file salvato non è valido, resta il mondo precedente e compaiono gli errori; alla correzione spariscono.
+
+### YAML-008 — Partenza del giocatore
+*Introdotto in F03 · ultima modifica: F03.*
+- **a** `[unit]` Il file del mondo può dichiarare la posizione orizzontale di partenza del giocatore (x, z in blocchi) e l'orientamento iniziale della visuale.
+- **b** `[unit]` Una posizione di partenza fuori dal mondo è un errore nel formato di YAML-002.

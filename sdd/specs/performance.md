@@ -15,3 +15,9 @@ Hardware di riferimento: il PC di sviluppo dell'utente, Chrome su Windows colleg
 Stesso hardware di riferimento di PERF-001.
 - **a** `[manuale]` Con il mondo predefinito del progetto valgono i budget di PERF-001 (caricamento ≤ 5 s, ≥ 60 fps).
 - **b** `[unit]` Il mondo predefinito contiene almeno 150 alberi, 6 case e 2 laghetti.
+
+### PERF-003 — Costo della simulazione
+*Introdotto in F03 · ultima modifica: F03.*
+Stesso hardware di riferimento di PERF-001.
+- **a** `[manuale]` Un passo di simulazione del giocatore costa al più 1 ms (valore mostrato nell'overlay).
+- **b** `[manuale]` Con il giocatore nel mondo predefinito valgono i budget di PERF-001 (caricamento ≤ 5 s, ≥ 60 fps camminando e nuotando).
