@@ -193,6 +193,14 @@ function house(style: HouseStyle): StructureType<{ width: number; depth: number 
     generate({ params, random, builder }) {
       buildHouse(builder, style, houseLayout(style, params.width, params.depth, random));
     },
+    // In front of the door, outside (MAP-003.b): the same layout as the generator.
+    approach({ params, random }) {
+      const { doorX, z1 } = houseLayout(style, params.width, params.depth, random);
+      return [
+        [doorX, z1],
+        [doorX + 1, z1],
+      ];
+    },
   });
 }
 

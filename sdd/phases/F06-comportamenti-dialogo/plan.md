@@ -172,7 +172,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Nomi e descrizioni (Q8) con il default del giocatore. Id facoltativo di strutture e distribuzioni. Sezione `places` e campi `behavior` e `behaviors` (il contenuto si valida in T6.05). Comportamento e controllore esclusivi. Errore della v1 (P18). Migrazione di mondi, esempi e test.
   - Fatto quando: test di YAML-001.a e .e, YAML-009.a–b, YAML-010.a–b, CHAR-001.a, BEHAV-001.b verdi; `npm run check` verde con tutti i file in v2.
 
-- [ ] **T6.02** Identificatori e mappa del mondo
+- [x] **T6.02** Identificatori e mappa del mondo
   - Req: MAP-001, MAP-002, STRUCT-001 · Dip: T6.01
   - Unico spazio di id, `player` riservato, id generati (Q10). Mappa nel risultato della composizione (P9). `approach` nel tipo di struttura e punti d'arrivo di case, laghetti e alberi (P10).
   - Fatto quando: test di MAP-001.a–b, MAP-002.a–d, STRUCT-001.a verdi.

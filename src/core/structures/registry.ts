@@ -38,6 +38,12 @@ export interface StructureType<P = unknown> {
   footprint(params: P): Rect;
   /** For `dig` structures: the basin to carve. Must be deterministic. */
   basin?(context: StructureContext<P>): Basin;
+  /**
+   * Where a character arrives when it walks to the structure (MAP-003.b): local columns before
+   * rotation, e.g. in front of the door. Optional: without it a character arrives on the dry
+   * ring around a basin, or on the ring around the footprint. Must be deterministic.
+   */
+  approach?(context: StructureContext<P>): readonly (readonly [x: number, z: number])[];
   /** Writes the structure in local coordinates. Must be deterministic (STRUCT-002.a). */
   generate(context: StructureContext<P>): void;
 }
@@ -97,6 +103,20 @@ export function buildStructure<P>(
   builder: StructureBuilder,
 ): void {
   type.generate({ params, seed, random: createRng(seed), builder });
+}
+
+/** The arrival columns declared by a type (local, before rotation), or undefined. */
+export function approachOf<P>(
+  type: StructureType<P>,
+  params: P,
+  seed: number,
+): readonly (readonly [number, number])[] | undefined {
+  return type.approach?.({
+    params,
+    seed,
+    random: createRng(seed),
+    builder: new StructureBuilder(),
+  });
 }
 
 /** The basin of a `dig` structure, or undefined for other modes. */

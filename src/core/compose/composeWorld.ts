@@ -15,6 +15,7 @@ import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '..
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import { DEFAULT_PLAYER_NAME, loadWorldFile, type PlaceDecl } from '../yaml/worldFile';
 import { areaInsideWorld } from './areas';
+import { buildWorldMap, checkIds, type Goal, type WorldMap } from '../map/worldMap';
 import { checkStructureTypes, findConflicts, placeStructures, type Placement } from './placement';
 import { scatterStructures } from './scatter';
 
@@ -85,6 +86,10 @@ export interface ComposeResult {
   readonly playerDescription: string | undefined;
   /** Named points and areas (YAML-010.a), in order. */
   readonly places: readonly PlaceDecl[];
+  /** The map of the world (MAP-002); undefined when the file has errors. */
+  readonly map: WorldMap | undefined;
+  /** Where a character goes for each id of the map (MAP-003). */
+  readonly goals: ReadonlyMap<string, Goal>;
   /** Characters declared in the file (CHAR-001.a), in order. */
   readonly characters: readonly CharacterStart[];
   /** Structures built, in order: declared one by one first, then distributed. */
@@ -118,6 +123,8 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     playerName: undefined,
     playerDescription: undefined,
     places: [],
+    map: undefined,
+    goals: new Map(),
     characters: [],
     placements: [],
     timings,
@@ -180,7 +187,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       });
     }
   });
-  const ids = new Map<string, number>();
+  checkIds(decl, loaded.lineOf, issues);
   (decl.characters ?? []).forEach((character, i) => {
     const [cx, cz] = character.at;
     if (cx < 0 || cz < 0 || cx >= size.x || cz >= size.z) {
@@ -188,15 +195,6 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
         path: ['characters', i, 'at'],
         message: `the character is outside the world: x and z must be within 0..${size.x - 1} and 0..${size.z - 1}`,
       });
-    }
-    const first = ids.get(character.id);
-    if (first !== undefined) {
-      issues.push({
-        path: ['characters', i, 'id'],
-        message: `the id "${character.id}" is already used by characters[${first}] (line ${loaded.lineOf(['characters', first, 'id'])})`,
-      });
-    } else {
-      ids.set(character.id, i);
     }
   });
   const singles = placeStructures(decl.structures ?? [], options.registry, seed, size, issues);
@@ -272,12 +270,32 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
   lap('columns');
 
   const structureCounts: Record<string, number> = {};
+  const baseY = new Map<Placement, number>();
   for (const placement of placements) {
     const ground = map.heights[placement.x + placement.z * size.x]! + 1;
-    stamp(world, placement, placement.y ?? anchors.get(placement) ?? ground);
+    const y = placement.y ?? anchors.get(placement) ?? ground;
+    baseY.set(placement, y);
+    stamp(world, placement, y);
     structureCounts[placement.type.name] = (structureCounts[placement.type.name] ?? 0) + 1;
   }
   lap('structures');
+
+  const built = buildWorldMap({
+    decl,
+    size,
+    structures: singles.map((p) => ({
+      index: p.path[1] as number,
+      type: p.type,
+      params: p.params,
+      seed: p.seed,
+      x: p.x,
+      z: p.z,
+      rotation: p.rotation,
+      rect: p.rect,
+      baseY: baseY.get(p)!,
+      water: basinColumns.get(p)?.columns.map(([x, z]) => [x, z] as const),
+    })),
+  });
 
   const diagnostics = toDiagnostics();
   return {
@@ -297,6 +315,8 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     playerName: decl.player?.name ?? DEFAULT_PLAYER_NAME,
     playerDescription: decl.player?.description,
     places: decl.places ?? [],
+    map: built.map,
+    goals: built.goals,
     characters: (decl.characters ?? []).map((c) => ({
       id: c.id,
       name: c.name,

@@ -144,12 +144,32 @@ function pickDirections(random: Random, count: number): (typeof DIRECTIONS)[numb
   return out;
 }
 
+/** At the foot of a thick 2 × 2 trunk (MAP-003.b): the columns next to its sides. */
+const AROUND_THICK_TRUNK = [
+  [-2, -1],
+  [-2, 0],
+  [1, -1],
+  [1, 0],
+  [-1, -2],
+  [0, -2],
+  [-1, 1],
+  [0, 1],
+] as const;
+/** At the foot of a 1 × 1 trunk. */
+const AROUND_THIN_TRUNK = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+] as const;
+
 /** Oak: short thick trunk, a few branches, a wide rounded crown of several lobes. */
 export const oak = defineStructure({
   name: 'oak',
   params: treeParams('oak'),
   terrain: 'sit',
   footprint: () => ({ minX: -2, minZ: -2, maxX: 2, maxZ: 2 }),
+  approach: () => AROUND_THICK_TRUNK,
   generate({ params, random, builder }) {
     const s = SPECIES.oak;
     const height = params.height ?? randomInt(random, s.height[0], s.height[1]);
@@ -181,6 +201,7 @@ export const birch = defineStructure({
   params: treeParams('birch'),
   terrain: 'sit',
   footprint: () => ({ minX: -1, minZ: -1, maxX: 2, maxZ: 2 }),
+  approach: () => AROUND_THIN_TRUNK,
   generate({ params, random, builder }) {
     const s = SPECIES.birch;
     const height = params.height ?? randomInt(random, s.height[0], s.height[1]);
@@ -200,6 +221,7 @@ export const willow = defineStructure({
   params: treeParams('willow'),
   terrain: 'sit',
   footprint: () => ({ minX: -2, minZ: -2, maxX: 2, maxZ: 2 }),
+  approach: () => AROUND_THICK_TRUNK,
   generate({ params, random, builder }) {
     const s = SPECIES.willow;
     const height = params.height ?? randomInt(random, s.height[0], s.height[1]);
