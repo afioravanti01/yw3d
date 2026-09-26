@@ -68,9 +68,16 @@ const scatterSchema = object(
   },
 );
 
+/** Start of the player (YAML-008): column and view direction in degrees, 0 = north, 90 = east. */
+const playerSchema = object({
+  at: pair(),
+  yaw: number({ min: -360, max: 360, default: 0 }),
+});
+
 const worldFileSchema = object({
   version: oneOf(WORLD_FILE_VERSIONS),
   terrain: terrainSchema,
+  player: optional(playerSchema),
   structures: optional(list(structureSchema)),
   scatter: optional(list(scatterSchema)),
 });
@@ -78,6 +85,7 @@ const worldFileSchema = object({
 export type WorldFile = Infer<typeof worldFileSchema>;
 export type StructureDecl = Infer<typeof structureSchema>;
 export type ScatterDecl = Infer<typeof scatterSchema>;
+export type PlayerDecl = Infer<typeof playerSchema>;
 export type AreaDecl = Infer<typeof areaSchema>;
 
 export interface LoadedWorldFile {

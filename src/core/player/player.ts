@@ -14,8 +14,15 @@ export function spawnPlayer(physics: PhysicsWorld, x: number, z: number): Entity
   return physics.spawn(PLAYER_SIZE, x, 0, z);
 }
 
-/** Default start: the center of the world. */
-export function defaultSpawn(physics: PhysicsWorld): EntityHandle {
+/**
+ * Spawns the player at the start declared by the world file, or at the center of the world
+ * (PLAYER-001.c). Returns the player and the initial view direction.
+ */
+export function spawnAtStart(
+  physics: PhysicsWorld,
+  start: { readonly x: number; readonly z: number; readonly yaw: number } | undefined,
+): { player: EntityHandle; yaw: number } {
   const { size } = physics.world;
-  return spawnPlayer(physics, size.x / 2, size.z / 2);
+  const { x, z, yaw } = start ?? { x: size.x / 2, z: size.z / 2, yaw: 0 };
+  return { player: spawnPlayer(physics, x, z), yaw };
 }

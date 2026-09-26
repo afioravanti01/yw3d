@@ -12,6 +12,7 @@ Coordinate in **blocchi** (1 blocco = 0,5 m); x verso est, z verso sud, y verso 
 | `terrain.seed` | sì | Seed del terreno, intero tra 0 e 4294967295. `?seed=` nell'indirizzo lo sostituisce, con un avviso. |
 | `terrain.generator` | sì | Versione del generatore di terreno per cui il file è scritto. Se diversa da quella in uso, il mondo si genera comunque e compare un avviso. |
 | `terrain.size` | no | `[x, y, z]` in blocchi, multipli di 32. Default `[512, 96, 512]`. |
+| `player` | no | Partenza del giocatore: `at: [x, z]` e `yaw` in gradi (0 = nord, 90 = est). Senza, il giocatore parte dal centro del mondo. |
 | `structures` | no | Strutture posate una per una. |
 | `scatter` | no | Strutture distribuite su un'area. |
 
@@ -46,6 +47,9 @@ version: 1
 terrain:
   seed: 1
   generator: 1
+player:
+  at: [150, 60]
+  yaw: 180
 structures:
   - type: stone_farmhouse
     at: [256, 300]

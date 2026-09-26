@@ -8,7 +8,7 @@ terrain:
 structures:
   # The village, on the flat land in the north.
   - type: stone_farmhouse
-    at: [132, 42]
+    at: [140, 42]
     params: { width: 16, depth: 10 }
   - type: stone_farmhouse
     at: [178, 50]

@@ -107,7 +107,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Misure, andature, spawn; test sul mondo predefinito: il giocatore entra in ogni casa dalla porta.
   - Fatto quando: test di PLAYER-001.a–b e PLAYER-002.a verdi.
 
-- [ ] **T3.08** Partenza del giocatore nel file del mondo
+- [x] **T3.08** Partenza del giocatore nel file del mondo
   - Req: YAML-008, PLAYER-001 · Dip: T3.07
   - Sezione `player` (`at`, `yaw`), errori nel formato di YAML-002, `worlds/README.md` aggiornato.
   - Fatto quando: test di YAML-008.a–b e PLAYER-001.c verdi.

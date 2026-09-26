@@ -45,6 +45,11 @@ export interface ComposeResult {
   readonly seed: number | undefined;
   /** Number of structures built, by type name (DEBUG-001.a). */
   readonly structureCounts: Record<string, number>;
+  /**
+   * Start of the player from the file (YAML-008): center of the declared column and view
+   * direction in radians (0 looks north, towards -z); undefined when the file has none.
+   */
+  readonly player: { readonly x: number; readonly z: number; readonly yaw: number } | undefined;
   /** Structures built, in order: declared one by one first, then distributed. */
   readonly placements: readonly PlacedStructure[];
   /** Duration of each step in milliseconds. */
@@ -69,6 +74,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     diagnostics,
     seed,
     structureCounts: {},
+    player: undefined,
     placements: [],
     timings,
   });
@@ -110,6 +116,15 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     });
   }
 
+  if (decl.player) {
+    const [px, pz] = decl.player.at;
+    if (px < 0 || pz < 0 || px >= size.x || pz >= size.z) {
+      issues.push({
+        path: ['player', 'at'],
+        message: `the player start is outside the world: x and z must be within 0..${size.x - 1} and 0..${size.z - 1}`,
+      });
+    }
+  }
   const singles = placeStructures(decl.structures ?? [], options.registry, seed, size, issues);
   for (const [a, b] of findConflicts(singles)) {
     warnings.push({
@@ -196,6 +211,11 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     diagnostics,
     seed,
     structureCounts,
+    player: decl.player && {
+      x: decl.player.at[0] + 0.5,
+      z: decl.player.at[1] + 0.5,
+      yaw: (-decl.player.yaw * Math.PI) / 180,
+    },
     placements: placements.map((p) => ({
       type: p.type.name,
       x: p.x,
