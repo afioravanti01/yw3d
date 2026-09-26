@@ -94,7 +94,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `HostSession` con caricatore di moduli (P2, P4), composizione, diagnostica nel terminale, avvio con errori e attesa di un file valido, avviso sul codice eseguito.
   - Fatto quando: test di HOST-001.a, HOST-001.c, CLI-001.b, STRUCT-008.a, b, d verdi.
 
-- [ ] **T4.04** Simulazione nell'host e viste
+- [x] **T4.04** Simulazione nell'host e viste
   - Req: HOST-001, HOST-002 · Dip: T4.03
   - Protocollo (`src/protocol`), passo fisso con orologio reale, ruoli guida e spettatore, intenzioni con scadenza (P9), stato del giocatore conservato tra le viste.
   - Fatto quando: test di HOST-001.b e della logica di HOST-002 (ruoli, intenzioni, riconnessione) verdi.
