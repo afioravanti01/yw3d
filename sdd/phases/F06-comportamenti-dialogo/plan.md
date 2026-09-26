@@ -182,7 +182,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Ricerca verso un insieme di colonne (P10). L'`AgentWorld` risolve gli id della mappa per `walk_to`, `look_at` e `follow`, e completa subito un `walk_to` quando si è già dentro l'area. Misura sul mondo predefinito.
   - Fatto quando: test di MAP-003.a–d e PROTO-001.b verdi; da ogni punto del borgo si arriva davanti alla porta di ogni casa.
 
-- [ ] **T6.04** Comprensione delle frasi
+- [x] **T6.04** Comprensione delle frasi
   - Req: DIALOG-003 · Dip: T6.02
   - `understand.ts` (P11).
   - Fatto quando: test di DIALOG-003.a–d verdi.
