@@ -95,7 +95,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Sezione `characters` e aspetto di `player` nello schema; colori derivati dal seed; personaggi nel risultato della composizione; spawn come entità fisiche.
   - Fatto quando: test di CHAR-001.a–c e YAML-008.a verdi.
 
-- [ ] **T5.02** Griglia di navigazione e ricerca del percorso
+- [x] **T5.02** Griglia di navigazione e ricerca del percorso
   - Req: NAV-001 · Dip: —
   - `navGrid.ts` (P1, P2, P4), `pathfinding.ts` (P3); misura sul mondo predefinito.
   - Fatto quando: test di NAV-001.a–d verdi.
@@ -177,3 +177,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T5.02 | Acqua nei percorsi con due ricerche (prima ammessa l'acqua, poi all'asciutto entro il doppio della lunghezza) invece del costo ×2 di P3 | Il costo doppio confronta il giro asciutto con «diretto + tratto bagnato», non con il doppio del diretto come chiede Q3. Con le mete in acqua la ricerca asciutta si salta; la potatura usa l'euristica | Nessuno |
