@@ -151,7 +151,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Livelli di AO per vertice e inversione della diagonale (P4); variazione di colore a chiazze + grana (P5).
   - Fatto quando: test RENDER-001.b e RENDER-002.a–b verdi su configurazioni di vicini note.
 
-- [ ] **T1.09** Rendering dei chunk con ricostruzione incrementale
+- [x] **T1.09** Rendering dei chunk con ricostruzione incrementale
   - Req: RENDER-005, PERF-001 · Dip: T1.08
   - `chunkRenderer.ts`: una `Mesh` per chunk, coda dei chunk sporchi alimentata dagli osservatori del World, ricostruzione a inizio frame, misura della durata.
   - Fatto quando: nel browser si vede il terreno; una `setBlock` da console aggiorna la scena; tempi di ricostruzione misurati.
@@ -210,3 +210,5 @@ Decisa con l'utente alla revisione del piano:
 | T1.06 | `World.fromColumns` copia le colonne un segmento di chunk alla volta | La versione blocco per blocco portava la generazione a ~1 s; ora ~0,7 s | Nessuno |
 | T1.07 | Buffer compatti: posizioni `Uint8`, normali `Int8`, colori `Uint16` normalizzati, indici a 16 bit quando bastano | Con `Float32` il mondo di default (~700 mila facce) occuperebbe più di 100 MB di geometria; così circa 40 MB | Nessuno |
 | T1.08 | Aggiunto `World.readColumn` (lettura di una colonna con un accesso per chunk), usato dai test del terreno | Il test degli strati di WORLD-006.d superava il timeout di 5 s quando girava in parallelo agli altri; servirà anche a fisica e navigazione | Nessuno |
+| T1.09 | Unità della scena Three.js = 1 blocco (non 1 metro) | Le coordinate della scena coincidono con quelle del core; le conversioni in metri restano confinate a camera, nebbia e overlay | Nessuno |
+| T1.09 | `@playwright/test` e Chromium headless installati in T1.09 invece che in T1.13 | Servono per controllare il risultato visivo con screenshot già durante T1.09–T1.12. Chromium headless parte in WSL anche senza `install-deps` | Nessuno |
