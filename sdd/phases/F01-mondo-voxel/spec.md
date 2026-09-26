@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | **draft**, in attesa di G1 |
+| Stato | **approved** (G1, 2026-09-26) |
 | Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-26 |
 | Piano | [plan.md](plan.md) |

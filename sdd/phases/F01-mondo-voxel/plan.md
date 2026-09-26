@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | **draft**, in attesa di G2 (dopo G1) |
+| Stato | **draft**, in attesa di G2 |
 | Spec | [spec.md](spec.md) v0.2 |
 | Data | 2026-09-26 |
 
