@@ -102,7 +102,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Frazione immersa, velocità dimezzata, galleggiamento, nuoto, uscita sulla riva (P5).
   - Fatto quando: test di PHYS-006.a–d verdi.
 
-- [ ] **T3.07** Giocatore
+- [x] **T3.07** Giocatore
   - Req: PLAYER-001, PLAYER-002 · Dip: T3.06
   - Misure, andature, spawn; test sul mondo predefinito: il giocatore entra in ogni casa dalla porta.
   - Fatto quando: test di PLAYER-001.a–b e PLAYER-002.a verdi.

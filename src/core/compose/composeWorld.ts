@@ -32,6 +32,9 @@ export interface PlacedStructure {
   /** Where it comes from, e.g. `structures[2]` or `scatter[0]`. */
   readonly source: string;
   readonly rect: Rect;
+  /** Validated parameters and seed, to rebuild the structure layout (e.g. its door). */
+  readonly params: unknown;
+  readonly seed: number;
 }
 
 export interface ComposeResult {
@@ -200,6 +203,8 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       rotation: p.rotation,
       source: formatPath(p.path),
       rect: p.rect,
+      params: p.params,
+      seed: p.seed,
     })),
     timings,
   };
