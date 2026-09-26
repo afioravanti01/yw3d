@@ -114,7 +114,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `worldSource.ts`, `hostConnection.ts`: composizione dal YAML ricevuto, controllo dell'hash, intenzioni, stato interpolato (P8), spettatori con camera libera, pannello e overlay. **Punto di controllo con l'utente**: demo con una cartella fuori dal progetto.
   - Fatto quando: con `yw3d` si gioca nel browser come in F03; due finestre, una guida e una guarda.
 
-- [ ] **T4.08** Comando installabile
+- [x] **T4.08** Comando installabile
   - Req: CLI-001 · Dip: T4.05
   - Campo `bin` di `package.json`, `npm link`, istruzioni nel README.
   - Fatto quando: `yw3d --help` funziona da una cartella qualunque dopo `npm link`.
@@ -146,3 +146,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T4.07 | Per le viste spettatrici la figura del giocatore resta visibile nella camera libera, che parte alle spalle del giocatore | CAM-001.f (A3.3) nasconde la figura quando il giocatore passa lui stesso alla camera libera; uno spettatore invece deve vedere chi guarda (HOST-002.d). Da confermare con l'utente alla demo | Da confermare |
+| T4.08 | `npm link` non eseguito dall'agente: la cartella globale di npm (`/usr/local`) richiede permessi di amministratore. Verificato `node bin/yw3d.js` da un'altra cartella; il README spiega `sudo npm link` o un prefisso nella home | Nessun comando con `sudo` da parte dell'agente | Nessuno: CLI-001.e resta da verificare a mano |

@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "description": "Yaml World in 3D: a programmable voxel world",
   "type": "module",
+  "bin": {
+    "yw3d": "bin/yw3d.js"
+  },
   "engines": {
     "node": ">=20.19"
   },
