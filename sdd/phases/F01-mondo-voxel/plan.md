@@ -126,7 +126,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `rng.ts` (sfc32 con seed, FNV-1a, hash di posizione `hash3(x, y, z, seed)`), `noise.ts` (simplex 2D, fbm, domain warping).
   - Fatto quando: test di ripetibilità e di intervallo dei valori passano.
 
-- [ ] **T1.04** Registro dei blocchi e blocchi di F01
+- [x] **T1.04** Registro dei blocchi e blocchi di F01
   - Req: WORLD-004 · Dip: T1.01
   - `BlockDef`, `BlockRegistry` con validazione di duplicati; `builtin.ts` con colori base e ampiezze di variazione della palette naturalistica calda. Valori di partenza (sRGB): erba `#7DA453`, terra `#8A6A4B`, pietra `#8F8B84`.
   - Fatto quando: test WORLD-004.a–d verdi.
