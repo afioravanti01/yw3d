@@ -145,5 +145,5 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
-| T4.07 | Per le viste spettatrici la figura del giocatore resta visibile nella camera libera, che parte alle spalle del giocatore | CAM-001.f (A3.3) nasconde la figura quando il giocatore passa lui stesso alla camera libera; uno spettatore invece deve vedere chi guarda (HOST-002.d). Da confermare con l'utente alla demo | Da confermare |
+| T4.07 | Per le viste spettatrici la figura del giocatore resta visibile nella camera libera, che parte alle spalle del giocatore | CAM-001.f (A3.3) nasconde la figura quando il giocatore passa lui stesso alla camera libera; uno spettatore invece deve vedere chi guarda (HOST-002.d). Confermato dall'utente alla demo | Emendamento A4.1 su HOST-002.d |
 | T4.08 | `npm link` non eseguito dall'agente: la cartella globale di npm (`/usr/local`) richiede permessi di amministratore. Verificato `node bin/yw3d.js` da un'altra cartella; il README spiega `sudo npm link` o un prefisso nella home | Nessun comando con `sudo` da parte dell'agente | Nessuno: CLI-001.e resta da verificare a mano |

@@ -51,7 +51,7 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **a** `[e2e]` Aperto sull'indirizzo dell'host, il browser si collega, ricostruisce il mondo dal YAML ricevuto e ottiene lo stesso hash dell'host.
 - **b** `[e2e]` Le intenzioni del giocatore partono dal browser e il movimento viene dall'host: la posizione mostrata segue quella simulata dall'host.
 - **c** `[e2e]` Chiudendo e riaprendo il browser si ritrova il giocatore nella posizione raggiunta.
-- **d** `[e2e]` Più browser possono collegarsi allo stesso host e vedono lo stesso mondo; solo uno guida il giocatore, gli altri guardano (Q3).
+- **d** `[e2e]` Più browser possono collegarsi allo stesso host e vedono lo stesso mondo; solo uno guida il giocatore, gli altri guardano con la camera libera, che parte alle spalle del giocatore, e vedono la sua figura (Q3, A4.1).
 - **e** `[manuale]` Sulla macchina locale il giocatore risponde ai comandi senza ritardi percepibili e si muove in modo fluido.
 
 ### HOST-003 — Ricaricamento dalla cartella
@@ -98,3 +98,4 @@ Chiuse con l'utente il 2026-09-26, prima di G1.
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A4.1 | 2026-09-26 | HOST-002.d | Gli spettatori vedono la figura del giocatore nella camera libera, che parte alle spalle del giocatore | Uno spettatore deve vedere chi guarda; CAM-001.f (A3.3) riguarda il giocatore che passa lui stesso alla camera libera. Emerso alla demo di T4.07 | sì, utente, 2026-09-26 |
