@@ -146,7 +146,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Copia imbottita 34³ (P3); una faccia per ogni lato tra un blocco opaco e uno non opaco, fuori mondo compreso; buffer di posizioni, normali, colori, indici.
   - Fatto quando: test su casi noti verdi (blocco isolato = 6 facce, due blocchi adiacenti = 10 facce, blocco d'angolo del mondo con facce esterne presenti; RENDER-001.a, RENDER-006.a).
 
-- [ ] **T1.08** Occlusione ambientale e variazione di colore
+- [x] **T1.08** Occlusione ambientale e variazione di colore
   - Req: RENDER-001, RENDER-002 · Dip: T1.03, T1.07
   - Livelli di AO per vertice e inversione della diagonale (P4); variazione di colore a chiazze + grana (P5).
   - Fatto quando: test RENDER-001.b e RENDER-002.a–b verdi su configurazioni di vicini note.
@@ -209,3 +209,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.06 | Il generatore ha componenti in più rispetto alla formula del piano: un'onda lunga per valli e alture (λ ≈ 420), gli affioramenti sollevati fino a 3 blocchi, poggi sovrapposti combinati col massimo invece che sommati, limite morbido delle altezze invece del clamp, 3–6 poggi invece di 2–5 | Con la sola formula del piano il rilievo di alcuni seed era sotto i 16 blocchi (WORLD-006.c) e le cime venivano tagliate piatte a 72 | Nessuno |
 | T1.06 | `World.fromColumns` copia le colonne un segmento di chunk alla volta | La versione blocco per blocco portava la generazione a ~1 s; ora ~0,7 s | Nessuno |
 | T1.07 | Buffer compatti: posizioni `Uint8`, normali `Int8`, colori `Uint16` normalizzati, indici a 16 bit quando bastano | Con `Float32` il mondo di default (~700 mila facce) occuperebbe più di 100 MB di geometria; così circa 40 MB | Nessuno |
+| T1.08 | Aggiunto `World.readColumn` (lettura di una colonna con un accesso per chunk), usato dai test del terreno | Il test degli strati di WORLD-006.d superava il timeout di 5 s quando girava in parallelo agli altri; servirà anche a fisica e navigazione | Nessuno |

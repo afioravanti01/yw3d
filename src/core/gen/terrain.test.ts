@@ -17,12 +17,14 @@ function analyze(world: World): Analysis {
   const { x: sx, y: sy, z: sz } = world.size;
   const heights = new Int32Array(sx * sz);
   const tops = new Uint8Array(sx * sz);
+  const column = new Uint8Array(sy);
   for (let z = 0; z < sz; z++) {
     for (let x = 0; x < sx; x++) {
+      world.readColumn(x, z, column);
       let y = sy - 1;
-      while (y >= 0 && world.getBlock(x, y, z) === AIR) y--;
+      while (y >= 0 && column[y] === AIR) y--;
       heights[x + z * sx] = y;
-      tops[x + z * sx] = world.getBlock(x, y, z);
+      tops[x + z * sx] = column[y]!;
     }
   }
   return { world, heights, tops };
@@ -125,21 +127,23 @@ describe('terrain generation', () => {
     each((a) => {
       const { x: sx, z: sz } = a.world.size;
       const problems: string[] = [];
+      const column = new Uint8Array(a.world.size.y);
       for (let z = 0; z < sz; z++) {
         for (let x = 0; x < sx; x++) {
+          a.world.readColumn(x, z, column);
           const h = a.heights[x + z * sx]!;
-          const top = a.world.getBlock(x, h, z);
+          const top = column[h];
           // Walk down from the surface: [grass, dirt × 3–5] or nothing, then stone to y = 0.
           let y = h;
           let dirt = 0;
           if (top === GRASS) {
             y--;
-            while (y >= 0 && a.world.getBlock(x, y, z) === DIRT) {
+            while (y >= 0 && column[y] === DIRT) {
               dirt++;
               y--;
             }
           }
-          while (y >= 0 && a.world.getBlock(x, y, z) === STONE) y--;
+          while (y >= 0 && column[y] === STONE) y--;
           const valid = y === -1 && (top === STONE || (top === GRASS && dirt >= 3 && dirt <= 5));
           if (!valid && problems.length < 5) {
             problems.push(`column ${x},${z}: top ${top}, dirt ${dirt}, stopped at y ${y}`);

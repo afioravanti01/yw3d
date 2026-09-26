@@ -112,6 +112,16 @@ describe('World', () => {
     expect(world.getChunk(0, 0, 1)).not.toBeNull();
   });
 
+  it('readColumn returns a column bottom-up, and air outside the world', () => {
+    const world = World.fromColumns(small, (x, _z, column) =>
+      column.fill(x === 3 ? STONE : DIRT, 0, 5),
+    );
+    const column = world.readColumn(3, 7);
+    expect([...column.subarray(0, 6)]).toEqual([STONE, STONE, STONE, STONE, STONE, AIR]);
+    expect(column).toHaveLength(32);
+    expect(world.readColumn(-1, 0).every((id) => id === AIR)).toBe(true);
+  });
+
   it('hash depends on content only, not on how chunks were allocated', () => {
     const fresh = new World(small);
     const edited = new World(small);

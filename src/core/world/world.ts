@@ -124,6 +124,24 @@ export class World {
     return true;
   }
 
+  /** Reads the column at (x, z), from y = 0 upwards, into `out` (all air outside the world). */
+  readColumn(x: number, z: number, out: Uint8Array = new Uint8Array(this.size.y)): Uint8Array {
+    out.fill(AIR);
+    if (!this.isInside(x, 0, z)) {
+      return out;
+    }
+    const columnOffset = chunkIndex(x & CHUNK_MASK, 0, z & CHUNK_MASK);
+    for (let cy = 0; cy < this.chunksY; cy++) {
+      const chunk = this.chunks[this.chunkSlot(x >> CHUNK_SHIFT, cy, z >> CHUNK_SHIFT)];
+      if (!chunk) continue;
+      const y0 = cy << CHUNK_SHIFT;
+      for (let ly = 0; ly < CHUNK_SIZE; ly++) {
+        out[y0 + ly] = chunk[columnOffset | chunkIndex(0, ly, 0)]!;
+      }
+    }
+    return out;
+  }
+
   /** Registers a change listener (WORLD-003.c). Returns the function that unregisters it. */
   onChange(listener: BlockChangeListener): () => void {
     this.listeners.add(listener);
