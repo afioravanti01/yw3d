@@ -110,7 +110,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `AgentWorld` (P6, P7): azioni con esiti e tempi limite, percezione a 4 Hz, frasi udite, interazione.
   - Fatto quando: test di PROTO-001.b–c, PROTO-002.a–b e PROTO-006.b verdi.
 
-- [ ] **T5.05** Messaggi dei controllori
+- [x] **T5.05** Messaggi dei controllori
   - Req: PROTO-001 · Dip: T5.04
   - `protocol/controller.ts`: tipi, schema, messaggi d'errore.
   - Fatto quando: test di PROTO-001.a e PROTO-001.d verdi.
@@ -178,3 +178,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T5.02 | Acqua nei percorsi con due ricerche (prima ammessa l'acqua, poi all'asciutto entro il doppio della lunghezza) invece del costo ×2 di P3 | Il costo doppio confronta il giro asciutto con «diretto + tratto bagnato», non con il doppio del diretto come chiede Q3. Con le mete in acqua la ricerca asciutta si salta; la potatura usa l'euristica | Nessuno |
+| T5.05 | Ogni azione è un tipo di messaggio (`{"type": "walk_to", "id": …}`) invece di un messaggio `action` con il tipo dentro | Più semplice da scrivere e da leggere per gli autori dei controllori; la validazione resta uno schema per tipo | Nessuno |

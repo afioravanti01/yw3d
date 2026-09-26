@@ -1,0 +1,152 @@
+import type { ActionRequest, AgentEvent, Perception } from '../core/agents/agentWorld';
+import {
+  formatPath,
+  number,
+  object,
+  oneOf,
+  optional,
+  str,
+  bool,
+  type Issue,
+  type Schema,
+} from '../core/schema/schema';
+
+/**
+ * Protocol between the host and the controllers of characters (PROTO-001), version 1: JSON
+ * messages, one per line on stdio, one per frame on the WebSocket `/controller`. Every
+ * message has a `type`; fields are `snake_case` (F05 Q8).
+ */
+export const CONTROLLER_PROTOCOL_VERSION = 1;
+export const CONTROLLER_SOCKET_PATH = '/controller';
+
+export interface ControllerHello {
+  readonly type: 'hello';
+  readonly version: number;
+  readonly character: { readonly id: string };
+  /** Size of the world in blocks: x, y, z. */
+  readonly world: { readonly size: readonly [number, number, number] };
+}
+
+export interface ControllerError {
+  readonly type: 'error';
+  readonly message: string;
+}
+
+/** Messages from the host to a controller. */
+export type HostToController = ControllerHello | Perception | AgentEvent | ControllerError;
+
+/** The first message on the WebSocket: which character the client wants to drive (PROTO-004). */
+export interface ControlRequest {
+  readonly type: 'control';
+  readonly character: string;
+}
+
+export function helloMessage(id: string, size: readonly [number, number, number]): ControllerHello {
+  return {
+    type: 'hello',
+    version: CONTROLLER_PROTOCOL_VERSION,
+    character: { id },
+    world: { size },
+  };
+}
+
+const actionId = () => str();
+const coordinate = () => number({ min: -1e6, max: 1e6 });
+const entity = () => str();
+
+/** Schema of each message a controller can send, by `type` (PROTO-001.b). */
+const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
+  walk_to: object(
+    {
+      type: oneOf(['walk_to']),
+      id: actionId(),
+      x: optional(coordinate()),
+      z: optional(coordinate()),
+      target: optional(entity()),
+      run: bool({ default: false }),
+    },
+    pointOrTarget,
+  ),
+  look_at: object(
+    {
+      type: oneOf(['look_at']),
+      id: actionId(),
+      x: optional(coordinate()),
+      z: optional(coordinate()),
+      target: optional(entity()),
+    },
+    pointOrTarget,
+  ),
+  say: object({ type: oneOf(['say']), id: actionId(), text: str() }, (m, path, issues) => {
+    if (m.text.length === 0 || m.text.length > 500) {
+      issues.push({ path: [...path, 'text'], message: 'the text must have 1 to 500 characters' });
+    }
+  }),
+  follow: object({
+    type: oneOf(['follow']),
+    id: actionId(),
+    target: entity(),
+    distance: number({ min: 1, max: 32, default: 3 }),
+  }),
+  wait: object({ type: oneOf(['wait']), id: actionId(), seconds: number({ min: 0, max: 3600 }) }),
+  stop: object({ type: oneOf(['stop']), id: actionId() }),
+  control: object({ type: oneOf(['control']), character: str() }),
+};
+
+function pointOrTarget(
+  m: { x?: number; z?: number; target?: string },
+  path: readonly (string | number)[],
+  issues: Issue[],
+): void {
+  const point = m.x !== undefined && m.z !== undefined;
+  const partial = (m.x === undefined) !== (m.z === undefined);
+  if (partial || point === (m.target !== undefined)) {
+    issues.push({ path, message: 'give either "x" and "z", or "target"' });
+  }
+}
+
+export type ControllerMessage =
+  | { readonly kind: 'action'; readonly request: ActionRequest }
+  | { readonly kind: 'control'; readonly character: string };
+
+export type ParsedControllerMessage =
+  | { readonly ok: true; readonly message: ControllerMessage }
+  | { readonly ok: false; readonly error: ControllerError };
+
+/**
+ * Parses one message from a controller (PROTO-001.d). Invalid messages give an error message
+ * to send back, with the cause; they never throw.
+ */
+export function parseControllerMessage(text: string): ParsedControllerMessage {
+  const fail = (message: string): ParsedControllerMessage => ({
+    ok: false,
+    error: { type: 'error', message },
+  });
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return fail(`not valid JSON: ${text.slice(0, 80)}`);
+  }
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return fail('a message must be a JSON object with a "type"');
+  }
+  const type = (raw as { type?: unknown }).type;
+  const schema = typeof type === 'string' ? MESSAGES[type] : undefined;
+  if (!schema) {
+    return fail(
+      `unknown message type ${JSON.stringify(type)}; expected one of: ${Object.keys(MESSAGES).join(', ')}`,
+    );
+  }
+  const issues: Issue[] = [];
+  const parsed = schema.parse(raw, [], issues);
+  if (!parsed) {
+    return fail(issues.map((i) => `${formatPath(i.path) || type}: ${i.message}`).join('; '));
+  }
+  if (type === 'control')
+    return { ok: true, message: { kind: 'control', character: parsed.character as string } };
+  const { type: kind, ...fields } = parsed;
+  // Drop the absent optional fields, so that the request has either a point or a target.
+  const clean = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+  return { ok: true, message: { kind: 'action', request: { kind, ...clean } as ActionRequest } };
+}
