@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import WebSocket from 'ws';
-import type { HostMessage, PlayerSnapshot } from '../src/protocol/messages';
+import type { CharacterSnapshot, HostMessage, PlayerSnapshot } from '../src/protocol/messages';
 
 const HOST_PORT = 5199;
 
@@ -14,6 +14,7 @@ interface Hook {
   connection: { role: 'driver' | 'spectator' } | null;
   worldHash(): number;
   player(): { x: number; y: number; z: number } | null;
+  characters(): { id: string; x: number; y: number; z: number }[];
 }
 type HookGlobal = { __yw3d: Hook };
 
@@ -36,7 +37,12 @@ const hook = <K extends keyof Hook>(page: Page, key: K) =>
  * What the host itself says: connects to its WebSocket as an extra (spectator) view, reads
  * the greeting and the next state, and leaves.
  */
-async function askHost(): Promise<{ hash: number; player: PlayerSnapshot; views: number }> {
+async function askHost(): Promise<{
+  hash: number;
+  player: PlayerSnapshot;
+  characters: CharacterSnapshot[];
+  views: number;
+}> {
   const socket = new WebSocket(`ws://localhost:${HOST_PORT}/host`);
   const messages: HostMessage[] = [];
   await new Promise<void>((resolve, reject) => {
@@ -53,7 +59,12 @@ async function askHost(): Promise<{ hash: number; player: PlayerSnapshot; views:
   const state = [...messages].reverse().find((m) => m.type === 'state');
   if (hello?.type !== 'hello' || state?.type !== 'state')
     throw new Error('no answer from the host');
-  return { hash: hello.world!.hash, player: state.player, views: state.views };
+  return {
+    hash: hello.world!.hash,
+    player: state.player,
+    characters: [...state.characters],
+    views: state.views,
+  };
 }
 
 test('HOST-002.a, STRUCT-008.c: the view composes the same world as the host, author structures included', async ({
@@ -130,4 +141,19 @@ test('APP-003.b: from the host the app ignores ?world= and ?seed=', async ({ pag
   await open(page, '?world=default&seed=42');
   expect(await hook(page, 'world')).toBe('host/world.yaml');
   expect(await hook(page, 'seed')).toBe(7);
+});
+
+test('CHAR-001.d: the view shows the characters where the host simulates them', async ({
+  page,
+}) => {
+  await open(page);
+  // Pino walks, driven by its controller: compare the view with the host at the same moment.
+  await expect
+    .poll(async () => (await askHost()).characters.find((c) => c.id === 'pino')?.speed ?? 0, {
+      timeout: 20_000,
+    })
+    .toBeGreaterThan(0);
+  const host = (await askHost()).characters.find((c) => c.id === 'pino')!;
+  const shown = (await hook(page, 'characters')).find((c) => c.id === 'pino')!;
+  expect(Math.hypot(shown.x - host.x, shown.z - host.z)).toBeLessThan(1);
 });

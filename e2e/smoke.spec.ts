@@ -132,6 +132,22 @@ test('APP-003.a: without the host the app runs on its own with the worlds of the
   expect(await hookValue(page, 'status')).toBe('ready');
 });
 
+test('CHAR-001.d: without the host the characters stand where they start', async ({ page }) => {
+  await open(page, '?world=test-characters');
+  await page.waitForTimeout(500);
+  const characters = await page.evaluate(() =>
+    (
+      globalThis as unknown as {
+        __yw3d: { characters(): { id: string; x: number; z: number; speech: string | null }[] };
+      }
+    ).__yw3d.characters(),
+  );
+  expect(characters.map((c) => [c.id, c.x, c.z, c.speech])).toEqual([
+    ['anna', 60.5, 60.5, null],
+    ['bruno', 70.5, 64.5, null],
+  ]);
+});
+
 test('YAML-006.a: the default world loads without parameters, another one with ?world=', async ({
   page,
 }) => {

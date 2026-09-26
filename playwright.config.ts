@@ -41,7 +41,7 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: `node bin/yw3d.js e2e/host --no-open --port ${HOST_PORT}`,
+      command: `node bin/yw3d.js e2e/host --no-open --port ${HOST_PORT} --allow-commands`,
       url: `http://localhost:${HOST_PORT}`,
       timeout: 60_000,
       reuseExistingServer: false,

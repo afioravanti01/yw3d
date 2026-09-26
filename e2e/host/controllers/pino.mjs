@@ -5,7 +5,7 @@ import { createInterface } from 'node:readline';
 const send = (message) => process.stdout.write(`${JSON.stringify(message)}\n`);
 const stops = [
   { x: 56, z: 60 },
-  { x: 76, z: 70 },
+  { x: 90, z: 70 },
 ];
 let next = 0;
 let counter = 0;

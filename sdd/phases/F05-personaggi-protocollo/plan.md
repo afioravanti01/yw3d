@@ -155,7 +155,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `examples/valle/` con il guardiano in Python e un secondo personaggio in JavaScript; `docs/controllori.md`; README aggiornato.
   - Fatto quando: `yw3d examples/valle` mostra la demo della roadmap.
 
-- [ ] **T5.13** Test end-to-end
+- [x] **T5.13** Test end-to-end
   - Req: CHAR-001 · Dip: T5.11
   - Personaggio con controllore di prova in `e2e/host`, host dei test con `--allow-commands`; CHAR-001.d nelle due modalità.
   - Fatto quando: `npm run e2e` verde.
