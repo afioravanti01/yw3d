@@ -3,6 +3,7 @@
 | | |
 |---|---|
 | Stato | **draft**, in attesa di G2 |
+| Versione | 0.2: rivisto punto per punto con l'utente |
 | Spec | [spec.md](spec.md) v0.2 |
 | Data | 2026-09-26 |
 
@@ -49,23 +50,25 @@ I test unitari stanno accanto al file che verificano (`*.test.ts`).
 | P2 | Meshing per facce con culling, non greedy | Greedy meshing | Il greedy fonde le facce e cancellerebbe variazione di colore e AO per blocco (RENDER-001/002). Triangoli stimati: 1–1,5 M, sostenibili con il frustum culling per chunk di Three.js. |
 | P3 | Il mesher lavora su una copia del chunk con bordo di 1 blocco (34³) e produce buffer tipizzati | Leggere i vicini dal World a ogni faccia | Niente casi speciali ai confini tra chunk; il mesher si può spostare in un Web Worker senza modifiche. |
 | P4 | AO classico a 3 vicini, 4 livelli, inversione della diagonale del quad in base ai livelli agli angoli | SSAO in post-processing | Deterministico, testabile, nessun costo a runtime. |
-| P5 | Colore sRGB nel registro (core), conversione in lineare nel mesher. Variazione = hash(x, y, z) → [−1, 1] × ampiezza sulla luminosità, più un piccolo spostamento di tinta | Texture di rumore | Nessuna texture (RENDER-001), deterministico. |
+| P5 | Colore sRGB nel registro (core), conversione in lineare nel mesher. Variazione = chiazze (rumore a bassa frequenza, λ ≈ 24–48 blocchi) + grana per blocco (hash(x, y, z) → [−1, 1]), su luminosità e un poco sulla tinta; la somma resta entro l'ampiezza del tipo (es. erba: chiazze ±5%, grana ±3%) | Solo grana per blocco: effetto "sale e pepe" su prati estesi. Colore sfumato per vertice: richiede un emendamento a RENDER-001.b. Texture di rumore: contro RENDER-001.a | Nessuna texture (RENDER-001.a), deterministico (RENDER-001.b), prati organici e non a scacchiera (RENDER-001.c). |
 | P6 | `MeshLambertMaterial` con `vertexColors` | `MeshStandardMaterial` | Più economico; look morbido; PBR non serve in F01. |
 | P7 | Un'unica `DirectionalLight` con shadow map 4096 (PCF soft) che copre tutto il mondo; `shadowMap.autoUpdate = false`, aggiornata solo dopo una ricostruzione | Cascaded shadow maps | Il mondo è finito e statico: circa 6 cm per texel su 256 m, costo delle ombre quasi nullo a regime. |
 | P8 | Cielo: sfera con `ShaderMaterial` a gradiente. `THREE.Fog` lineare con il colore dell'orizzonte | `Sky` degli esempi di three (scattering fisico) | Controllo diretto dello stile; colore nebbia = orizzonte (RENDER-004.b). |
 | P9 | Rumore con `simplex-noise` v4, inizializzato dal PRNG con seed | Implementazione propria | Libreria piccola e testata; usa solo aritmetica di base, quindi è deterministica anche tra motori JS diversi. |
 | P10 | Hash del mondo: FNV-1a a 32 bit sui dati dei chunk in ordine fisso | SHA-256 via WebCrypto | Sincrono e identico in Node e nel browser. |
 | P11 | Confine del core: `tsconfig.core.json` con `lib: ["ES2022"]` e `types: []` (niente DOM); import di `three` vietato in `src/core` con `no-restricted-imports` di ESLint | Solo convenzione | Rende ARCH-001.a verificabile automaticamente. |
-| P12 | Hook `window.__yw3d` (stato di caricamento, seed, hash, statistiche, `setBlock`) esposto solo se `import.meta.env.DEV` o `MODE === 'test'` | Asserzioni su screenshot | Test e2e robusti, senza confronti di pixel. |
-| P13 | Tasti letti da `KeyboardEvent.code` | `KeyboardEvent.key` | Posizione fisica indipendente dal layout (CAM-001.b). |
+| P12 | Hook `window.__yw3d` (stato di caricamento, seed, hash, statistiche, `setBlock`) esposto solo se `import.meta.env.DEV` o `MODE === 'test'`. In più ogni esecuzione e2e salva screenshot da punti di vista fissi in `e2e/screenshots/` (fuori da git), senza confrontarli | Solo hook. Confronto pixel per pixel con immagini di riferimento: fragile con SwiftShader e colori in taratura | Asserzioni robuste senza confronti di pixel; gli screenshot servono alla revisione visiva dell'utente. |
+| P13 | Tasti letti da `KeyboardEvent.code` | `KeyboardEvent.key` (dipende dal layout). Tasti rimappabili (nessun requisito lo chiede in F01) | Posizione fisica indipendente dal layout (CAM-001.b). |
+| P14 | Terreno con domain warping: le coordinate di colline e poggi sono deformate da un secondo rumore prima del calcolo dell'altezza | Solo fbm + poggi: rilievi a macchie tonde. Erosione idraulica: più realistica, ma costosa (rischio sul budget di 5 s) e difficile da rendere deterministica | Crinali e valli sinuosi, più naturali (WORLD-006.g), per 2 valutazioni di rumore in più per colonna. |
 
 ## Generazione del terreno
 Altezza della superficie per colonna, con parametri raccolti in `TerrainParams`:
 
 ```
+(x', z') = (x, z) + A_warp · (simplex(x, z; λw), simplex(x + k, z + k; λw))    domain warping (P14)
 h(x, z) = base
-        + A_colline   · fbm(x, z; λ ≈ 96 blocchi, 4 ottave)
-        + A_poggi     · Σ bump(x, z; centro_i, raggio_i)     2–5 poggi, posizioni dal PRNG
+        + A_colline   · fbm(x', z'; λ ≈ 96 blocchi, 4 ottave)
+        + A_poggi     · Σ bump(x', z'; centro_i, raggio_i)     2–5 poggi, posizioni dal PRNG
         + A_dettaglio · simplex(x, z; λ ≈ 20 blocchi)
 h ← clamp(round(h), 16, 72)
 ```
@@ -120,7 +123,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [ ] **T1.03** PRNG, hash e rumore deterministici
   - Req: WORLD-005 · Dip: T1.01
-  - `rng.ts` (sfc32 con seed, FNV-1a, hash di posizione `hash3(x, y, z, seed)`), `noise.ts` (simplex 2D e fbm).
+  - `rng.ts` (sfc32 con seed, FNV-1a, hash di posizione `hash3(x, y, z, seed)`), `noise.ts` (simplex 2D, fbm, domain warping).
   - Fatto quando: test di ripetibilità e di intervallo dei valori passano.
 
 - [ ] **T1.04** Registro dei blocchi e blocchi di F01
@@ -145,7 +148,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [ ] **T1.08** Occlusione ambientale e variazione di colore
   - Req: RENDER-001, RENDER-002 · Dip: T1.03, T1.07
-  - Livelli di AO per vertice e inversione della diagonale (P4); variazione di colore (P5).
+  - Livelli di AO per vertice e inversione della diagonale (P4); variazione di colore a chiazze + grana (P5).
   - Fatto quando: test RENDER-001.b e RENDER-002.a–b verdi su configurazioni di vicini note.
 
 - [ ] **T1.09** Rendering dei chunk con ricostruzione incrementale
@@ -170,7 +173,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [ ] **T1.13** Test end-to-end
   - Req: APP-001, WORLD-005, RENDER-005 · Dip: T1.12
-  - Configurazione Playwright (Chromium, SwiftShader, `vite preview`); test APP-001.a–b, WORLD-005.d (hash browser = hash Node), RENDER-005.b. Script npm `e2e`.
+  - Configurazione Playwright (Chromium, SwiftShader, `vite preview`); test APP-001.a–b, WORLD-005.d (hash browser = hash Node), RENDER-005.b; screenshot da 3 punti di vista fissi (P12). Script npm `e2e`. Prerequisito: l'utente esegue una volta `sudo npx playwright install-deps chromium`.
   - Fatto quando: `npm run e2e` è verde in locale.
 
 - [ ] **T1.14** Verifica di accettazione e chiusura della fase
@@ -187,7 +190,13 @@ T1.01 ─┬─ T1.02
                          └─ T1.07 ─ T1.08 ─ T1.09 ─┬─ T1.10 ─┤
                                                    └─ T1.11 ─┴─ T1.12 ─ T1.13 ─ T1.14
 ```
-(T1.08 dipende anche da T1.03.) Punti di controllo con l'utente: G2 prima di T1.01, demo visiva dopo T1.12, G3 a T1.14.
+(T1.08 dipende anche da T1.03.)
+
+## Modalità di esecuzione
+Decisa con l'utente alla revisione del piano:
+- **Autonomia:** dopo G2 i task si eseguono in ordine senza fermarsi fino al punto di controllo dopo T1.12. Ci si ferma prima solo se serve un emendamento alla spec o un comando con `sudo`.
+- **Git:** a fine di ogni task, con `npm run check` verde, commit `T1.nn: …` e push su `main`. L'autorizzazione vale per tutta la fase F01.
+- **Punti di controllo:** G2 prima di T1.01; demo visiva dopo T1.12; G3 a T1.14.
 
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
