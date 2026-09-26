@@ -127,7 +127,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Dipendenza `yaml`; `schema.ts`, `parse.ts`, `report.ts`, `worldFile.ts` (P1, P2, P14). Documentazione del formato in `worlds/README.md`.
   - Fatto quando: test di YAML-001.a–b e YAML-002.a–c verdi, con riga e percorso controllati.
 
-- [ ] **T2.04** Registro delle strutture e builder
+- [x] **T2.04** Registro delle strutture e builder
   - Req: STRUCT-001, STRUCT-002 · Dip: T2.03
   - `defineStructure`, validazione dei parametri con lo schema, builder con rotazione e impronta, seed per struttura (P6). Una struttura di prova registrata da un test esterno al core.
   - Fatto quando: test di STRUCT-001.a–d e STRUCT-002.a, c verdi.
