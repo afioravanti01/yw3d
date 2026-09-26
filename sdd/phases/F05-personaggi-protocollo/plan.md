@@ -130,7 +130,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `consent.ts` (P11, P12), opzione `--allow-commands`.
   - Fatto quando: test di PROTO-005.a–c verdi.
 
-- [ ] **T5.09** Controllori via WebSocket
+- [x] **T5.09** Controllori via WebSocket
   - Req: PROTO-004 · Dip: T5.07
   - `controllers/socket.ts` (P10).
   - Fatto quando: test di PROTO-004.a–b verdi.

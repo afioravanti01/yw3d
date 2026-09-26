@@ -2,7 +2,9 @@ import { performance } from 'node:perf_hooks';
 import path from 'node:path';
 import { createServer, type Plugin, type ViteDevServer } from 'vite';
 import { WebSocketServer, type WebSocket } from 'ws';
+import { CONTROLLER_SOCKET_PATH } from '../protocol/controller';
 import { HOST_SOCKET_PATH, type ViewMessage } from '../protocol/messages';
+import { attachControllerSocket } from './controllers/socket';
 import type { CliOptions } from './args';
 import { PROJECT_ROOT, viteBaseConfig, viteModuleLoader } from './moduleLoader';
 import { HostSession } from './session';
@@ -75,8 +77,14 @@ export async function startHostServer(
 
   const sockets = new WebSocketServer({ noServer: true });
   vite.httpServer!.on('upgrade', (request, socket, head) => {
-    if (request.url !== HOST_SOCKET_PATH) return;
-    sockets.handleUpgrade(request, socket, head, (ws) => attach(ws, session));
+    if (request.url === HOST_SOCKET_PATH) {
+      sockets.handleUpgrade(request, socket, head, (ws) => attach(ws, session));
+    } else if (request.url === CONTROLLER_SOCKET_PATH) {
+      // Controllers of characters (PROTO-004), on their own path (plan F05 P10).
+      sockets.handleUpgrade(request, socket, head, (ws) =>
+        attachControllerSocket(ws, session, terminal, () => (session.agents?.time ?? 0) * 1000),
+      );
+    }
   });
 
   // Simulation clock: the session keeps fixed steps whatever the timer precision (PHYS-002).
