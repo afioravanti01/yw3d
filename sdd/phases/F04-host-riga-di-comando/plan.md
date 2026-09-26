@@ -109,7 +109,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Osservazione della cartella (P11), ricomposizione, messaggio `world` alle viste, giocatore conservato, errori.
   - Fatto quando: test di HOST-003.a–b verdi.
 
-- [ ] **T4.07** App collegata all'host
+- [x] **T4.07** App collegata all'host
   - Req: HOST-002, APP-003, DEBUG-001 · Dip: T4.05
   - `worldSource.ts`, `hostConnection.ts`: composizione dal YAML ricevuto, controllo dell'hash, intenzioni, stato interpolato (P8), spettatori con camera libera, pannello e overlay. **Punto di controllo con l'utente**: demo con una cartella fuori dal progetto.
   - Fatto quando: con `yw3d` si gioca nel browser come in F03; due finestre, una guida e una guarda.
@@ -145,3 +145,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T4.07 | Per le viste spettatrici la figura del giocatore resta visibile nella camera libera, che parte alle spalle del giocatore | CAM-001.f (A3.3) nasconde la figura quando il giocatore passa lui stesso alla camera libera; uno spettatore invece deve vedere chi guarda (HOST-002.d). Da confermare con l'utente alla demo | Da confermare |

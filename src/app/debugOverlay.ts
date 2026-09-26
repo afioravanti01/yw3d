@@ -16,6 +16,13 @@ export interface OverlayData {
   };
   /** Duration of the last simulation step (PERF-003.a). */
   stepMs: number;
+  /** Connection to the host (DEBUG-001.a), null in browser-only mode. */
+  connection: {
+    address: string;
+    views: number;
+    role: 'driver' | 'spectator';
+    rttMs: number;
+  } | null;
   seed: number;
   world: string;
   structureCounts: Record<string, number>;
@@ -64,6 +71,11 @@ export class DebugOverlay {
       `fps        ${d.fps.toFixed(0)}`,
       `position   ${block(d.camera.x)}, ${block(d.camera.y)}, ${block(d.camera.z)} blocks`,
       `           ${meters(d.camera.x)}, ${meters(d.camera.y)}, ${meters(d.camera.z)} m`,
+      `link       ${
+        d.connection
+          ? `host ${d.connection.address} · ${d.connection.views} view${d.connection.views === 1 ? '' : 's'} · ${d.connection.role === 'driver' ? 'driving the player' : 'watching'} · ${d.connection.rttMs.toFixed(0)} ms round trip`
+          : 'browser only'
+      }`,
       `mode       ${MODE_NAMES[d.mode]}`,
       `player     ${block(d.player.x)}, ${block(d.player.y)}, ${block(d.player.z)} blocks · ${meters(Math.hypot(d.player.vx, d.player.vz))} m/s${d.player.onGround ? ' · on ground' : ''}${d.player.submerged >= 0.5 ? ' · in water' : ''}`,
       `step       ${d.stepMs.toFixed(3)} ms (physics, last step)`,

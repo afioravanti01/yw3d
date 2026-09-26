@@ -13,6 +13,10 @@ export interface TestHook {
   /** Messages of the diagnostics panel, errors and warnings. */
   messages: string[];
   structureCounts: Record<string, number>;
+  /** Role of this view when connected to a host (HOST-002.d), null in browser-only mode. */
+  connection: { role: 'driver' | 'spectator' } | null;
+  /** State of the player shown by this view. */
+  player(): { x: number; y: number; z: number; onGround: boolean } | null;
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

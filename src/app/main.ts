@@ -1,20 +1,23 @@
 import * as THREE from 'three';
 import { createDefaultRegistry } from '../core/blocks/builtin';
 import { composeWorld, type ComposeResult } from '../core/compose/composeWorld';
-import { createDefaultStructures } from '../core/structures/builtin';
-import { formatDiagnostic } from '../core/yaml/report';
-import type { World } from '../core/world/world';
-import { ChunkRenderer } from '../render/chunkRenderer';
 import { PhysicsWorld } from '../core/physics/physicsWorld';
 import { PLAYER_SIZE } from '../core/player/player';
+import { createDefaultStructures } from '../core/structures/builtin';
+import type { StructureType } from '../core/structures/registry';
+import type { World } from '../core/world/world';
+import { formatDiagnostic, type Diagnostic } from '../core/yaml/report';
+import type { WorldMessage } from '../protocol/messages';
+import { ChunkRenderer } from '../render/chunkRenderer';
 import { FlyCamera } from '../render/flyCamera';
 import { createPalette } from '../render/meshing/palette';
 import { configureRenderer, createWorldScene, type WorldScene } from '../render/scene';
 import { DebugOverlay, FpsMeter } from './debugOverlay';
 import { DiagnosticsPanel, type PanelMessage } from './diagnosticsPanel';
+import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
-import { PlayerView } from './playerView';
 import { parseStartParams } from './params';
+import { LocalPlayer, PlayerView, RemotePlayer, type PlayerSource } from './playerView';
 import { installTestHook, type TestHook } from './testHook';
 import * as bundledWorlds from './worlds';
 
@@ -39,15 +42,33 @@ interface Loaded {
   readonly meshingMs: number;
 }
 
+const toMessages = (diagnostics: readonly Diagnostic[]): PanelMessage[] =>
+  diagnostics.map((d) => ({ severity: d.severity, text: formatDiagnostic(d) }));
+
+/**
+ * Structures of the author, loaded from the URLs sent by the host (STRUCT-008.c), in the same
+ * order as the host registers them. The timestamp makes a reload read the new code.
+ */
+async function authorStructures(urls: readonly string[]): Promise<StructureType[]> {
+  const stamp = Date.now();
+  const types: StructureType[] = [];
+  for (const url of urls) {
+    const module = (await import(/* @vite-ignore */ `${url}?t=${stamp}`)) as { default: unknown };
+    const exported = module.default;
+    types.push(...((Array.isArray(exported) ? exported : [exported]) as StructureType[]));
+  }
+  return types;
+}
+
 async function main(): Promise<void> {
   const canvas = required<HTMLCanvasElement>('#world');
   const loading = required<HTMLElement>('#loading');
   const panel = new DiagnosticsPanel(required<HTMLElement>('#notice'));
   const params = parseStartParams(location.search);
+  const host = hostConfig();
   await nextPaint();
 
   const registry = createDefaultRegistry();
-  const structures = createDefaultStructures();
   const palette = createPalette(registry);
   const material = new THREE.MeshLambertMaterial({ vertexColors: true });
   // Water (RENDER-007): see-through near the shore, drawn after the opaque terrain.
@@ -65,13 +86,13 @@ async function main(): Promise<void> {
   let controls: FlyCamera | undefined;
   let playerView: PlayerView | undefined;
   let current: Loaded | undefined;
+  let connection: HostConnection | undefined;
   const playerControls = new PlayerControls(canvas, (code) => {
     if (code === 'KeyV') playerView?.toggleThirdPerson();
     if (code === 'KeyC') playerView?.toggleFree(camera);
   });
   let reloadMs = 0;
-  // Replaced by the hot update of the world files (YAML-007).
-  let worlds: typeof bundledWorlds = bundledWorlds;
+  let worldName = params.world;
 
   const resize = () => {
     renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -91,6 +112,7 @@ async function main(): Promise<void> {
     structureCounts: {},
     loadTimeMs: 0,
     frames: 0,
+    connection: null,
     worldHash: () => current?.world.hash() ?? 0,
     getBlock: (x, y, z) => current?.world.getBlock(x, y, z) ?? 0,
     setBlock: (x, y, z, id) => current?.world.setBlock(x, y, z, id) ?? false,
@@ -99,6 +121,7 @@ async function main(): Promise<void> {
       triangles: current?.chunks.stats.triangles ?? 0,
       rebuiltChunks: current?.chunks.stats.rebuiltChunks ?? 0,
     }),
+    player: () => playerView?.source.state() ?? null,
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
     setView: (x, y, z, yaw, pitch) => {
       if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
@@ -118,11 +141,64 @@ async function main(): Promise<void> {
   let frameWaiters: (() => void)[] = [];
   installTestHook(hook);
 
+  const showMessages = (messages: PanelMessage[], status: 'ready' | 'error') => {
+    panel.show(messages);
+    hook.messages = messages.map((m) => m.text);
+    hook.status = status;
+    if (status === 'error' && !current) {
+      loading.hidden = true;
+      hook.ready = true;
+    }
+  };
+
   /**
-   * Composes the world of the file and shows it. With errors, keeps what is shown (nothing on
-   * the first load) and lists the errors (YAML-002.d, YAML-007.b).
+   * Shows a composed world: regions, scene, player. The player keeps its place across reloads
+   * (YAML-007.a, HOST-003.a); `source` builds the player the first time.
    */
-  const load = (reload: boolean): void => {
+  const show = (
+    result: ComposeResult & { world: World },
+    composeMs: number,
+    source: () => PlayerSource,
+  ): void => {
+    const meshingStart = performance.now();
+    const chunks = new ChunkRenderer(result.world, palette, material, waterMaterial);
+    chunks.buildAll();
+    const meshingMs = performance.now() - meshingStart;
+    const scene = createWorldScene(result.world.size);
+    scene.scene.add(chunks.group);
+
+    current?.chunks.dispose();
+    current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
+    if (!controls || !playerView) {
+      controls = new FlyCamera(camera, canvas, result.world.size);
+      playerView = new PlayerView(result.world, registry, source(), playerControls, controls);
+    } else {
+      playerView.replaceWorld(result.world);
+    }
+    scene.scene.add(playerView.figure);
+    renderer.shadowMap.needsUpdate = true;
+    hook.seed = result.seed ?? 0;
+    hook.structureCounts = result.structureCounts;
+  };
+
+  // Replaced by the hot update of the world files in browser-only mode (YAML-007).
+  let worlds: typeof bundledWorlds = bundledWorlds;
+  if (host) {
+    connectToHost();
+  } else {
+    loadBundled(false);
+    if (import.meta.hot) {
+      import.meta.hot.accept('./worlds', (updated) => {
+        if (updated) {
+          worlds = updated as unknown as typeof bundledWorlds;
+          loadBundled(true);
+        }
+      });
+    }
+  }
+
+  /** Browser-only mode (APP-003.a): a world of the project, chosen with `?world=`. */
+  function loadBundled(reload: boolean): void {
     const start = performance.now();
     const messages: PanelMessage[] = params.warning
       ? [{ severity: 'warning', text: params.warning }]
@@ -137,74 +213,108 @@ async function main(): Promise<void> {
       return;
     }
     const result = composeWorld(file.text, file.path, {
-      registry: structures,
+      registry: createDefaultStructures(),
       seedOverride: params.seedOverride,
       now: () => performance.now(),
     });
-    const composeMs = performance.now() - start;
     if (params.seedOverride !== undefined && result.world) {
       messages.push({
         severity: 'warning',
         text: `The seed ${params.seedOverride} from the URL replaces the seed of ${file.path}.`,
       });
     }
-    for (const d of result.diagnostics) {
-      messages.push({ severity: d.severity, text: formatDiagnostic(d) });
-    }
+    messages.push(...toMessages(result.diagnostics));
     if (!result.world) {
       showMessages(messages, 'error');
       return;
     }
-
-    const meshingStart = performance.now();
-    const chunks = new ChunkRenderer(result.world, palette, material, waterMaterial);
-    chunks.buildAll();
-    const meshingMs = performance.now() - meshingStart;
-    const scene = createWorldScene(result.world.size);
-    scene.scene.add(chunks.group);
-
-    current?.chunks.dispose();
-    current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
-    if (!controls || !playerView) {
-      controls = new FlyCamera(camera, canvas, result.world.size);
-      playerView = new PlayerView(
-        result.world,
-        registry,
-        result.player,
-        playerControls,
-        controls,
-        () => performance.now(),
+    const composed = result as ComposeResult & { world: World };
+    show(composed, performance.now() - start, () => {
+      const local = new LocalPlayer(composed.world, registry, composed.player, () =>
+        performance.now(),
       );
-    } else {
-      // Keep the player and the view across reloads (YAML-007.a).
-      playerView.replaceWorld(result.world);
-    }
-    scene.scene.add(playerView.figure);
-    renderer.shadowMap.needsUpdate = true;
-    hook.seed = result.seed ?? 0;
-    hook.structureCounts = result.structureCounts;
+      playerControls.yaw = local.startYaw;
+      return local;
+    });
     if (reload) reloadMs = performance.now() - start;
     showMessages(messages, 'ready');
-  };
+  }
 
-  const showMessages = (messages: PanelMessage[], status: 'ready' | 'error') => {
-    panel.show(messages);
-    hook.messages = messages.map((m) => m.text);
-    hook.status = status;
-    if (status === 'error' && !current) {
-      loading.hidden = true;
-      hook.ready = true;
-    }
-  };
+  /**
+   * Host mode (HOST-002): the world comes from the host, composed here from the same YAML and
+   * structures and checked by hash; the player is simulated by the host.
+   */
+  function connectToHost(): void {
+    const receiveWorld = async (world: WorldMessage, diagnostics: readonly Diagnostic[]) => {
+      const start = performance.now();
+      worldName = world.file;
+      hook.world = world.file;
+      const messages = toMessages(diagnostics);
+      let structures;
+      try {
+        structures = createDefaultStructures();
+        for (const type of await authorStructures(world.structures)) structures.register(type);
+      } catch (error) {
+        messages.push({
+          severity: 'error',
+          text: `Cannot load the structures of the author: ${(error as Error).message}`,
+        });
+        showMessages(messages, 'error');
+        return;
+      }
+      const result = composeWorld(world.text, world.file, {
+        registry: structures,
+        seedOverride: world.seedOverride,
+        now: () => performance.now(),
+      });
+      if (!result.world || result.world.hash() !== world.hash) {
+        messages.push({
+          severity: 'error',
+          text: result.world
+            ? `This view composed a different world from the host (hash ${result.world.hash()} instead of ${world.hash}).`
+            : 'This view could not compose the world of the host.',
+        });
+        showMessages(messages, 'error');
+        return;
+      }
+      const reload = current !== undefined;
+      show(result as ComposeResult & { world: World }, performance.now() - start, () => {
+        return new RemotePlayer(connection!, () => performance.now());
+      });
+      playerView!.setSpectator(connection!.role === 'spectator', camera);
+      if (reload) reloadMs = performance.now() - start;
+      showMessages(messages, 'ready');
+    };
 
-  load(false);
-
-  if (import.meta.hot) {
-    import.meta.hot.accept('./worlds', (updated) => {
-      if (!updated) return;
-      worlds = updated as unknown as typeof bundledWorlds;
-      load(true);
-    });
+    connection = new HostConnection(
+      host!,
+      {
+        hello: (message) => {
+          hook.connection = { role: message.role };
+          if (message.player) playerControls.yaw = message.player.yaw;
+          if (message.world) void receiveWorld(message.world, message.diagnostics);
+          else showMessages(toMessages(message.diagnostics), 'error');
+        },
+        world: (world, diagnostics) => void receiveWorld(world, diagnostics),
+        diagnostics: (diagnostics) =>
+          showMessages(toMessages(diagnostics), current ? 'ready' : 'error'),
+        role: (role) => {
+          hook.connection = { role };
+          playerView?.setSpectator(role === 'spectator', camera);
+        },
+        closed: () =>
+          showMessages(
+            [
+              {
+                severity: 'error',
+                text: 'Connection to the yw3d host lost. Restart yw3d and reload the page.',
+              },
+            ],
+            'error',
+          ),
+      },
+      () => performance.now(),
+    );
   }
 
   const overlay = new DebugOverlay();
@@ -235,15 +345,24 @@ async function main(): Promise<void> {
     const now = performance.now();
     const fps = fpsMeter.tick(now);
     const shown = current;
+    const view = playerView;
     overlay.update(now, () => ({
       fps,
       camera: camera.position,
       speedMps: controls!.speed,
-      mode: playerView!.mode,
-      player: playerView!.player.state,
-      stepMs: playerView!.lastStepMs,
+      mode: view.mode,
+      player: view.source.state(),
+      stepMs: view.source.lastStepMs,
+      connection: connection
+        ? {
+            address: connection.address,
+            views: connection.views,
+            role: connection.role,
+            rttMs: connection.rttMs,
+          }
+        : null,
       seed: hook.seed,
-      world: params.world,
+      world: worldName,
       structureCounts: shown.result.structureCounts,
       warnings: shown.result.diagnostics.filter((d) => d.severity === 'warning').length,
       meshedChunks: shown.chunks.stats.meshedChunks,
