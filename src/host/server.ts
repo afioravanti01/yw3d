@@ -7,6 +7,7 @@ import type { CliOptions } from './args';
 import { PROJECT_ROOT, viteBaseConfig, viteModuleLoader } from './moduleLoader';
 import { HostSession } from './session';
 import type { Terminal } from './terminal';
+import { watchWorldFolder } from './watch';
 import type { WorldFolder } from './worldFolder';
 
 /** Name of the global the host puts in the page, so the app knows it is connected (plan P10). */
@@ -58,6 +59,17 @@ export async function startHostServer(
   });
   await session.load();
 
+  // Saving world.yaml or a structure file recomposes the world for every view (HOST-003).
+  let reloading = Promise.resolve();
+  const stopWatching = watchWorldFolder(vite.watcher, folder, () => {
+    reloading = reloading.then(async () => {
+      const start = performance.now();
+      if (await session.load()) {
+        terminal.line(`yw3d  reloaded in ${Math.round(performance.now() - start)} ms`);
+      }
+    });
+  });
+
   const sockets = new WebSocketServer({ noServer: true });
   vite.httpServer!.on('upgrade', (request, socket, head) => {
     if (request.url !== HOST_SOCKET_PATH) return;
@@ -80,6 +92,7 @@ export async function startHostServer(
     vite,
     async close() {
       clearInterval(clock);
+      stopWatching();
       for (const client of sockets.clients) client.terminate();
       sockets.close();
       await vite.close();

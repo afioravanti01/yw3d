@@ -104,7 +104,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `server.ts` (P1, P5, P10), `cli.ts`, `bin/yw3d.js`, apertura del browser (P12), `--port`, `--lan`, `--seed`; misura del tempo di avvio.
   - Fatto quando: `node bin/yw3d.js e2e/host --no-open` avvia l'host e l'app risponde.
 
-- [ ] **T4.06** Ricaricamento dalla cartella
+- [x] **T4.06** Ricaricamento dalla cartella
   - Req: HOST-003 · Dip: T4.05
   - Osservazione della cartella (P11), ricomposizione, messaggio `world` alle viste, giocatore conservato, errori.
   - Fatto quando: test di HOST-003.a–b verdi.

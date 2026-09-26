@@ -38,7 +38,7 @@ export interface SessionOptions {
   readonly seedOverride?: number;
   /** Clock for the timings, e.g. `performance.now`. */
   readonly now?: () => number;
-  /** How paths are shown to the user; relative to the current directory by default. */
+  /** How paths are shown to the user; by default from the world folder, e.g. `valle/world.yaml`. */
   readonly display?: (file: string) => string;
   /** URL of a structure file for the views; Vite serves files by absolute path under `/@fs`. */
   readonly moduleUrl?: (file: string) => string;
@@ -91,7 +91,8 @@ export class HostSession {
 
   /** Path shown to the user for a file of the folder. */
   display(file: string): string {
-    return this.options.display?.(file) ?? (path.relative(process.cwd(), file) || file);
+    // `valle/world.yaml`: short and the same wherever the command is run from.
+    return this.options.display?.(file) ?? path.relative(path.dirname(this.folder.root), file);
   }
 
   /** Loads and composes the folder. Returns true when a new world replaced the previous one. */
