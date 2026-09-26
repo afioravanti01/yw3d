@@ -166,7 +166,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Pointer lock, WASD/Spazio/Shift con `KeyboardEvent.code` (P13), rotella per la velocità, `clampCamera` pura, posizione iniziale.
   - Fatto quando: test CAM-001.d verde; volo verificato a mano.
 
-- [ ] **T1.12** Avvio dell'app, overlay e hook di test
+- [x] **T1.12** Avvio dell'app, overlay e hook di test
   - Req: APP-001, DEBUG-001, PERF-001 · Dip: T1.06, T1.10, T1.11
   - `params.ts` (seed da URL, avviso se non valido); sequenza di caricamento con misura del tempo; overlay F3; `testHook.ts` (P12).
   - Fatto quando: l'app parte con `?seed=` e senza; l'overlay mostra tutti i campi di DEBUG-001.a. **Punto di controllo con l'utente**: prima demo visiva, commenti sul look.
@@ -213,3 +213,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.09 | Unità della scena Three.js = 1 blocco (non 1 metro) | Le coordinate della scena coincidono con quelle del core; le conversioni in metri restano confinate a camera, nebbia e overlay | Nessuno |
 | T1.09 | `@playwright/test` e Chromium headless installati in T1.09 invece che in T1.13 | Servono per controllare il risultato visivo con screenshot già durante T1.09–T1.12. Chromium headless parte in WSL anche senza `install-deps` | Nessuno |
 | T1.10 | Ombre `PCFShadowMap` invece di PCF soft | Three.js r186 ha rimosso `PCFSoftShadowMap` | Nessuno |
+| T1.12 | L'overlay diagnostico è visibile all'avvio (F3 lo nasconde) e mostra anche i tempi di generazione e meshing; i testi dell'interfaccia sono in inglese come il codice | Utile alla demo e alla misura di PERF-001.a; la spec non fissa lo stato iniziale né la lingua dell'interfaccia | Nessuno |
