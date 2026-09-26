@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | draft |
+| Stato | **approved** (G2, 2026-09-26) |
 | Versione | 0.1 |
 | Spec | [spec.md](spec.md) v0.2 |
 | Data | 2026-09-26 |
@@ -72,7 +72,7 @@ Nessuna.
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T3.01** Avviso di `sdd:trace` per i requisiti senza criteri
+- [x] **T3.01** Avviso di `sdd:trace` per i requisiti senza criteri
   - Req: SDD-001 · Dip: —
   - D-007: il comando segnala i requisiti della fase senza criteri riconosciuti (formato della spec sbagliato).
   - Fatto quando: test di SDD-001 verdi; `sdd:trace -- F03` senza falsi avvisi.

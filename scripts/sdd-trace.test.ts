@@ -93,4 +93,14 @@ describe('sdd-trace', () => {
     const unknown = [{ file: 'camera.test.ts', title: 'CAM-001.z: nope', criteria: ['CAM-001.z'] }];
     expect(trace(phase, living, tasks, unknown).errors).toHaveLength(1);
   });
+
+  it('SDD-001.b: fails on phase requirements without recognized criteria (D-007)', () => {
+    // Criteria written inline after "Dopo:" are not recognized.
+    const phase = parseSpec('### CAM-001 — Camera\n- **Dopo:** b `[manuale]` New B.\n');
+    const tasks = parsePlan('- [ ] **T3.01** Camera\n  - Req: CAM-001 · Dip: —\n');
+    const result = trace(phase, [], tasks, []);
+    expect(result.errors).toEqual([
+      'CAM-001 non ha criteri riconosciuti: ogni criterio va su una riga propria ("- **a** [unit] …")',
+    ]);
+  });
 });

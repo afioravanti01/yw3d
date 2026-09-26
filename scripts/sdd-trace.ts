@@ -156,6 +156,12 @@ export function trace(
     if (coveringTasks.length === 0) {
       errors.push(`${req.id} non è citato da nessun task`);
     }
+    // D-007: a requirement without recognized criteria usually means a formatting mistake.
+    if (req.criteria.length === 0) {
+      errors.push(
+        `${req.id} non ha criteri riconosciuti: ogni criterio va su una riga propria ("- **a** [unit] …")`,
+      );
+    }
     for (const criterion of req.criteria) {
       const id = `${req.id}.${criterion.letter}`;
       const label = `  ${criterion.letter} [${criterion.verification}]`;
