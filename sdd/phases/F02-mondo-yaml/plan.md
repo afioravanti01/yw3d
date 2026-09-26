@@ -132,7 +132,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `defineStructure`, validazione dei parametri con lo schema, builder con rotazione e impronta, seed per struttura (P6). Una struttura di prova registrata da un test esterno al core.
   - Fatto quando: test di STRUCT-001.a–d e STRUCT-002.a, c verdi.
 
-- [ ] **T2.05** Composizione e posizionamento
+- [x] **T2.05** Composizione e posizionamento
   - Req: YAML-001, YAML-003, YAML-004, STRUCT-004 · Dip: T2.02, T2.04
   - `composeWorld`: seed e dimensioni dal file, avviso di versione, ancoraggio alla superficie o quota esplicita, parametri di default, conflitti come avvisi, strutture fuori dal mondo come errori.
   - Fatto quando: test di YAML-001.c, YAML-003.a–b, YAML-004.a–d, STRUCT-004.a–b verdi.
