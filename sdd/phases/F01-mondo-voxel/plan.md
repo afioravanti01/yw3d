@@ -121,7 +121,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `scripts/sdd-trace.ts` con il parsing descritto nella strategia di test; output a matrice su stdout; exit ≠ 0 per requisiti senza task, criteri `[unit]`/`[e2e]` senza test, ID sconosciuti. Script npm `sdd:trace`.
   - Fatto quando: i test su fixture passano; eseguito su F01 mostra la matrice (che fallisce finché mancano i test: è atteso).
 
-- [ ] **T1.03** PRNG, hash e rumore deterministici
+- [x] **T1.03** PRNG, hash e rumore deterministici
   - Req: WORLD-005 · Dip: T1.01
   - `rng.ts` (sfc32 con seed, FNV-1a, hash di posizione `hash3(x, y, z, seed)`), `noise.ts` (simplex 2D, fbm, domain warping).
   - Fatto quando: test di ripetibilità e di intervallo dei valori passano.
