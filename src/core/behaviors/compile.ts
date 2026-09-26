@@ -975,8 +975,9 @@ export function compileBehaviors(input: CompileInput): CompileOutput {
         error(source, at, `expected a point [x, z], got ${show(v)}`);
         return false;
       }
-      if (type === 'id' && v === 'any') {
-        error(source, at, 'expected an id of the map');
+      if (type === 'id') {
+        if (typeof v === 'string' && v !== 'any') return checkId(v, at, scope);
+        error(source, at, `expected an id of the map, got ${show(v)}`);
         return false;
       }
       return value({ kind, min: spec.min, max: spec.max }, v, at, scope) !== undefined;
