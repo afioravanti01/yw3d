@@ -105,7 +105,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `pathFollower.ts` (P5): intenzioni, arrivo, blocco e ricalcolo.
   - Fatto quando: test di NAV-002.a–b verdi, compreso un personaggio che entra in ogni casa del mondo predefinito.
 
-- [ ] **T5.04** Azioni, percezione ed eventi
+- [x] **T5.04** Azioni, percezione ed eventi
   - Req: PROTO-001, PROTO-002, PROTO-006 · Dip: T5.03
   - `AgentWorld` (P6, P7): azioni con esiti e tempi limite, percezione a 4 Hz, frasi udite, interazione.
   - Fatto quando: test di PROTO-001.b–c, PROTO-002.a–b e PROTO-006.b verdi.
