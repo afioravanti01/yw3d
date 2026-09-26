@@ -115,7 +115,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `protocol/controller.ts`: tipi, schema, messaggi d'errore.
   - Fatto quando: test di PROTO-001.a e PROTO-001.d verdi.
 
-- [ ] **T5.06** Personaggi nell'host
+- [x] **T5.06** Personaggi nell'host
   - Req: HOST-001, PROTO-002, PROTO-003, PERF-005 · Dip: T5.05
   - Sessione con `AgentWorld`, stato dei personaggi alle viste (P15), tasto E dal giocatore, terminale, misura del passo con 20 personaggi.
   - Fatto quando: test di HOST-001.c, PROTO-002.c, PROTO-003.c e PERF-005.b verdi.

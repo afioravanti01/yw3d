@@ -6,6 +6,10 @@ import { STEP_SECONDS } from '../core/physics/constants';
 import { IDLE, type Intent } from '../core/physics/entity';
 import { FixedStepper } from '../core/physics/fixedStep';
 import { PhysicsWorld, type EntityHandle } from '../core/physics/physicsWorld';
+import { AgentWorld, type AgentListener } from '../core/agents/agentWorld';
+import { spawnCharacters } from '../core/characters/characters';
+import { NavGrid } from '../core/nav/navGrid';
+import { Pathfinder } from '../core/nav/pathfinding';
 import { PLAYER_SIZE, spawnAtStart } from '../core/player/player';
 import { createDefaultStructures } from '../core/structures/builtin';
 import type { StructureRegistry, StructureType } from '../core/structures/registry';
@@ -13,6 +17,7 @@ import type { World } from '../core/world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../core/yaml/report';
 import {
   PROTOCOL_VERSION,
+  type CharacterSnapshot,
   type HostMessage,
   type PlayerSnapshot,
   type Role,
@@ -74,6 +79,10 @@ export class HostSession {
 
   private physics: PhysicsWorld | undefined;
   private player: EntityHandle | undefined;
+  /** Characters, their actions and perception (F05); undefined before the first world. */
+  agents: AgentWorld | undefined;
+  /** Where each character's events and perception go: its controller, when it has one. */
+  private readonly controllerSinks = new Map<string, AgentListener>();
   private readonly stepper = new FixedStepper();
   /** Simulated time, seconds: intents expire on this clock, so that tests are exact. */
   private time = 0;
@@ -185,6 +194,58 @@ export class HostSession {
       this.view = { yaw: spawned.yaw, pitch: 0 };
     }
     this.physics = physics;
+    // Characters restart from their declared places at every new world (F05).
+    const characters = spawnCharacters(physics, world.result.characters);
+    const finder = new Pathfinder(new NavGrid(world.result.world, createDefaultRegistry().solid));
+    this.agents = new AgentWorld(
+      physics,
+      characters,
+      this.player,
+      (from, to) => finder.find(from, to),
+      {
+        event: (id, event) => this.controllerSinks.get(id)?.event(id, event),
+        perception: (id, perception) => this.controllerSinks.get(id)?.perception(id, perception),
+      },
+    );
+    if (characters.length > 0) {
+      this.terminal.line(
+        `${PREFIX}  characters: ${world.result.characters
+          .map((c) => `${c.id} (${c.command ?? 'no controller'})`)
+          .join(', ')}`,
+      );
+    }
+  }
+
+  /** Routes the events and perception of a character to its controller (PROTO-003, PROTO-004). */
+  attachController(characterId: string, sink: AgentListener): void {
+    this.controllerSinks.set(characterId, sink);
+  }
+
+  /** The controller of a character went away: it stops (PROTO-003.b, PROTO-004.b). */
+  detachController(characterId: string, sink: AgentListener): void {
+    if (this.controllerSinks.get(characterId) !== sink) return;
+    this.controllerSinks.delete(characterId);
+    this.agents?.release(characterId);
+  }
+
+  /** Whether a character has a controller now. */
+  isControlled(characterId: string): boolean {
+    return this.controllerSinks.has(characterId);
+  }
+
+  /** Characters as views draw them (plan F05 P15). */
+  characterSnapshots(): CharacterSnapshot[] {
+    return (this.agents?.views() ?? []).map((c) => ({
+      id: c.id,
+      x: c.state.x,
+      y: c.state.y,
+      z: c.state.z,
+      speed: Math.hypot(c.state.vx, c.state.vz),
+      onGround: c.state.onGround,
+      submerged: c.state.submerged,
+      yaw: c.yaw,
+      speech: c.speech,
+    }));
   }
 
   /**
@@ -198,7 +259,8 @@ export class HostSession {
       this.time += STEP_SECONDS;
       const fresh = this.lastIntent && this.time - this.lastIntent.at <= INTENT_TIMEOUT_SECONDS;
       this.player.intent = fresh ? this.lastIntent!.intent : IDLE;
-      this.physics.step();
+      // The agent world moves the characters and runs the physics step for everyone.
+      this.agents!.step();
       this.steps++;
     }
     if (steps > 0) {
@@ -206,6 +268,7 @@ export class HostSession {
         type: 'state',
         step: this.steps,
         player: this.snapshot()!,
+        characters: this.characterSnapshots(),
         views: this.views.length,
       });
     }
@@ -249,6 +312,7 @@ export class HostSession {
       world: this.worldMessage() ?? null,
       diagnostics: this.diagnostics,
       player: this.snapshot() ?? null,
+      characters: this.characterSnapshots(),
       views: this.views.length,
     });
     const currentRole = () => this.roleOf(view);
@@ -276,6 +340,10 @@ export class HostSession {
       return;
     }
     // Only the driver moves the player; spectators' intents are ignored.
+    if (message.type === 'interact' && this.roleOf(view) === 'driver') {
+      this.agents?.interact();
+      return;
+    }
     if (message.type === 'intent' && this.roleOf(view) === 'driver') {
       this.lastIntent = { intent: message.intent, at: this.time };
       this.view = { yaw: message.yaw, pitch: message.pitch };

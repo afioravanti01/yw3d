@@ -38,6 +38,21 @@ export interface PlayerSnapshot {
   readonly pitch: number;
 }
 
+/** A character as views draw it (plan F05 P15). */
+export interface CharacterSnapshot {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  /** Horizontal speed, blocks per second: drives the walking animation. */
+  readonly speed: number;
+  readonly onGround: boolean;
+  readonly submerged: number;
+  readonly yaw: number;
+  /** What it is saying, shown in a speech bubble (CHAR-002.c). */
+  readonly speech: string | null;
+}
+
 export type HostMessage =
   | {
       readonly type: 'hello';
@@ -46,6 +61,7 @@ export type HostMessage =
       readonly world: WorldMessage | null;
       readonly diagnostics: readonly Diagnostic[];
       readonly player: PlayerSnapshot | null;
+      readonly characters: readonly CharacterSnapshot[];
       readonly views: number;
     }
   | {
@@ -60,6 +76,7 @@ export type HostMessage =
       /** Simulation steps since the host started. */
       readonly step: number;
       readonly player: PlayerSnapshot;
+      readonly characters: readonly CharacterSnapshot[];
       readonly views: number;
     }
   | { readonly type: 'role'; readonly role: Role }
@@ -72,4 +89,6 @@ export type ViewMessage =
       readonly yaw: number;
       readonly pitch: number;
     }
-  | { readonly type: 'ping'; readonly id: number };
+  | { readonly type: 'ping'; readonly id: number }
+  /** The player pressed E near a character (PROTO-002.c). */
+  | { readonly type: 'interact' };
