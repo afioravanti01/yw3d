@@ -100,7 +100,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `navGrid.ts` (P1, P2, P4), `pathfinding.ts` (P3); misura sul mondo predefinito.
   - Fatto quando: test di NAV-001.a–d verdi.
 
-- [ ] **T5.03** Esecuzione dei percorsi
+- [x] **T5.03** Esecuzione dei percorsi
   - Req: NAV-002 · Dip: T5.02, T5.01
   - `pathFollower.ts` (P5): intenzioni, arrivo, blocco e ricalcolo.
   - Fatto quando: test di NAV-002.a–b verdi, compreso un personaggio che entra in ogni casa del mondo predefinito.

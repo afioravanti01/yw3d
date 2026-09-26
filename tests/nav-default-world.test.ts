@@ -5,6 +5,10 @@ import { composeWorld, type ComposeResult } from '../src/core/compose/composeWor
 import { createRng } from '../src/core/math/rng';
 import { HEADROOM, NavGrid } from '../src/core/nav/navGrid';
 import { MAX_DROP, MAX_STEP_UP, Pathfinder, type PathPoint } from '../src/core/nav/pathfinding';
+import { PathFollower } from '../src/core/nav/pathFollower';
+import { STEP_SECONDS } from '../src/core/physics/constants';
+import { PhysicsWorld } from '../src/core/physics/physicsWorld';
+import { spawnPlayer } from '../src/core/player/player';
 import { createDefaultStructures } from '../src/core/structures/builtin';
 import { houseLayout, type HouseStyle } from '../src/core/structures/houses';
 import type { World } from '../src/core/world/world';
@@ -112,5 +116,33 @@ describe('path search in the default world', () => {
       expect(finder.find(from, { x: 490 - i, z: 490 }).ok).toBe(true);
     }
     expect((performance.now() - start) / runs).toBeLessThanOrEqual(50);
+  });
+
+  it('NAV-002.a: a character walks from behind each house to its middle, through the door', () => {
+    const houses = result.placements.filter(
+      (p) => p.type === 'stone_farmhouse' || p.type === 'wooden_hut',
+    );
+    for (const house of houses) {
+      const { width, depth } = house.params as { width: number; depth: number };
+      const layout = houseLayout(house.type as HouseStyle, width, depth, createRng(house.seed));
+      const physics = new PhysicsWorld(result.world!, registry);
+      const [bx, bz] = inverse(0, layout.z0 - 12, (360 - house.rotation) % 360);
+      const entity = spawnPlayer(physics, house.x + bx + 0.5, house.z + bz + 0.5);
+      physics.step();
+      const [mx, mz] = inverse(0, 0, (360 - house.rotation) % 360);
+      const follower = new PathFollower(
+        (f, t) => finder.find(f, t),
+        { x: house.x + mx, z: house.z + mz },
+        entity.state,
+        0,
+      );
+      let time = 0;
+      for (let i = 0; i < 60 / STEP_SECONDS && follower.status.kind === 'moving'; i++) {
+        time += STEP_SECONDS;
+        entity.intent = follower.update(entity.state, time);
+        physics.step();
+      }
+      expect(follower.status, house.source).toEqual({ kind: 'arrived' });
+    }
   });
 });
