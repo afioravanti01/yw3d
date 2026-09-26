@@ -229,15 +229,34 @@ export function maxNeighborDrop(map: Heightmap, x: number, z: number): number {
 }
 
 /**
- * Generates the F01 terrain: plains and rolling hills with mounds and rock outcrops (WORLD-006).
- * Deterministic: the same seed, size and params always give the same world (WORLD-005).
+ * Version of the terrain generator (plan F02 P5). Increment it whenever `generateHeightmap` or
+ * `fillColumns` produce a different output for the same input: world files declare the version
+ * they were written for (YAML-003.b).
  */
-export function generateTerrain(
+export const TERRAIN_GENERATOR_VERSION = 1;
+
+/** A deep copy of a heightmap, to be adapted without touching the original. */
+export function cloneHeightmap(map: Heightmap): Heightmap {
+  return {
+    sizeX: map.sizeX,
+    sizeZ: map.sizeZ,
+    heights: map.heights.slice(),
+    outcrops: map.outcrops.slice(),
+  };
+}
+
+/**
+ * Fills the world columns from a heightmap: rocky columns are all stone; the others are stone,
+ * 3–5 dirt and a surface block (WORLD-006.d). The surface block is grass, unless `surface` has
+ * a non-zero block id for the column (e.g. sand on a pond shore).
+ */
+export function fillColumns(
+  map: Heightmap,
   seed: number,
-  size: WorldSize = DEFAULT_WORLD_SIZE,
+  size: WorldSize,
   params: TerrainParams = DEFAULT_TERRAIN_PARAMS,
+  surface?: Uint8Array,
 ): World {
-  const map = generateHeightmap(seed, size, params);
   const dirt = createNoise(seed, SALT.dirt);
   const dirtFrequency = 1 / params.dirtWavelength;
   const [minDirt, maxDirt] = params.dirtDepth;
@@ -245,7 +264,9 @@ export function generateTerrain(
   return World.fromColumns(size, (x, z, column) => {
     const i = x + z * size.x;
     const h = map.heights[i]!;
-    const rocky = map.outcrops[i] === 1 || maxNeighborDrop(map, x, z) >= params.rockSlope;
+    const top = surface?.[i] ?? 0;
+    const rocky =
+      top === 0 && (map.outcrops[i] === 1 || maxNeighborDrop(map, x, z) >= params.rockSlope);
     if (rocky) {
       column.fill(STONE, 0, h + 1);
       return;
@@ -254,6 +275,18 @@ export function generateTerrain(
     const depth = Math.min(maxDirt, minDirt + Math.floor(t * (maxDirt - minDirt + 1)));
     column.fill(STONE, 0, h - depth);
     column.fill(DIRT, h - depth, h);
-    column[h] = GRASS;
+    column[h] = top === 0 ? GRASS : top;
   });
+}
+
+/**
+ * Generates the F01 terrain: plains and rolling hills with mounds and rock outcrops (WORLD-006).
+ * Deterministic: the same seed, size and params always give the same world (WORLD-005).
+ */
+export function generateTerrain(
+  seed: number,
+  size: WorldSize = DEFAULT_WORLD_SIZE,
+  params: TerrainParams = DEFAULT_TERRAIN_PARAMS,
+): World {
+  return fillColumns(generateHeightmap(seed, size, params), seed, size, params);
 }

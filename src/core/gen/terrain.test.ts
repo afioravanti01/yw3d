@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { AIR, DIRT, GRASS, STONE } from '../blocks/builtin';
 import type { World } from '../world/world';
-import { generateTerrain } from './terrain';
+import { generateTerrain, TERRAIN_GENERATOR_VERSION } from './terrain';
 
 const TEST_SEEDS = [1, 2, 3, 4, 5];
 
@@ -135,8 +135,10 @@ describe('terrain generation', () => {
   });
 
   it('WORLD-005.b: the hash of the reference seed is fixed', () => {
-    // Changing the generator output requires updating this value and logging a plan deviation.
+    // Changing the generator output requires updating this value, logging a plan deviation and
+    // incrementing TERRAIN_GENERATOR_VERSION (YAML-003.b): world files declare the version.
     expect(analyses.get(1)!.world.hash().toString(16)).toMatchInlineSnapshot(`"b8c27500"`);
+    expect(TERRAIN_GENERATOR_VERSION).toBe(1);
   });
 
   it('WORLD-005.c: 10 different seeds give 10 different worlds', () => {

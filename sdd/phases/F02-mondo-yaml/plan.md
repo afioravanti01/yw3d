@@ -117,7 +117,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `water`, `sand`, `gravel`, `oak_log`, `birch_log`, `willow_log`, `oak_leaves`, `birch_leaves`, `willow_leaves`, `planks`, `cobblestone`, `roof_tiles` con colori della palette calda (RENDER-001); id stabili dopo quelli di F01.
   - Fatto quando: test di WORLD-004.c aggiornato e verde; hash di WORLD-005.b invariato.
 
-- [ ] **T2.02** Separazione del generatore di terreno e versione
+- [x] **T2.02** Separazione del generatore di terreno e versione
   - Req: WORLD-005, YAML-003 · Dip: —
   - `fillColumns` con sostituzioni di superficie (P4); `TERRAIN_GENERATOR_VERSION` (P5).
   - Fatto quando: tutti i test di WORLD-005/006 verdi senza cambiare l'hash di riferimento.
