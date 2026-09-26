@@ -24,6 +24,7 @@ import {
   type ViewMessage,
   type WorldMessage,
 } from '../protocol/messages';
+import { checkPrograms, type CommandConsent } from './consent';
 import { startStdioController, type RunningController } from './controllers/stdio';
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
@@ -49,7 +50,7 @@ export interface SessionOptions {
   /** URL of a structure file for the views; Vite serves files by absolute path under `/@fs`. */
   readonly moduleUrl?: (file: string) => string;
   /** Whether the commands of the controllers may run: the user's consent (PROTO-005). */
-  readonly runCommands?: boolean;
+  readonly consent?: CommandConsent;
 }
 
 /** Intents older than this are dropped: a stalled view does not keep the player walking (P9). */
@@ -145,7 +146,9 @@ export class HostSession {
             hash: result.world.hash(),
           }
         : undefined;
-    return this.finish(diagnostics, world);
+    const replaced = this.finish(diagnostics, world);
+    if (replaced) await this.restartControllers(world!);
+    return replaced;
   }
 
   private finish(diagnostics: Diagnostic[], world: SessionWorld | undefined): boolean {
@@ -162,7 +165,6 @@ export class HostSession {
     }
     this.world = world;
     this.startSimulation(world);
-    this.restartControllers(world);
     this.broadcast({
       type: 'world',
       world: this.worldMessage()!,
@@ -225,12 +227,21 @@ export class HostSession {
    * Stops the controllers of the previous world and starts the ones declared now, when their
    * commands may run (PROTO-003.b: they restart at every reload).
    */
-  private restartControllers(world: SessionWorld): void {
+  private async restartControllers(world: SessionWorld): Promise<void> {
     for (const controller of this.controllers) controller.stop();
     this.controllers = [];
-    if (!this.options.runCommands) return;
+    const declared = world.result.characters.flatMap((c) =>
+      c.command ? [{ id: c.id, command: c.command }] : [],
+    );
+    if (declared.length === 0) return;
+    if (!(await (this.options.consent ?? (async () => false))(declared))) return;
+    // The world may have changed while the user was answering.
+    if (this.world !== world) return;
+    const runnable = new Set(
+      checkPrograms(declared, this.folder.root, this.terminal).map((c) => c.id),
+    );
     for (const character of world.result.characters) {
-      if (!character.command) continue;
+      if (!character.command || !runnable.has(character.id)) continue;
       this.controllers.push(
         startStdioController(
           character.id,

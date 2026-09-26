@@ -56,7 +56,7 @@ async function session(characters: string) {
     resolved.folder,
     noModules,
     { line: (t) => lines.push(t) },
-    { runCommands: true },
+    { consent: async () => true },
   );
   sessions.push(s);
   await s.load();

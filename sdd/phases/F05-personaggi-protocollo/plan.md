@@ -125,7 +125,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `controllers/stdio.ts` e `link.ts` (P8, P9): avvio, righe JSON, stderr, uscita e blocco, rilancio alla ricarica.
   - Fatto quando: test di PROTO-003.a–b e PROTO-006.a verdi.
 
-- [ ] **T5.08** Consenso e verifica dei comandi
+- [x] **T5.08** Consenso e verifica dei comandi
   - Req: PROTO-005, CLI-001 · Dip: T5.07
   - `consent.ts` (P11, P12), opzione `--allow-commands`.
   - Fatto quando: test di PROTO-005.a–c verdi.

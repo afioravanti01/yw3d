@@ -43,11 +43,36 @@ describe('yw3d command line', () => {
   it('CLI-001.c: --port, --no-open, --lan, --seed and --help', () => {
     expect(parseArgs(['valle'])).toEqual({
       kind: 'run',
-      options: { folder: 'valle', port: DEFAULT_PORT, open: true, lan: false, seed: undefined },
+      options: {
+        folder: 'valle',
+        port: DEFAULT_PORT,
+        open: true,
+        lan: false,
+        seed: undefined,
+        allowCommands: false,
+      },
     });
-    expect(parseArgs(['--port', '8080', 'valle', '--no-open', '--lan', '--seed', '42'])).toEqual({
+    expect(
+      parseArgs([
+        '--port',
+        '8080',
+        'valle',
+        '--no-open',
+        '--lan',
+        '--seed',
+        '42',
+        '--allow-commands',
+      ]),
+    ).toEqual({
       kind: 'run',
-      options: { folder: 'valle', port: 8080, open: false, lan: true, seed: 42 },
+      options: {
+        folder: 'valle',
+        port: 8080,
+        open: false,
+        lan: true,
+        seed: 42,
+        allowCommands: true,
+      },
     });
     expect(parseArgs(['valle', '--help'])).toEqual({ kind: 'help' });
     expect(parseArgs(['-h'])).toEqual({ kind: 'help' });

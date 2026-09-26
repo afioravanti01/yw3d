@@ -6,6 +6,7 @@ import { HOST_SOCKET_PATH, type ViewMessage } from '../protocol/messages';
 import type { CliOptions } from './args';
 import { PROJECT_ROOT, viteBaseConfig, viteModuleLoader } from './moduleLoader';
 import { HostSession } from './session';
+import type { CommandConsent } from './consent';
 import type { Terminal } from './terminal';
 import { watchWorldFolder } from './watch';
 import type { WorldFolder } from './worldFolder';
@@ -28,6 +29,7 @@ export async function startHostServer(
   folder: WorldFolder,
   options: CliOptions,
   terminal: Terminal,
+  consent?: CommandConsent,
 ): Promise<HostServer> {
   const plugin: Plugin = {
     name: 'yw3d-host',
@@ -56,6 +58,7 @@ export async function startHostServer(
   const session = new HostSession(folder, viteModuleLoader(vite), terminal, {
     seedOverride: options.seed,
     now: () => performance.now(),
+    consent,
   });
   await session.load();
 

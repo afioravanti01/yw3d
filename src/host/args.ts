@@ -9,6 +9,8 @@ export interface CliOptions {
   readonly lan: boolean;
   /** Replaces the terrain seed of the world file. */
   readonly seed: number | undefined;
+  /** Runs the commands of the characters without asking (PROTO-005.a). */
+  readonly allowCommands: boolean;
 }
 
 export type ParsedArgs =
@@ -30,6 +32,8 @@ Options:
   --no-open      do not open the browser
   --lan          accept connections from the local network (default: this machine only)
   --seed <n>     replace the terrain seed of world.yaml (0 … ${MAX_SEED})
+  --allow-commands
+                 run the commands of the characters without asking
   -h, --help     show this help`;
 
 /** Parses the command-line arguments after `yw3d` (plan F04 P12). */
@@ -39,6 +43,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let open = true;
   let lan = false;
   let seed: number | undefined;
+  let allowCommands = false;
   const error = (message: string): ParsedArgs => ({ kind: 'error', message });
 
   for (let i = 0; i < argv.length; i++) {
@@ -53,6 +58,9 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         break;
       case '--lan':
         lan = true;
+        break;
+      case '--allow-commands':
+        allowCommands = true;
         break;
       case '--port': {
         const raw = value();
@@ -81,5 +89,5 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     }
   }
   if (folder === undefined) return error('missing the world folder');
-  return { kind: 'run', options: { folder, port, open, lan, seed } };
+  return { kind: 'run', options: { folder, port, open, lan, seed, allowCommands } };
 }
