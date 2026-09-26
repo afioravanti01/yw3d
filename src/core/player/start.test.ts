@@ -15,7 +15,7 @@ describe('player start', () => {
   it('YAML-008.a: the file declares the start column and the view direction', () => {
     const result = compose('player:\n  at: [30, 40]\n  yaw: 90\n');
     expect(result.diagnostics).toEqual([]);
-    expect(result.player).toEqual({ x: 30.5, z: 40.5, yaw: -Math.PI / 2 });
+    expect(result.player).toMatchObject({ x: 30.5, z: 40.5, yaw: -Math.PI / 2 });
     expect(compose('player: { at: [30, 40] }\n').player?.yaw).toBe(-0);
     expect(compose('').player).toBeUndefined();
   });

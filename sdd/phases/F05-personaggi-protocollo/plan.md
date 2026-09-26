@@ -90,7 +90,7 @@ Nessuna.
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T5.01** Personaggi nel file del mondo
+- [x] **T5.01** Personaggi nel file del mondo
   - Req: CHAR-001, YAML-008 · Dip: —
   - Sezione `characters` e aspetto di `player` nello schema; colori derivati dal seed; personaggi nel risultato della composizione; spawn come entità fisiche.
   - Fatto quando: test di CHAR-001.a–c e YAML-008.a verdi.

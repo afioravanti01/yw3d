@@ -1,4 +1,5 @@
 import {
+  color,
   int,
   list,
   number,
@@ -6,6 +7,7 @@ import {
   oneOf,
   optional,
   pair,
+  pattern,
   record,
   str,
   unknownValue,
@@ -68,16 +70,35 @@ const scatterSchema = object(
   },
 );
 
-/** Start of the player (YAML-008): column and view direction in degrees, 0 = north, 90 = east. */
+/** Colors of a figure (CHAR-001.a); the missing ones are derived from the seed. */
+const appearanceSchema = object({
+  skin: optional(color()),
+  hair: optional(color()),
+  shirt: optional(color()),
+  trousers: optional(color()),
+});
+
+/** Start of the player (YAML-008): column, view direction in degrees (0 = north, 90 = east), colors. */
 const playerSchema = object({
   at: pair(),
   yaw: number({ min: -360, max: 360, default: 0 }),
+  appearance: optional(appearanceSchema),
+});
+
+/** A character (CHAR-001.a), optionally driven by a command (PROTO-003). */
+const characterSchema = object({
+  id: pattern(/^[a-z][a-z0-9_-]{0,31}$/, 'an identifier of lowercase letters, digits, "_" or "-"'),
+  at: pair(),
+  yaw: number({ min: -360, max: 360, default: 0 }),
+  appearance: optional(appearanceSchema),
+  controller: optional(object({ command: str() })),
 });
 
 const worldFileSchema = object({
   version: oneOf(WORLD_FILE_VERSIONS),
   terrain: terrainSchema,
   player: optional(playerSchema),
+  characters: optional(list(characterSchema)),
   structures: optional(list(structureSchema)),
   scatter: optional(list(scatterSchema)),
 });
@@ -86,6 +107,8 @@ export type WorldFile = Infer<typeof worldFileSchema>;
 export type StructureDecl = Infer<typeof structureSchema>;
 export type ScatterDecl = Infer<typeof scatterSchema>;
 export type PlayerDecl = Infer<typeof playerSchema>;
+export type CharacterDecl = Infer<typeof characterSchema>;
+export type AppearanceDecl = Infer<typeof appearanceSchema>;
 export type AreaDecl = Infer<typeof areaSchema>;
 
 export interface LoadedWorldFile {

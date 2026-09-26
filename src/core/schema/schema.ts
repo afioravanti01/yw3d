@@ -115,6 +115,37 @@ export function str(): Schema<string> {
   };
 }
 
+/** A color written as `#rrggbb`, parsed to the number 0xRRGGBB. */
+export function color(): Schema<number> {
+  return {
+    description: 'a color like "#a55f3a"',
+    parse(value, path, issues) {
+      if (typeof value !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(value)) {
+        issues.push({
+          path,
+          message: `expected a color like "#a55f3a", got ${describeValue(value)}`,
+        });
+        return undefined;
+      }
+      return parseInt(value.slice(1), 16);
+    },
+  };
+}
+
+/** A string matching a pattern, described for the messages (e.g. identifiers). */
+export function pattern(regex: RegExp, description: string): Schema<string> {
+  return {
+    description,
+    parse(value, path, issues) {
+      if (typeof value !== 'string' || !regex.test(value)) {
+        issues.push({ path, message: `expected ${description}, got ${describeValue(value)}` });
+        return undefined;
+      }
+      return value;
+    },
+  };
+}
+
 /** One of a fixed set of strings or numbers. */
 export function oneOf<const T extends string | number>(
   values: readonly T[],

@@ -7,6 +7,7 @@ import {
 } from '../gen/terrain';
 import { formatPath, type Issue } from '../schema/schema';
 import { WATER } from '../blocks/builtin';
+import { resolveAppearance, type Appearance } from '../characters/appearance';
 import { rotateColumn, StructureBuilder, type Rect } from '../structures/builder';
 import { basinOf, buildStructure, type StructureRegistry } from '../structures/registry';
 import { dig, flatten, type DugBasin } from './adapt';
@@ -22,6 +23,19 @@ export interface ComposeOptions {
   readonly seedOverride?: number;
   /** Clock for the step timings, e.g. `performance.now`; the core has no clock of its own. */
   readonly now?: () => number;
+}
+
+/** A character as declared, ready to be spawned (CHAR-001). */
+export interface CharacterStart {
+  readonly id: string;
+  /** Center of the declared column. */
+  readonly x: number;
+  readonly z: number;
+  /** View direction in radians, 0 looks north. */
+  readonly yaw: number;
+  readonly appearance: Appearance;
+  /** Command of the controller that drives it, if any (PROTO-003). */
+  readonly command: string | undefined;
 }
 
 export interface PlacedStructure {
@@ -49,7 +63,18 @@ export interface ComposeResult {
    * Start of the player from the file (YAML-008): center of the declared column and view
    * direction in radians (0 looks north, towards -z); undefined when the file has none.
    */
-  readonly player: { readonly x: number; readonly z: number; readonly yaw: number } | undefined;
+  readonly player:
+    | {
+        readonly x: number;
+        readonly z: number;
+        readonly yaw: number;
+        readonly appearance: Appearance;
+      }
+    | undefined;
+  /** Colors of the player, declared or derived from the seed (YAML-008.a). */
+  readonly playerAppearance: Appearance | undefined;
+  /** Characters declared in the file (CHAR-001.a), in order. */
+  readonly characters: readonly CharacterStart[];
   /** Structures built, in order: declared one by one first, then distributed. */
   readonly placements: readonly PlacedStructure[];
   /** Duration of each step in milliseconds. */
@@ -75,6 +100,8 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     seed,
     structureCounts: {},
     player: undefined,
+    playerAppearance: undefined,
+    characters: [],
     placements: [],
     timings,
   });
@@ -125,6 +152,25 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       });
     }
   }
+  const ids = new Map<string, number>();
+  (decl.characters ?? []).forEach((character, i) => {
+    const [cx, cz] = character.at;
+    if (cx < 0 || cz < 0 || cx >= size.x || cz >= size.z) {
+      issues.push({
+        path: ['characters', i, 'at'],
+        message: `the character is outside the world: x and z must be within 0..${size.x - 1} and 0..${size.z - 1}`,
+      });
+    }
+    const first = ids.get(character.id);
+    if (first !== undefined) {
+      issues.push({
+        path: ['characters', i, 'id'],
+        message: `the id "${character.id}" is already used by characters[${first}] (line ${loaded.lineOf(['characters', first, 'id'])})`,
+      });
+    } else {
+      ids.set(character.id, i);
+    }
+  });
   const singles = placeStructures(decl.structures ?? [], options.registry, seed, size, issues);
   for (const [a, b] of findConflicts(singles)) {
     warnings.push({
@@ -215,7 +261,17 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       x: decl.player.at[0] + 0.5,
       z: decl.player.at[1] + 0.5,
       yaw: (-decl.player.yaw * Math.PI) / 180,
+      appearance: resolveAppearance(decl.player.appearance, seed, 'player'),
     },
+    playerAppearance: resolveAppearance(decl.player?.appearance, seed, 'player'),
+    characters: (decl.characters ?? []).map((c) => ({
+      id: c.id,
+      x: c.at[0] + 0.5,
+      z: c.at[1] + 0.5,
+      yaw: (-c.yaw * Math.PI) / 180,
+      appearance: resolveAppearance(c.appearance, seed, c.id),
+      command: c.controller?.command,
+    })),
     placements: placements.map((p) => ({
       type: p.type.name,
       x: p.x,
