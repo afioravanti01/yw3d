@@ -142,7 +142,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Appoggio, livellamento con raccordo (P9), scavo; stratificazione delle colonne modificate.
   - Fatto quando: test di STRUCT-003.a–e verdi su 20 seed.
 
-- [ ] **T2.07** Alberi
+- [x] **T2.07** Alberi
   - Req: STRUCT-005, STRUCT-002 · Dip: T2.04, T2.01
   - Quercia, betulla, salice con chiome irregolari (P12).
   - Fatto quando: test di STRUCT-005.a–c e STRUCT-002.b verdi; screenshot delle 3 specie allegati al commit.
@@ -213,3 +213,4 @@ Come in F01, salvo diversa indicazione dell'utente alla revisione del piano:
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T2.07 | Screenshot di alberi e case rimandati al punto di controllo, che si sposta da T2.10 a dopo T2.13 | Per vedere le strutture serve che l'app carichi un file YAML (T2.13). Nel frattempo le sagome sono controllate con proiezioni ASCII e con i test | Nessuno |

@@ -63,6 +63,11 @@ export class StructureBuilder {
     this.blocks.set(`${x},${y},${z}`, [x, y, z, block]);
   }
 
+  /** Forgets a block: the world keeps whatever is there. */
+  delete(x: number, y: number, z: number): void {
+    this.blocks.delete(`${x},${y},${z}`);
+  }
+
   get(x: number, y: number, z: number): number | undefined {
     return this.blocks.get(`${x},${y},${z}`)?.[3];
   }
