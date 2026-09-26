@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | draft |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-26 |
 | Piano | [plan.md](plan.md) (dopo G1) |
 
@@ -109,7 +109,8 @@ Ogni tipo dichiara un modo di adattamento.
 - **b** `[unit]` Ogni casa ha almeno una porta: un vano libero largo almeno 2 blocchi e alto almeno 5 (1 m × 2,5 m), raggiungibile dall'esterno a livello del terreno.
 - **c** `[unit]` Ogni casa ha almeno una finestra (apertura) per lato lungo, un pavimento e un interno vuoto alto almeno 5 blocchi.
 - **d** `[unit]` Il tetto è a falde: ogni falda sale di 1 blocco ogni 1–2 blocchi, con colmo lungo il lato lungo.
-- **e** `[manuale]` I due stili hanno carattere diverso e non ricordano le case di Minecraft.
+- **e** `[unit]` Dettagli di carattere (Q8): ogni casa ha un comignolo e travi a vista agli angoli in legno scuro; il capanno in legno poggia su un basamento in pietra alto almeno 1 blocco.
+- **f** `[manuale]` I due stili hanno carattere diverso e non ricordano le case di Minecraft.
 
 ### STRUCT-007 — Laghetti
 - **a** `[unit]` Un laghetto ha forma irregolare (non un cerchio o un rettangolo), dimensione e profondità parametrizzabili.
@@ -150,15 +151,19 @@ Stesso hardware di riferimento di PERF-001.
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Domande aperte
-- **Q1** Unità delle coordinate nel YAML: blocchi o metri? Proposta: **blocchi**, come le API del core e come l'overlay; l'overlay mostra anche i metri.
-- **Q2** Dove stanno i file del mondo? Proposta: cartella `worlds/` del progetto, predefinito `worlds/default.yaml`, altri selezionabili con `?world=` (YAML-006). Nessun caricamento di file dal disco dell'utente in F02.
-- **Q3** `?seed=` resta? Proposta: **sì**, come sostituto del seed del file con avviso (APP-001 modificato); utile per provare lo stesso YAML su terreni diversi.
-- **Q4** Conflitti tra strutture posate singolarmente: avviso o errore? Proposta: **avviso**, e prevale la struttura dichiarata dopo (STRUCT-004.a). Un errore bloccherebbe il ricaricamento a ogni spostamento maldestro.
-- **Q5** Foglie opache o trasparenti? Proposta: **opache**, con chiome un po' irregolari; foglie trasparenti moltiplicano le facce e complicano il rendering. Si rivede in F06 (natura viva).
-- **Q6** Distribuzioni (YAML-005): servono già in F02? Proposta: **sì**; senza, un bosco da 100 alberi richiede 100 voci nel file.
-- **Q7** Budget del ricaricamento a caldo: proposta **entro 5 s** (lo stesso di PERF-001.a), rigenerando tutto il mondo. Un ricaricamento incrementale (solo le strutture cambiate) è più veloce ma molto più complesso.
-- **Q8** Specie di alberi e stili di casa: confermi quercia, betulla e salice, e casolare in pietra e capanno in legno? Altre idee per il carattere delle case (es. intonaco chiaro, travi a vista, comignolo)?
+## Domande risolte
+Chiuse con l'utente il 2026-09-26, prima di G1. Tutte le proposte sono state accettate.
+
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Unità delle coordinate nel YAML | Blocchi, come le API del core | YAML-004.a invariato |
+| Q2 | Dove stanno i file del mondo | Cartella `worlds/` del progetto, predefinito `worlds/default.yaml`, altri con `?world=`; nessun file dal disco dell'utente | YAML-006 invariato |
+| Q3 | `?seed=` nell'indirizzo | Resta, sostituisce il seed del file con un avviso | APP-001 modificato come proposto |
+| Q4 | Sovrapposizione di strutture posate singolarmente | Avviso; prevale la struttura dichiarata dopo | STRUCT-004.a invariato |
+| Q5 | Foglie | Opache, chiome dal contorno irregolare; da rivedere in F06 | Nessun blocco trasparente oltre all'acqua |
+| Q6 | Distribuzioni su un'area in F02 | Sì | YAML-005 invariato |
+| Q7 | Ricaricamento a caldo | Rigenerazione completa entro 5 s | YAML-007.a invariato |
+| Q8 | Specie e stili | Quercia, betulla, salice; casolare in pietra e capanno in legno; in più dettagli di carattere: travi a vista, comignolo, basamento in pietra per il capanno | Nuovo criterio STRUCT-006.e (il vecchio e diventa f) |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
