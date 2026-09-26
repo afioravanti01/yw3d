@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Stato | draft |
-| Versione | 0.1 |
+| Stato | **approved** (G2, 2026-09-26) |
+| Versione | 0.2: formato del file e modalità confermati dall'utente |
 | Spec | [spec.md](spec.md) v0.2 |
 | Data | 2026-09-26 |
 
@@ -65,7 +65,7 @@ scripts/world-check.ts              validazione da terminale (YAML-002.e)
 | P11 | Mesher: passaggio separato per l'acqua. Faccia emessa solo se il vicino è aria (non acqua, non opaco); un'unica `MeshLambertMaterial` trasparente (opacità ~0,7, `depthWrite: false`) disegnata dopo le mesh opache | Acqua con shader dedicato (riflessi, onde) | RENDER-007.a–c con il minimo di complessità; riflessi e onde sono materia di F06. Senza facce acqua–acqua l'ordinamento dei trasparenti riguarda solo il pelo e le pareti esposte. |
 | P12 | Foglie opache con contorno irregolare: la chioma è un insieme di sfere/ellissoidi deformati, con blocchi di bordo rimossi a caso (seed) | Chioma sferica piena | Q5: silhouette meno "a cubo", nessun costo in più di rendering. |
 | P13 | File del mondo inclusi con `import.meta.glob('/worlds/*.yaml', { query: '?raw' })`; in modalità test si aggiungono `e2e/worlds/*.yaml`. Ricarica a caldo con `import.meta.hot.accept` sul modulo che li importa: si rigenera tutto (Q7) e si conserva la posa della camera | Server che espone la cartella; `fetch` a runtime | Nessun server da scrivere; HMR di Vite dà la notifica di modifica gratis. I file di prova non finiscono nella build di produzione. |
-| P14 | Errori e avvisi hanno una forma unica (`Diagnostic`: gravità, file, riga, percorso, messaggio), prodotta dal core; pannello dell'app e comando da terminale li formattano allo stesso modo | Eccezioni con messaggi liberi | YAML-002.a/e: stesso formato ovunque; il core non lancia eccezioni su input dell'utente. |
+| P14 | Errori e avvisi hanno una forma unica (`Diagnostic`: gravità, file, riga, percorso, messaggio), prodotta dal core; pannello dell'app e comando da terminale li formattano allo stesso modo | Eccezioni con messaggi liberi | YAML-002.a/e: stesso formato ovunque; il core non lancia eccezioni su input dell'utente. Per un campo o un tipo sconosciuto il messaggio suggerisce il nome valido più vicino ("did you mean…"), se ce n'è uno simile. |
 | P15 | Il mondo predefinito è scritto a mano in `worlds/default.yaml`, dopo aver scelto con gli screenshot una zona pianeggiante per il borgo | Mondo predefinito generato da codice | È anche la demo del formato: deve essere leggibile e modificabile. |
 
 ## Formato del file

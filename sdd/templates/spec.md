@@ -29,7 +29,8 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 ## Requisiti MODIFICATI
 ### AREA-NNN — <Titolo>
 - **Prima:** <testo in vigore, dalla spec viva>
-- **Dopo:** <testo nuovo completo, con i criteri>
+- **Dopo:** <testo nuovo completo; i criteri nuovi o cambiati su righe proprie, come nei requisiti aggiunti:>
+- **a** `[unit]` <Criterio.>
 - **Motivo:** <perché cambia>
 
 ## Requisiti RIMOSSI

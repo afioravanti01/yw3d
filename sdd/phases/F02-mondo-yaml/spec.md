@@ -135,17 +135,21 @@ Stesso hardware di riferimento di PERF-001.
 
 ### WORLD-004 — Registro dei tipi di blocco
 - **Prima:** c `[unit]` Sono registrati i tipi di F01: `air` (id 0, non solido, non opaco), `grass`, `dirt`, `stone`.
-- **Dopo:** c `[unit]` Sono registrati i tipi di F01 (`air`, `grass`, `dirt`, `stone`, con gli stessi id) e quelli di F02: `water` (non solido, non opaco), `sand`, `gravel`, legno e foglie di ciascuna specie di STRUCT-005, `planks` (assi), `cobblestone` (pietrame), `roof_tiles` (coppi). Criteri a, b e d invariati.
+- **Dopo:** criteri a, b e d invariati; il criterio c diventa:
+- **c** `[unit]` Sono registrati i tipi di F01 (`air`, `grass`, `dirt`, `stone`, con gli stessi id) e quelli di F02: `water` (non solido, non opaco), `sand`, `gravel`, legno e foglie di ciascuna specie di STRUCT-005, `planks` (assi), `cobblestone` (pietrame), `roof_tiles` (coppi).
 - **Motivo:** le strutture di F02 richiedono nuovi materiali.
 
 ### APP-001 — Parametri di avvio
 - **Prima:** a `[e2e]` Il parametro URL `?seed=<intero>` determina il seed; senza parametro si usa il seed di default `1`. b `[e2e]` Con un seed non valido compare un avviso visibile e si usa il seed di default.
-- **Dopo:** a `[e2e]` Il seed del terreno è quello del file del mondo. Il parametro URL `?seed=<intero>` lo sostituisce, per esplorare varianti, e un avviso visibile lo segnala. b `[e2e]` Con un seed non valido compare un avviso visibile e si usa il seed del file.
+- **Dopo:**
+- **a** `[e2e]` Il seed del terreno è quello del file del mondo. Il parametro URL `?seed=<intero>` lo sostituisce, per esplorare varianti, e un avviso visibile lo segnala.
+- **b** `[e2e]` Con un seed non valido compare un avviso visibile e si usa il seed del file.
 - **Motivo:** il mondo di un file non deve dipendere dall'URL (YAML-003).
 
 ### DEBUG-001 — Overlay diagnostico
 - **Prima:** a `[manuale]` Il tasto F3 mostra e nasconde un overlay con: fps, posizione della camera (in blocchi e in metri), velocità, seed, numero di regioni e di triangoli, tempo di caricamento, durata dell'ultima ricostruzione di una regione.
-- **Dopo:** a `[manuale]` Come prima, più: nome del file del mondo, numero di strutture per tipo, numero di avvisi.
+- **Dopo:**
+- **a** `[manuale]` Come prima, più: nome del file del mondo, numero di strutture per tipo, numero di avvisi.
 - **Motivo:** serve a capire cosa è stato caricato mentre si modifica il YAML.
 
 ## Requisiti RIMOSSI
@@ -168,3 +172,4 @@ Chiuse con l'utente il 2026-09-26, prima di G1. Tutte le proposte sono state acc
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A2.1 | 2026-09-26 | WORLD-004, APP-001, DEBUG-001 (MODIFICATI) | Solo forma: i criteri dopo «Dopo:» su righe proprie, testo invariato | Lo script di tracciabilità riconosce solo i criteri su righe proprie | sì, utente, 2026-09-26 |
