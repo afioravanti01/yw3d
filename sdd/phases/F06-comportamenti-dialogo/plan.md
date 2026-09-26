@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | draft |
+| Stato | **approved** (G2, 2026-09-26) |
 | Versione | 0.2: decisioni riviste con l'utente |
 | Spec | [spec.md](spec.md) v0.2, con A6.1 e A6.2 |
 | Data | 2026-09-26 |

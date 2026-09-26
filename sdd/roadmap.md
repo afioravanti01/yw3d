@@ -9,7 +9,7 @@
 | F03 | Fisica e giocatore | `done` (G3, 2026-09-26) | F01, F02 |
 | F04 | Host e riga di comando | `done` (G3, 2026-09-26) | F03 |
 | F05 | Personaggi e protocollo dei controllori | `done` (G3, 2026-09-26) | F04 |
-| F06 | Comportamenti, mappa e dialogo | `planning` | F05 |
+| F06 | Comportamenti, mappa e dialogo | `implementing` | F05 |
 | F07 | Agenti LLM | planned | F06 |
 | F08 | Natura viva | planned | F02 |
 
