@@ -278,3 +278,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T6.03 | Verso un'area il personaggio si ferma su un posto che sta tutto dentro l'area (le 4 colonne che occupa), verso una struttura su un posto che tocca le sue colonne d'arrivo | Con il solo «tocca» il personaggio poteva fermarsi sul bordo, fuori dall'area, e un secondo `walk_to` non risultava «già dentro» (MAP-003.c) | Nessuno |
+| T6.04 | Le misure di tempo di una ricerca del percorso (NAV-001.d e quella nuova verso le aree) prendono la migliore di più ripetizioni invece della media | Con la suite cresciuta, la media superava i 50 ms solo per il carico degli altri test in parallelo (54 ms; 14 ms da sola, uguale al codice di F05). Il commit di T6.04 è partito con questo test rosso: la catena di comandi controllava l'esito di `grep`, non di `npm run check`; corretto con un commit esplicito | Nessuno |
