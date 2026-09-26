@@ -58,7 +58,7 @@ describe('BlockRegistry', () => {
     expect(() => registry.idOf('missing')).toThrow(/Unknown block/);
   });
 
-  it('WORLD-004.c: the F01 and F02 block types are registered with stable ids', () => {
+  it('WORLD-004.c: the F01 and F02 block types are registered with stable ids; leaves are not solid', () => {
     const registry = createDefaultRegistry();
     expect(registry.all().map((b) => [b.id, b.name])).toEqual([
       [AIR, 'air'],
@@ -83,7 +83,13 @@ describe('BlockRegistry', () => {
     for (const id of [AIR, WATER]) {
       expect(registry.get(id)).toMatchObject({ solid: false, opaque: false });
     }
-    for (const block of registry.all().filter((b) => b.id !== AIR && b.id !== WATER)) {
+    // Leaves are opaque but can be walked through (F03).
+    const leaves = [OAK_LEAVES, BIRCH_LEAVES, WILLOW_LEAVES];
+    for (const id of leaves) {
+      expect(registry.get(id)).toMatchObject({ solid: false, opaque: true });
+    }
+    for (const block of registry.all()) {
+      if (block.id === AIR || block.id === WATER || leaves.includes(block.id)) continue;
       expect(block).toMatchObject({ solid: true, opaque: true });
     }
   });

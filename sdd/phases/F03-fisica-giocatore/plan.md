@@ -77,7 +77,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - D-007: il comando segnala i requisiti della fase senza criteri riconosciuti (formato della spec sbagliato).
   - Fatto quando: test di SDD-001 verdi; `sdd:trace -- F03` senza falsi avvisi.
 
-- [ ] **T3.02** Foglie non solide
+- [x] **T3.02** Foglie non solide
   - Req: WORLD-004 · Dip: —
   - `solid: false` per le foglie; test di WORLD-004.c aggiornato.
   - Fatto quando: test verdi; hash di riferimento invariati (la solidità non entra nei dati del mondo).

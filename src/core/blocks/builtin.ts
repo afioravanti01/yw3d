@@ -20,6 +20,8 @@ export const COBBLESTONE = 14;
 export const ROOF_TILES = 15;
 
 const solid = { solid: true, opaque: true } as const;
+/** Foliage hides what is behind it but can be walked through (F03 spec Q5). */
+const foliage = { solid: false, opaque: true } as const;
 
 /** Built-in block types, with the warm, slightly desaturated palette (F01 spec Q4). */
 export const BUILTIN_BLOCKS: readonly BlockDef[] = [
@@ -33,9 +35,9 @@ export const BUILTIN_BLOCKS: readonly BlockDef[] = [
   { id: OAK_LOG, name: 'oak_log', color: 0x5b4331, variation: 0.06, ...solid },
   { id: BIRCH_LOG, name: 'birch_log', color: 0xdad4c4, variation: 0.06, ...solid },
   { id: WILLOW_LOG, name: 'willow_log', color: 0x6e5a45, variation: 0.06, ...solid },
-  { id: OAK_LEAVES, name: 'oak_leaves', color: 0x5d7d3a, variation: 0.1, ...solid },
-  { id: BIRCH_LEAVES, name: 'birch_leaves', color: 0x93ab4c, variation: 0.1, ...solid },
-  { id: WILLOW_LEAVES, name: 'willow_leaves', color: 0x7f9c5b, variation: 0.1, ...solid },
+  { id: OAK_LEAVES, name: 'oak_leaves', color: 0x5d7d3a, variation: 0.1, ...foliage },
+  { id: BIRCH_LEAVES, name: 'birch_leaves', color: 0x93ab4c, variation: 0.1, ...foliage },
+  { id: WILLOW_LEAVES, name: 'willow_leaves', color: 0x7f9c5b, variation: 0.1, ...foliage },
   { id: PLANKS, name: 'planks', color: 0xa67f56, variation: 0.05, ...solid },
   { id: COBBLESTONE, name: 'cobblestone', color: 0x847e75, variation: 0.12, ...solid },
   { id: ROOF_TILES, name: 'roof_tiles', color: 0xa5563c, variation: 0.07, ...solid },
