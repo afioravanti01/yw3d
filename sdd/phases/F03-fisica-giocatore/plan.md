@@ -122,7 +122,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Tasti → intenzioni (P11), accumulatore e interpolazione, altezza degli occhi smorzata, V e F4, figura a blocchi (P10), overlay; hook `simulate` (P9). **Punto di controllo con l'utente**: demo in prima e terza persona.
   - Fatto quando: si cammina, si salta, si nuota e si cambia visuale in `npm run dev`; test della mappatura dei tasti verde.
 
-- [ ] **T3.11** Partenza nel mondo predefinito e prestazioni
+- [x] **T3.11** Partenza nel mondo predefinito e prestazioni
   - Req: PERF-003, YAML-008 · Dip: T3.10
   - Sezione `player` nel borgo di `worlds/default.yaml`; durata del passo nell'overlay; misura.
   - Fatto quando: il giocatore parte nel borgo; passo sotto 1 ms in sviluppo.
@@ -155,3 +155,4 @@ Come in F02: task in ordine senza fermarsi fino al punto di controllo di T3.10; 
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T3.06 | Galleggiamento come molla sulla profondità rispetto alla superficie (non solo sulla frazione immersa) con smorzamento quasi critico; il nuoto imposta la velocità verticale (3 m/s) invece di aggiungere una spinta | Con la sola frazione immersa un'entità rilasciata sul fondo risaliva in oltre 3 s (PHYS-006.b); con una spinta di nuoto fissa non si raggiungeva il fondo né la riva (PHYS-006.c–d) | Nessuno |
+| T3.10 | Punto di controllo spostato dopo T3.11 | Per la demo il giocatore deve partire nel borgo (sezione `player` del mondo predefinito, T3.11), non sul poggio al centro del mondo | Nessuno |

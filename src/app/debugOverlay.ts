@@ -66,7 +66,7 @@ export class DebugOverlay {
       `           ${meters(d.camera.x)}, ${meters(d.camera.y)}, ${meters(d.camera.z)} m`,
       `mode       ${MODE_NAMES[d.mode]}`,
       `player     ${block(d.player.x)}, ${block(d.player.y)}, ${block(d.player.z)} blocks · ${meters(Math.hypot(d.player.vx, d.player.vz))} m/s${d.player.onGround ? ' · on ground' : ''}${d.player.submerged >= 0.5 ? ' · in water' : ''}`,
-      `step       ${d.stepMs.toFixed(2)} ms (physics)`,
+      `step       ${d.stepMs.toFixed(3)} ms (physics, last step)`,
       `free cam   ${d.speedMps.toFixed(1)} m/s`,
       `world      ${d.world} · seed ${d.seed} · ${d.warnings} warning${d.warnings === 1 ? '' : 's'}`,
       `structures ${formatCounts(d.structureCounts)}`,

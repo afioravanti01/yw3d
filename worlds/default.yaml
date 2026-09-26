@@ -5,6 +5,11 @@ terrain:
   seed: 1
   generator: 1
 
+# The player starts in the village square, looking north towards the farmhouses.
+player:
+  at: [158, 66]
+  yaw: 0
+
 structures:
   # The village, on the flat land in the north.
   - type: stone_farmhouse
