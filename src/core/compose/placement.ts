@@ -61,11 +61,7 @@ export function placeStructures(
     const path = ['structures', i];
     const type = registry.get(decl.type);
     if (!type) {
-      const names = registry.names();
-      issues.push({
-        path: [...path, 'type'],
-        message: `unknown structure type "${decl.type}"${didYouMean(decl.type, names)}; available: ${names.join(', ')}`,
-      });
+      issues.push(unknownTypeIssue(decl.type, [...path, 'type'], registry));
       return;
     }
     const params = parseParams(type, decl.params, [...path, 'params'], issues);
@@ -93,6 +89,38 @@ export function placeStructures(
     });
   });
   return placements;
+}
+
+/**
+ * Checks type and params of structure declarations when the file has other errors, so that
+ * every error is reported at once (YAML-002.b). Positions are not checked here.
+ */
+export function checkStructureTypes(
+  decls: readonly (readonly [index: number, decl: StructureDecl])[],
+  registry: StructureRegistry,
+  issues: Issue[],
+): void {
+  for (const [i, decl] of decls) {
+    const path = ['structures', i];
+    const type = registry.get(decl.type);
+    if (!type) {
+      issues.push(unknownTypeIssue(decl.type, [...path, 'type'], registry));
+      continue;
+    }
+    parseParams(type, decl.params, [...path, 'params'], issues);
+  }
+}
+
+function unknownTypeIssue(
+  name: string,
+  path: (string | number)[],
+  registry: StructureRegistry,
+): Issue {
+  const names = registry.names();
+  return {
+    path,
+    message: `unknown structure type "${name}"${didYouMean(name, names)}; available: ${names.join(', ')}`,
+  };
 }
 
 /** Pairs of placements whose footprints overlap (STRUCT-004.a), in declaration order. */

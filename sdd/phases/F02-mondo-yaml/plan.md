@@ -167,7 +167,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Poisson disk deterministico in rettangoli e cerchi, pesi dei tipi, densità o numero, scarto dei conflitti (P7).
   - Fatto quando: test di YAML-005.a–d verdi.
 
-- [ ] **T2.12** Comando di validazione
+- [x] **T2.12** Comando di validazione
   - Req: YAML-002 · Dip: T2.05
   - `npm run world:check -- <file>`: stampa errori e avvisi nel formato del core, exit ≠ 0 se ci sono errori.
   - Fatto quando: test di YAML-002.e verde.

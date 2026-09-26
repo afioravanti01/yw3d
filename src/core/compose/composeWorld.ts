@@ -13,7 +13,7 @@ import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import { loadWorldFile } from '../yaml/worldFile';
-import { findConflicts, placeStructures, type Placement } from './placement';
+import { checkStructureTypes, findConflicts, placeStructures, type Placement } from './placement';
 import { scatterStructures } from './scatter';
 
 export interface ComposeOptions {
@@ -72,7 +72,16 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
 
   const loaded = loadWorldFile(text, file);
   const { world: decl } = loaded;
-  if (!decl) return failed(loaded.diagnostics);
+  if (!decl) {
+    const more: Issue[] = [];
+    checkStructureTypes(loaded.validStructures, options.registry, more);
+    const extra = more.map((i) =>
+      diagnostic('error', file, loaded.lineOf(i.path), i.path, i.message),
+    );
+    const all = [...loaded.diagnostics, ...extra];
+    all.sort((a, b) => (a.line ?? 0) - (b.line ?? 0));
+    return failed(all);
+  }
   const issues: Issue[] = [];
   const warnings: Issue[] = [];
   const toDiagnostics = () => [

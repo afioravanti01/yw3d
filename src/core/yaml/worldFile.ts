@@ -83,6 +83,11 @@ export type AreaDecl = Infer<typeof areaSchema>;
 export interface LoadedWorldFile {
   /** The validated file; undefined when there are errors. */
   readonly world: WorldFile | undefined;
+  /**
+   * Structure declarations that are valid on their own, with their index, also when other
+   * parts of the file have errors: their types and params can still be checked (YAML-002.b).
+   */
+  readonly validStructures: readonly (readonly [index: number, decl: StructureDecl])[];
   readonly diagnostics: Diagnostic[];
   /** Line of a field, for diagnostics produced later (structure params, conflicts). */
   lineOf(path: readonly (string | number)[]): number | null;
@@ -92,11 +97,17 @@ export interface LoadedWorldFile {
 export function loadWorldFile(text: string, file: string): LoadedWorldFile {
   const parsed = parseYaml(text, file);
   if (parsed.diagnostics.length > 0) {
-    return { world: undefined, diagnostics: parsed.diagnostics, lineOf: parsed.lineOf };
+    return {
+      world: undefined,
+      validStructures: [],
+      diagnostics: parsed.diagnostics,
+      lineOf: parsed.lineOf,
+    };
   }
   if (parsed.value === undefined || parsed.value === null) {
     return {
       world: undefined,
+      validStructures: [],
       diagnostics: [diagnostic('error', file, null, '', 'the file is empty')],
       lineOf: parsed.lineOf,
     };
@@ -106,5 +117,18 @@ export function loadWorldFile(text: string, file: string): LoadedWorldFile {
   const diagnostics = issues.map((issue) =>
     diagnostic('error', file, parsed.lineOf(issue.path), issue.path, issue.message),
   );
-  return { world: diagnostics.length > 0 ? undefined : world, diagnostics, lineOf: parsed.lineOf };
+  const validStructures: [number, StructureDecl][] = [];
+  const rawStructures = (parsed.value as { structures?: unknown }).structures;
+  if (Array.isArray(rawStructures)) {
+    rawStructures.forEach((raw, i) => {
+      const decl = structureSchema.parse(raw, ['structures', i], []);
+      if (decl) validStructures.push([i, decl]);
+    });
+  }
+  return {
+    world: diagnostics.length > 0 ? undefined : world,
+    validStructures,
+    diagnostics,
+    lineOf: parsed.lineOf,
+  };
 }

@@ -302,23 +302,25 @@ export function variant<V extends Variants>(variants: V): Schema<VariantOf<V>> {
   };
 }
 
-/** Levenshtein distance, for "did you mean" hints. */
+/**
+ * Edit distance counting insertions, deletions, substitutions and swaps of two adjacent letters
+ * (optimal string alignment), for "did you mean" hints: "oka" is one edit away from "oak".
+ */
 function distance(a: string, b: string): number {
-  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const d = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+  );
   for (let i = 1; i <= a.length; i++) {
-    let diagonal = row[0]!;
-    row[0] = i;
     for (let j = 1; j <= b.length; j++) {
-      const next = Math.min(
-        row[j]! + 1,
-        row[j - 1]! + 1,
-        diagonal + (a[i - 1] === b[j - 1] ? 0 : 1),
-      );
-      diagonal = row[j]!;
-      row[j] = next;
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let best = Math.min(d[i - 1]![j]! + 1, d[i]![j - 1]! + 1, d[i - 1]![j - 1]! + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        best = Math.min(best, d[i - 2]![j - 2]! + 1);
+      }
+      d[i]![j] = best;
     }
   }
-  return row[b.length]!;
+  return d[a.length]![b.length]!;
 }
 
 /** ` (did you mean "width"?)` when a candidate is close enough, otherwise an empty string. */
