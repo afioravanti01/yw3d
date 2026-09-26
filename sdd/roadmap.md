@@ -7,9 +7,12 @@
 | F01 | Fondamenta e mondo voxel | `done` (G3, 2026-09-26) | — |
 | F02 | Mondo da YAML e strutture programmabili | `done` (G3, 2026-09-26) | F01 |
 | F03 | Fisica e giocatore | `done` (G3, 2026-09-26) | F01, F02 |
-| F04 | Personaggi animati e comportamenti programmati | planned | F02, F03 |
-| F05 | Personaggi AI e interazione | planned | F04 |
-| F06 | Natura viva | planned | F02 |
+| F04 | Host e riga di comando | planned | F03 |
+| F05 | Personaggi e protocollo dei controllori | planned | F04 |
+| F06 | Agenti LLM | planned | F05 |
+| F07 | Natura viva | planned | F02 |
+
+La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio).
 
 ## F01 — Fondamenta e mondo voxel
 **Obiettivo:** un mondo a blocchi finito, generato in modo deterministico, con uno stile riconoscibilmente diverso da Minecraft, esplorabile con una camera libera. Fondamenta tecniche: separazione core/rendering, test headless, tracciabilità automatica.
@@ -46,28 +49,42 @@
 
 **Note per la spec** (dalla chiusura di F02, 2026-09-26): primo task della fase: avviso di `sdd:trace` per i requisiti senza criteri riconosciuti (D-007).
 
-## F04 — Personaggi animati e comportamenti programmati
-**Obiettivo:** personaggi a voxel animati che si muovono nel mondo tramite la fisica di F03, guidati da script scritti dall'utente.
-- Modello a voxel con parti articolate e animazioni procedurali: fermo, camminata, salto, parlata.
-- Navigazione: ricerca del percorso sulla griglia voxel (gradini, porte, acqua).
-- API dei comportamenti (`defineBehavior`) con primitive asincrone: `walkTo`, `lookAt`, `wait`, `say`, `follow`.
-- Sezione `characters` del YAML con `control: script`.
-- Interazione di base: mi avvicino, premo un tasto, il personaggio reagisce secondo lo script.
+## F04 — Host e riga di comando
+**Obiettivo:** l'autore lavora in una propria cartella e avvia il mondo con un comando; la simulazione gira in un host headless e il browser si collega come vista (D-008).
+- `yw3d <cartella>` (o `yw3d <file.yaml>`): valida il YAML e stampa gli errori nel terminale, avvia l'host, serve l'app e apre il browser. Comando installabile con `npm link`.
+- Cartella del mondo in qualunque posizione del disco: il YAML e, facoltative, strutture TypeScript dell'autore registrate all'avvio.
+- Host: composizione del mondo e simulazione a passo fisso in Node, autorità sullo stato.
+- Browser collegato via WebSocket: ricostruisce il mondo dallo stesso YAML, riceve lo stato delle entità, invia le intenzioni del giocatore. La modalità solo browser resta.
+- Ricarica a caldo guidata dall'host: salvando il YAML il mondo si rigenera, errori nel terminale e nel pannello.
+- Terminale dell'host: avvio, errori, client collegati.
 
-**Demo:** un personaggio fa il giro del villaggio evitando le case, si ferma al laghetto e mi saluta quando mi avvicino.
-**Aree:** CHAR, NAV, BEHAV, YAML (modificati).
+**Demo:** da una cartella fuori dal progetto lancio `yw3d valle/`, il browser si apre sul mio mondo; modifico il YAML e il mondo cambia; chiudo il browser e l'host continua a girare, lo riapro e ritrovo il giocatore dov'era.
+**Aree:** HOST, CLI, APP (modificati), YAML (modificati).
 
-## F05 — Personaggi AI e interazione
-**Obiettivo:** personaggi guidati da un modello AI con cui dialogare liberamente.
-- `control: ai` nel YAML, con persona, obiettivi e luogo di riferimento.
-- Architettura "cervello e corpo": il modello (Claude, tramite backend Node) riceve una percezione sintetica (dove sono, cosa vedo, chi mi parla, cosa ricordo) e risponde chiamando **strumenti** che corrispondono alle primitive di F04 (`walk_to`, `say`, `look_at`, `follow`, `wait`). Il corpo li esegue con navigazione e fisica: il modello non può violare la fisica per costruzione (P3).
+## F05 — Personaggi e protocollo dei controllori
+**Obiettivo:** personaggi a blocchi animati, mossi dalla fisica di F03 e guidati da controllori in qualunque linguaggio.
+- Personaggi: modello a blocchi con parti articolate e animazioni procedurali (fermo, camminata, salto, parlata). Sezione `characters` del YAML.
+- Azioni di alto livello eseguite dall'host: `walk_to`, `look_at`, `say`, `follow`, `wait`; navigazione con ricerca del percorso sulla griglia (gradini, porte, acqua).
+- Percezione: cosa vede e sente il personaggio (posizione, entità vicine, frasi rivolte a lui), in forma sintetica.
+- Protocollo: modello di messaggi versionato; canali JSON a righe su stdio (processi lanciati dal YAML) e WebSocket (client esterni). Consenso dell'utente prima di lanciare i comandi, verifica che esistano, tempi limite e ripieghi per i controllori lenti o bloccati.
+- Esempi di controllori in JavaScript e Python.
+- Interazione di base: mi avvicino, premo un tasto, il personaggio riceve l'evento e reagisce.
+
+**Demo:** un guardiano scritto in Python fa il giro del villaggio evitando le case, si ferma al laghetto e mi saluta quando mi avvicino.
+**Aree:** CHAR, NAV, PROTO, YAML (modificati).
+
+## F06 — Agenti LLM
+**Obiettivo:** personaggi guidati da agenti LLM tramite le CLI disponibili sulla macchina dell'utente.
+- Server MCP dell'host: le azioni di F05 come strumenti, la percezione come risorsa o come risposta agli strumenti.
+- Controllori `agent` nel YAML: quale CLI usare (claude, codex, opencode, ollama…), persona, obiettivi, luogo di riferimento; avvio headless e verifica della configurazione.
+- Architettura "cervello e corpo": l'agente decide, il corpo esegue con navigazione e fisica; nessun agente può violare la fisica (P3).
 - Dialogo libero con il giocatore, memoria per personaggio.
-- Budget di costo e latenza, limiti di frequenza, comportamento di ripiego se il modello non è raggiungibile.
+- Budget di costo e latenza, limiti di frequenza, ripiego se l'agente non risponde. Valutazione di una modalità a turni per esperimenti riproducibili (D-008).
 
-**Demo:** chiedo a un pescatore dove si pesca meglio, mi risponde e mi accompagna al laghetto.
-**Aree:** AI, UI, BEHAV (modificati).
+**Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
+**Aree:** AGENT, MCP, UI, PROTO (modificati).
 
-## F06 — Natura viva
+## F07 — Natura viva
 Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline, lucciole), audio ambientale.
 **Aree:** RENDER, AUDIO, WORLD.
 
@@ -76,42 +93,42 @@ Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline,
 - Modifica dei blocchi in gioco e salvataggio dello stato.
 - Altre strutture: ponti, recinti, mulini, sentieri.
 - Personaggi AI che conversano tra loro.
+- Interazione senza browser (D-008): console di comandi dell'host, mappa testuale nel terminale, screenshot su richiesta, riproduzione delle sessioni registrate.
+- Apertura di una cartella del mondo direttamente dal browser, senza host (trascinamento o selettore di file).
+- Pubblicazione del comando `yw3d` su npm.
 - Generazione in un Web Worker e mondi più grandi.
 
 ## Anteprima del YAML (non normativa)
 
-Solo per dare un'idea della direzione; lo schema vero lo definiranno le spec di F02, F04 e F05.
+Solo per dare un'idea della direzione. Terreno e strutture sono già definiti (spec viva [world-file.md](specs/world-file.md)); personaggi e controllori li definiranno le spec di F05 e F06.
 
 ```yaml
 version: 1
-world:
-  name: Valle dei Salici
+terrain:
   seed: 1234
-  size: [512, 96, 512]          # blocchi (x, y, z) = 256 m × 48 m × 256 m
-  terrain: { preset: rolling-hills }
+  generator: 1
 
-objects:
-  - type: tree
-    species: oak
-    at: [64, 80]                # (x, z); y dal terreno
-  - type: house
-    id: casa-marta
-    style: stone-cottage
+player:
+  at: [158, 66]
+
+structures:
+  - type: stone_farmhouse
     at: [120, 100]
-    facing: south
+    rotation: 180
   - type: pond
-    id: laghetto
-    at: [150, 60]
-    radius: 7
+    at: [196, 112]
+    params: { radius: 10 }
 
 characters:
   - id: guardiano
-    control: script
-    behavior: ./behaviors/patrol.ts
+    at: [150, 70]
+    controller:
+      command: python guardiano.py      # any language, JSON lines on stdio
   - id: marta
-    control: ai
-    home: casa-marta
-    persona: >
-      Anziana pescatrice del villaggio, conosce ogni albero della valle
-      e diffida dei forestieri finché non le si parla del laghetto.
+    at: [196, 118]
+    controller:
+      agent: claude                     # or codex, opencode, ollama…
+      persona: >
+        Anziana pescatrice del villaggio, conosce ogni albero della valle
+        e diffida dei forestieri finché non le si parla del laghetto.
 ```

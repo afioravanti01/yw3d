@@ -3,11 +3,11 @@
 > Principi non negoziabili del progetto. Ogni spec e ogni piano devono rispettarli.
 > Si modifica solo con una decisione esplicita registrata in [decisions.md](decisions.md).
 
-Versione: 1.0 — 2026-09-26
+Versione: 1.1 — 2026-09-26 (D-008: host headless e controllori esterni)
 
 ## Visione
 
-yw3d è un mondo 3D a blocchi immerso nella natura e interamente **programmabile**: lo stato iniziale del mondo (terreno, strutture, personaggi) è descritto in un file YAML, e nuovi tipi di strutture e comportamenti si aggiungono via codice. Il mondo è abitato da personaggi animati, alcuni guidati da script scritti dall'utente e altri da un modello AI, con cui il giocatore può interagire. Tutto ciò che si muove rispetta la fisica del mondo.
+yw3d è un mondo 3D a blocchi immerso nella natura e interamente **programmabile**: lo stato iniziale del mondo (terreno, strutture, personaggi) è descritto in un file YAML, e nuovi tipi di strutture e comportamenti si aggiungono via codice. Il mondo è il contenitore di personaggi animati guidati da programmi scritti dall'utente in qualunque linguaggio e da agenti LLM (claude, codex, opencode, ollama o altri), con cui il giocatore può interagire. Il mondo gira in un host headless avviato da riga di comando a partire da una cartella con il YAML e gli script; il browser è una vista collegata, e per i mondi senza controllori esterni può funzionare da solo. Tutto ciò che si muove rispetta la fisica del mondo.
 
 Non è un clone di Minecraft: grafica senza texture pixel-art, voxel più piccoli, un mondo finito e "scritto" invece che infinito e casuale, strutture con un carattere proprio.
 
@@ -44,6 +44,9 @@ Chiavi API e credenziali non finiscono mai nel codice eseguito dal browser né n
 ### P9 — Semplicità
 Nuove dipendenze solo se motivate nel piano. Codice semplice e leggibile prima delle ottimizzazioni; le ottimizzazioni sono guidate dai requisiti di prestazione della spec.
 
+### P10 — Personaggi guidati da controllori esterni
+Un personaggio può essere guidato da qualunque programma che parli il protocollo del mondo: script in qualunque linguaggio, client di rete, agenti LLM. Il controllore riceve percezioni e invia azioni di alto livello; l'host le traduce in intenzioni per la fisica (P3) e resta l'autorità sullo stato. Il mondo non aspetta i controllori, e un controllore lento o bloccato non lo rallenta. I comandi dichiarati in una cartella del mondo si eseguono solo con il consenso dell'utente (D-008).
+
 ## Stack tecnologico
 
 | Ambito | Scelta |
@@ -55,9 +58,11 @@ Nuove dipendenze solo se motivate nel piano. Codice semplice e leggibile prima d
 | Test unitari | Vitest, ambiente Node (headless) |
 | Test end-to-end | Playwright (Chromium) |
 | Formato del mondo | YAML (da F02) |
-| AI dei personaggi | Claude API tramite un piccolo backend Node (da F05; modello e dettagli nella spec F05) |
+| Host | Processo Node headless, avviato con `yw3d <cartella del mondo>` (da F04) |
+| Protocollo dei controllori | Un modello di messaggi su tre canali: JSON a righe su stdio, WebSocket, server MCP (da F05–F06) |
+| Agenti LLM | CLI disponibili sulla macchina dell'utente, in modalità headless, collegate via MCP (da F06; D-008) |
 
-Motivazioni in [decisions.md](decisions.md) (D-001).
+Motivazioni in [decisions.md](decisions.md) (D-001, D-008).
 
 ## Qualità
 - `npm run check` (typecheck, lint, test unitari) è verde alla fine di ogni task.
