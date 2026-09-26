@@ -131,7 +131,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `BlockDef`, `BlockRegistry` con validazione di duplicati; `builtin.ts` con colori base e ampiezze di variazione della palette naturalistica calda. Valori di partenza (sRGB): erba `#7DA453`, terra `#8A6A4B`, pietra `#8F8B84`.
   - Fatto quando: test WORLD-004.a–d verdi.
 
-- [ ] **T1.05** Unità, chunk e World
+- [x] **T1.05** Unità, chunk e World
   - Req: WORLD-001, WORLD-002, WORLD-003, RENDER-005 · Dip: T1.04
   - Conversioni blocchi ↔ metri; validazione delle dimensioni; `getBlock`/`setBlock` con limiti; osservatori delle modifiche; `chunksAffectedBy(x, y, z)`; `hash()`.
   - Fatto quando: test WORLD-001, WORLD-002, WORLD-003 e RENDER-005.a verdi.
