@@ -182,7 +182,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `ArrowUp`/`ArrowLeft`/`ArrowDown`/`ArrowRight` aggiunti ai codici di movimento, equivalenti a W/A/S/D.
   - Fatto quando: `npm run check` verde; volo con le frecce verificato a mano.
 
-- [ ] **T1.16+** Aree pianeggianti nel terreno
+- [x] **T1.16+** Aree pianeggianti nel terreno
   - Req: WORLD-006 (A1.2) · Dip: T1.06
   - Maschera di pianura nel generatore (vedi "Generazione del terreno"); test WORLD-006.h; hash di riferimento di WORLD-005.b aggiornato con deviazione registrata.
   - Fatto quando: tutti i test di WORLD-006 verdi sui 5 seed; aspetto rivisto con l'utente.
@@ -225,3 +225,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.09 | `@playwright/test` e Chromium headless installati in T1.09 invece che in T1.13 | Servono per controllare il risultato visivo con screenshot già durante T1.09–T1.12. Chromium headless parte in WSL anche senza `install-deps` | Nessuno |
 | T1.10 | Ombre `PCFShadowMap` invece di PCF soft | Three.js r186 ha rimosso `PCFSoftShadowMap` | Nessuno |
 | T1.12 | L'overlay diagnostico è visibile all'avvio (F3 lo nasconde) e mostra anche i tempi di generazione e meshing; i testi dell'interfaccia sono in inglese come il codice | Utile alla demo e alla misura di PERF-001.a; la spec non fissa lo stato iniziale né la lingua dell'interfaccia | Nessuno |
+| T1.16+ | Hash di riferimento di WORLD-005.b da `decee4b7` a `b8c27500` | Il generatore produce un terreno diverso per le pianure dell'emendamento A1.2, come previsto da WORLD-005.b | Nessuno. Sui 5 seed: zone piane 31–47% (soglia 25%); il rilievo di WORLD-006.c scende a 17 blocchi sui seed 1 e 2, con 1 blocco di margine |

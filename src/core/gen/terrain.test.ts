@@ -52,6 +52,69 @@ function percentile(values: Int32Array, p: number): number {
   return sorted[Math.floor(p * (sorted.length - 1))]!;
 }
 
+/**
+ * Sliding window over a sizeX × sizeZ grid: out[x + z * sizeX] is `pick` over the w × w window
+ * starting at (x, z). Only starts with the whole window inside the grid are meaningful.
+ */
+function slidingWindow(
+  values: ArrayLike<number>,
+  sizeX: number,
+  sizeZ: number,
+  w: number,
+  pick: (a: number, b: number) => number,
+): Int32Array {
+  const rows = new Int32Array(sizeX * sizeZ);
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x + w <= sizeX; x++) {
+      let v = values[x + z * sizeX]!;
+      for (let d = 1; d < w; d++) v = pick(v, values[x + d + z * sizeX]!);
+      rows[x + z * sizeX] = v;
+    }
+  }
+  const out = new Int32Array(sizeX * sizeZ);
+  for (let z = 0; z + w <= sizeZ; z++) {
+    for (let x = 0; x + w <= sizeX; x++) {
+      let v = rows[x + z * sizeX]!;
+      for (let d = 1; d < w; d++) v = pick(v, rows[x + (z + d) * sizeX]!);
+      out[x + z * sizeX] = v;
+    }
+  }
+  return out;
+}
+
+/** Fraction of columns inside at least one w × w zone whose height range is at most `tolerance`. */
+function flatCoverage(a: Analysis, w: number, tolerance: number): number {
+  const { x: sx, z: sz } = a.world.size;
+  const lo = slidingWindow(a.heights, sx, sz, w, Math.min);
+  const hi = slidingWindow(a.heights, sx, sz, w, Math.max);
+  // flat[s] = 1 if the zone starting at s is flat; a column is covered if a flat zone starts
+  // within w - 1 blocks before it on both axes.
+  const flat = new Int32Array(sx * sz);
+  for (let z = 0; z + w <= sz; z++) {
+    for (let x = 0; x + w <= sx; x++) {
+      const i = x + z * sx;
+      flat[i] = hi[i]! - lo[i]! <= tolerance ? 1 : 0;
+    }
+  }
+  let covered = 0;
+  const reach = new Int32Array(sx * sz);
+  for (let z = 0; z < sz; z++) {
+    for (let x = 0; x < sx; x++) {
+      let v = 0;
+      for (let d = 0; d < w && d <= x && !v; d++) v = flat[x - d + z * sx]!;
+      reach[x + z * sx] = v;
+    }
+  }
+  for (let z = 0; z < sz; z++) {
+    for (let x = 0; x < sx; x++) {
+      let v = 0;
+      for (let d = 0; d < w && d <= z && !v; d++) v = reach[x + (z - d) * sx]!;
+      covered += v;
+    }
+  }
+  return covered / (sx * sz);
+}
+
 describe('terrain generation', () => {
   const analyses = new Map<number, Analysis>();
 
@@ -73,7 +136,7 @@ describe('terrain generation', () => {
 
   it('WORLD-005.b: the hash of the reference seed is fixed', () => {
     // Changing the generator output requires updating this value and logging a plan deviation.
-    expect(analyses.get(1)!.world.hash().toString(16)).toMatchInlineSnapshot(`"decee4b7"`);
+    expect(analyses.get(1)!.world.hash().toString(16)).toMatchInlineSnapshot(`"b8c27500"`);
   });
 
   it('WORLD-005.c: 10 different seeds give 10 different worlds', () => {
@@ -164,6 +227,12 @@ describe('terrain generation', () => {
         }
       }
       expect(steepGrass).toBe(0);
+    });
+  });
+
+  it('WORLD-006.h: at least 25% of columns lie in a flat 16 × 16 zone', () => {
+    each((a) => {
+      expect(flatCoverage(a, 16, 1)).toBeGreaterThanOrEqual(0.25);
     });
   });
 
