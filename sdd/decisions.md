@@ -3,7 +3,7 @@
 Formato: contesto, decisione, alternative, conseguenze. Una decisione non si riscrive: si supera con una nuova voce che la cita.
 
 ## D-001 — Piattaforma web: TypeScript, Three.js, Vite
-Data: 2026-09-26 · Stato: **proposta**, si conferma con l'approvazione di F01
+Data: 2026-09-26 · Stato: accettata
 
 **Contesto.** Serve una base per un mondo a voxel programmabile via YAML e codice, sviluppato in larga parte da agenti AI dentro un processo SDD.
 
@@ -17,7 +17,7 @@ Data: 2026-09-26 · Stato: **proposta**, si conferma con l'approvazione di F01
 **Conseguenze.** Tutto è testo e la logica è testabile senza GPU, il che aiuta sia l'SDD sia gli agenti. Si esegue nel browser senza installazioni. Fisica voxel e animazioni si scrivono a mano; per un mondo a voxel è comunque la scelta tipica (collisioni AABB contro griglia, non un motore fisico generico). Prestazioni inferiori a un motore nativo, contenute con mondo finito e meshing per chunk.
 
 ## D-002 — Voxel da 0,5 m
-Data: 2026-09-26 · Stato: **proposta** (spec F01, Q2)
+Data: 2026-09-26 · Stato: accettata (spec F01, Q2)
 
 **Contesto.** Differenziarsi da Minecraft (1 m) e permettere strutture più fini: tetti, finestre, alberi più organici.
 **Decisione.** 1 blocco = 0,5 m; un personaggio adulto è alto circa 3,5 blocchi.
@@ -25,11 +25,12 @@ Data: 2026-09-26 · Stato: **proposta** (spec F01, Q2)
 **Conseguenze.** A parità di area servono 8 volte i blocchi rispetto a 1 m: si compensa con un mondo finito (D-003).
 
 ## D-003 — Mondo finito
-Data: 2026-09-26 · Stato: **proposta** (spec F01, Q3)
+Data: 2026-09-26 · Stato: accettata (spec F01, Q3)
 
-**Decisione.** Dimensioni fissate dalla configurazione (default 128 m × 128 m), senza streaming di chunk.
+**Decisione.** Dimensioni fissate dalla configurazione, default 256 m × 256 m (512 × 96 × 512 blocchi), senza streaming di chunk.
 **Motivo.** Il mondo è scritto nel YAML, non esplorato all'infinito. Un mondo finito semplifica determinismo, fisica, navigazione e percezione dei personaggi AI.
-**Alternative.** Mondo infinito con streaming: molta complessità, poco utile per un mondo dichiarativo.
+**Alternative.** 128 m × 128 m (la proposta iniziale): un quarto dei dati, caricamento più rapido, ma meno spazio per più insediamenti. Mondo infinito con streaming: molta complessità, poco utile per un mondo dichiarativo.
+**Conseguenze.** Circa 25 M voxel e 768 chunk: il budget di caricamento di PERF-001 passa da 3 s a 5 s, e il piano deve saltare i chunk senza facce visibili.
 
 ## D-004 — Spec vive più spec di fase come delta
 Data: 2026-09-26 · Stato: accettata
@@ -43,6 +44,7 @@ Data: 2026-09-26 · Stato: accettata, **da rivalutare nella retro di F02**
 
 **Decisione.** Template markdown, convenzioni e uno script di tracciabilità, senza adottare un framework (Spec Kit, OpenSpec, Kiro).
 **Motivo.** L'esperimento vuole osservare il processo in sé; un framework nasconde scelte e aggiunge dipendenze. Le convenzioni restano compatibili nello spirito (spec → piano → task; delta → spec vive), quindi un passaggio a un framework resta possibile.
+**Alternative.** Stessa strumentazione più comandi Claude Code (`/sdd-spec`, `/sdd-plan`, `/sdd-task`, `/sdd-close`) che rendono ripetibile ogni passo: scartata per ora, i passi si guidano a voce seguendo `process.md`. OpenSpec: spec vive native, ma meno controllo su gate e metriche. GitHub Spec Kit: organizzato per singola funzionalità, senza spec vive (in conflitto con D-004).
 
 ## D-006 — Lingua
 Data: 2026-09-26 · Stato: accettata

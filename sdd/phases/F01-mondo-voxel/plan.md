@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | **draft**, in attesa di G2 (dopo G1) |
-| Spec | [spec.md](spec.md) v0.1 |
+| Spec | [spec.md](spec.md) v0.2 |
 | Data | 2026-09-26 |
 
 ## Panoramica
@@ -45,13 +45,13 @@ I test unitari stanno accanto al file che verificano (`*.test.ts`).
 
 | # | Decisione | Alternative scartate | Motivo |
 |---|---|---|---|
-| P1 | Chunk da 32 × 32 × 32 su `Uint8Array` (fino a 255 tipi) | 16³: 1536 chunk e troppe draw call. 64³: ricostruzione oltre 16 ms. `Uint16Array` | Mondo di default = 8 × 3 × 8 = 192 chunk. 255 tipi bastano a lungo; passare a 16 bit è una modifica locale. |
-| P2 | Meshing per facce con culling, non greedy | Greedy meshing | Il greedy fonde le facce e cancellerebbe variazione di colore e AO per blocco (RENDER-001/002). Triangoli stimati: 0,3–0,6 M, sostenibili. |
+| P1 | Chunk da 32 × 32 × 32 su `Uint8Array` (fino a 255 tipi) | 16³: 1536 chunk e troppe draw call. 64³: ricostruzione oltre 16 ms. `Uint16Array` | Mondo di default = 16 × 3 × 16 = 768 chunk; quelli senza facce visibili (tutto aria, o pieni e circondati) non producono una Mesh. 255 tipi bastano a lungo; passare a 16 bit è una modifica locale. |
+| P2 | Meshing per facce con culling, non greedy | Greedy meshing | Il greedy fonde le facce e cancellerebbe variazione di colore e AO per blocco (RENDER-001/002). Triangoli stimati: 1–1,5 M, sostenibili con il frustum culling per chunk di Three.js. |
 | P3 | Il mesher lavora su una copia del chunk con bordo di 1 blocco (34³) e produce buffer tipizzati | Leggere i vicini dal World a ogni faccia | Niente casi speciali ai confini tra chunk; il mesher si può spostare in un Web Worker senza modifiche. |
 | P4 | AO classico a 3 vicini, 4 livelli, inversione della diagonale del quad in base ai livelli agli angoli | SSAO in post-processing | Deterministico, testabile, nessun costo a runtime. |
 | P5 | Colore sRGB nel registro (core), conversione in lineare nel mesher. Variazione = hash(x, y, z) → [−1, 1] × ampiezza sulla luminosità, più un piccolo spostamento di tinta | Texture di rumore | Nessuna texture (RENDER-001), deterministico. |
 | P6 | `MeshLambertMaterial` con `vertexColors` | `MeshStandardMaterial` | Più economico; look morbido; PBR non serve in F01. |
-| P7 | Un'unica `DirectionalLight` con shadow map 4096 (PCF soft) che copre tutto il mondo; `shadowMap.autoUpdate = false`, aggiornata solo dopo una ricostruzione | Cascaded shadow maps | Il mondo è piccolo e statico: circa 3 cm per texel, costo delle ombre quasi nullo a regime. |
+| P7 | Un'unica `DirectionalLight` con shadow map 4096 (PCF soft) che copre tutto il mondo; `shadowMap.autoUpdate = false`, aggiornata solo dopo una ricostruzione | Cascaded shadow maps | Il mondo è finito e statico: circa 6 cm per texel su 256 m, costo delle ombre quasi nullo a regime. |
 | P8 | Cielo: sfera con `ShaderMaterial` a gradiente. `THREE.Fog` lineare con il colore dell'orizzonte | `Sky` degli esempi di three (scattering fisico) | Controllo diretto dello stile; colore nebbia = orizzonte (RENDER-004.b). |
 | P9 | Rumore con `simplex-noise` v4, inizializzato dal PRNG con seed | Implementazione propria | Libreria piccola e testata; usa solo aritmetica di base, quindi è deterministica anche tra motori JS diversi. |
 | P10 | Hash del mondo: FNV-1a a 32 bit sui dati dei chunk in ordine fisso | SHA-256 via WebCrypto | Sincrono e identico in Node e nel browser. |
@@ -65,7 +65,7 @@ Altezza della superficie per colonna, con parametri raccolti in `TerrainParams`:
 ```
 h(x, z) = base
         + A_colline   · fbm(x, z; λ ≈ 96 blocchi, 4 ottave)
-        + A_poggi     · Σ bump(x, z; centro_i, raggio_i)     1–3 poggi, posizioni dal PRNG
+        + A_poggi     · Σ bump(x, z; centro_i, raggio_i)     2–5 poggi, posizioni dal PRNG
         + A_dettaglio · simplex(x, z; λ ≈ 20 blocchi)
 h ← clamp(round(h), 16, 72)
 ```
@@ -99,6 +99,7 @@ Convenzione: il titolo di ogni test inizia con i criteri che verifica, es. `it('
 | WebGL headless non disponibile in WSL2 | I test e2e non girano | Flag SwiftShader (`--use-angle=swiftshader`). In ultima istanza i criteri `[e2e]` diventano `[manuale]` tramite emendamento. |
 | Le dipendenze di sistema di Playwright richiedono sudo | Installazione bloccata | L'utente esegue una volta `sudo npx playwright install-deps chromium`. |
 | Ombre sull'intero mondo pesanti su GPU integrata | PERF-001.b non passa | Già mitigato da P7 (ombre statiche); altrimenti shadow map 2048. |
+| Meshing di 768 chunk nel thread principale oltre il budget di 5 s | PERF-001.a non passa | Saltare i chunk senza facce (P1); se non basta, meshing in Web Worker (P3 lo rende possibile) come task `+`. |
 | Terreno che sembra rumore, non natura | WORLD-006.g non passa | Punto di controllo visivo con l'utente dopo T1.12, prima di chiudere. |
 | Differenze numeriche tra Node e browser | WORLD-005.d non passa | Solo aritmetica di base nella generazione, altezze arrotondate a intero, test e2e dedicato. |
 | Le prestazioni misurate sul browser Windows dipendono dalla rete WSL2 | Tempo di caricamento falsato | Misurare con `vite build` + `vite preview`, non con il dev server. |
@@ -124,7 +125,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [ ] **T1.04** Registro dei blocchi e blocchi di F01
   - Req: WORLD-004 · Dip: T1.01
-  - `BlockDef`, `BlockRegistry` con validazione di duplicati; `builtin.ts` con colori base e ampiezze di variazione della palette naturalistica.
+  - `BlockDef`, `BlockRegistry` con validazione di duplicati; `builtin.ts` con colori base e ampiezze di variazione della palette naturalistica calda. Valori di partenza (sRGB): erba `#7DA453`, terra `#8A6A4B`, pietra `#8F8B84`.
   - Fatto quando: test WORLD-004.a–d verdi.
 
 - [ ] **T1.05** Unità, chunk e World
@@ -135,7 +136,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 - [ ] **T1.06** Generatore di terreno
   - Req: WORLD-005, WORLD-006 · Dip: T1.03, T1.05
   - Algoritmo della sezione "Generazione del terreno"; `TerrainParams` con i default; taratura; hash di riferimento per il seed 1.
-  - Fatto quando: test WORLD-005.a–c e WORLD-006.a–f verdi su 5 seed; generazione del mondo di default in Node ≤ 1 s.
+  - Fatto quando: test WORLD-005.a–c e WORLD-006.a–f verdi su 5 seed; generazione del mondo di default in Node ≤ 1,5 s.
 
 - [ ] **T1.07** Mesher: culling delle facce e bordi del mondo
   - Req: RENDER-001, RENDER-006 · Dip: T1.05
@@ -154,7 +155,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [ ] **T1.10** Scena: luci, ombre, cielo, nebbia
   - Req: RENDER-003, RENDER-004 · Dip: T1.09
-  - Luce emisferica + direzionale con ombre statiche (P7); cielo a gradiente e nebbia (P8); prima taratura dei colori.
+  - Luce emisferica + direzionale con ombre statiche (P7); cielo a gradiente e nebbia (P8); prima taratura dei colori. Valori di partenza: cielo da `#DCE8EC` (orizzonte, = nebbia) a `#86B4DC` (zenit), sole `#FFE8C4` basso sull'orizzonte.
   - Fatto quando: la scena mostra ombre, cielo e nebbia; screenshot allegato al commit per la revisione.
 
 - [ ] **T1.11** Camera libera

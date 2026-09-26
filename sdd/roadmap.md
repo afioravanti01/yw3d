@@ -80,7 +80,7 @@ version: 1
 world:
   name: Valle dei Salici
   seed: 1234
-  size: [256, 96, 256]          # blocchi (x, y, z) = 128 m × 48 m × 128 m
+  size: [512, 96, 512]          # blocchi (x, y, z) = 256 m × 48 m × 256 m
   terrain: { preset: rolling-hills }
 
 objects:

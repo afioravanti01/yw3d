@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | **draft**, in attesa di G1 |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-26 |
 | Piano | [plan.md](plan.md) |
 
@@ -43,7 +43,7 @@ Il codice del core (stato e logica del mondo) non dipende da Three.js né dalle 
 - **b** `[unit]` Un blocco misura 0,5 m di lato. Il core espone un'unica definizione di questo fattore e le funzioni di conversione tra blocchi e metri.
 
 ### WORLD-002 — Mondo finito
-- **a** `[unit]` Le dimensioni del mondo (X, Y, Z in blocchi) sono configurabili; default 256 × 96 × 256, cioè 128 m × 48 m × 128 m.
+- **a** `[unit]` Le dimensioni del mondo (X, Y, Z in blocchi) sono configurabili; default 512 × 96 × 512, cioè 256 m × 48 m × 256 m.
 - **b** `[unit]` Sono valide dimensioni multiple di 32, con X e Z tra 32 e 1024 e Y tra 32 e 256. Un valore non valido produce un errore che indica il valore e il vincolo violato.
 - **c** `[unit]` La lettura di un blocco fuori dai limiti restituisce `air`.
 - **d** `[unit]` La scrittura fuori dai limiti non modifica il mondo e restituisce un esito negativo, senza lanciare eccezioni.
@@ -77,6 +77,7 @@ Verificato con la configurazione di default su 5 seed di test.
 - **g** `[manuale]` L'insieme appare come una valle collinare naturale (prati ondulati, uno o più poggi con roccia), non come rumore casuale.
 
 ### RENDER-001 — Colore senza texture
+Palette naturalistica calda e leggermente desaturata, con luce dorata da tardo pomeriggio (Q4).
 - **a** `[unit]` Sui blocchi non si applicano texture bitmap: il colore di ogni vertice deriva dal colore base del tipo di blocco.
 - **b** `[unit]` Ogni blocco ha una variazione di colore deterministica che dipende dalla sua posizione: stessa posizione, stesso colore. La luminosità resta entro l'ampiezza di variazione del tipo (es. ±8% per l'erba).
 - **c** `[manuale]` I prati mostrano variazioni organiche: né un colore piatto, né un rumore a scacchiera.
@@ -104,8 +105,8 @@ Verificato con la configurazione di default su 5 seed di test.
 - **b** `[manuale]` Guardando verso il bordo dall'interno, la nebbia lo attenua; guardando dall'esterno, la sezione del terreno si legge bene.
 
 ### PERF-001 — Prestazioni
-Hardware di riferimento: il PC di sviluppo dell'utente, browser Chrome, mondo di default.
-- **a** `[manuale]` Dall'apertura della pagina al mondo interamente visibile passano al più 3 s (tempo misurato e mostrato nell'overlay).
+Hardware di riferimento: il PC di sviluppo dell'utente, Chrome su Windows collegato alla build di produzione servita da WSL2, mondo di default (Q5).
+- **a** `[manuale]` Dall'apertura della pagina al mondo interamente visibile passano al più 5 s (tempo misurato e mostrato nell'overlay).
 - **b** `[manuale]` Il frame rate medio è di almeno 60 fps durante 30 s di volo a quota media sopra il mondo.
 
 ### CAM-001 — Camera libera
@@ -131,14 +132,16 @@ In F01 la camera non ha collisioni e attraversa il terreno.
 ### SDD-002 — Verifica unica
 - **a** `[manuale]` `npm run check` esegue typecheck, lint e test unitari, e fallisce se uno di questi fallisce.
 
-## Domande aperte
-Ciascuna ha una proposta di default: se ti vanno bene tutte, basta approvare la spec.
+## Domande risolte
+Chiuse con l'utente il 2026-09-26, prima di G1.
 
-- **Q1** Bordi del mondo: plastico con la sezione del terreno visibile, attenuata dalla nebbia (RENDER-006), oppure un orizzonte finto (colline lontane di sfondo) che nasconde il bordo? Proposta: plastico.
-- **Q2** Voxel da 0,5 m (D-002): confermi? Proposta: sì.
-- **Q3** Dimensione di default 128 m × 128 m: basta per un villaggio, un bosco e 2–3 laghetti? Una casa di 8 × 6 m occupa 16 × 12 blocchi. Proposta: sì; la dimensione resta configurabile.
-- **Q4** Palette: naturalistica calda e leggermente desaturata, oppure pastello "ad acquerello"? Proposta: naturalistica calda.
-- **Q5** Hardware di riferimento per PERF-001: il tuo PC, con Chrome su Windows collegato al dev server in WSL2? Proposta: sì.
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Bordi del mondo | Plastico con la sezione del terreno visibile, attenuata dalla nebbia | RENDER-006 invariato |
+| Q2 | Lato del blocco | 0,5 m (D-002) | WORLD-001.b invariato |
+| Q3 | Dimensione del mondo | Finito, **256 m × 256 m** (D-003), invece dei 128 m proposti | WORLD-002.a: default 512 × 96 × 512; PERF-001.a: budget da 3 s a **5 s** |
+| Q4 | Palette | Naturalistica calda, leggermente desaturata | Nota in RENDER-001 |
+| Q5 | Hardware di riferimento | PC dell'utente, Chrome su Windows, build servita da WSL2 | Nota in PERF-001 |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
