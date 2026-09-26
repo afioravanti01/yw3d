@@ -135,7 +135,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `controllers/socket.ts` (P10).
   - Fatto quando: test di PROTO-004.a–b verdi.
 
-- [ ] **T5.10** Figura animata
+- [x] **T5.10** Figura animata
   - Req: CHAR-002 · Dip: —
   - `pose.ts` (P13) e `figure.ts`: parti articolate, colori, pose per fermo, camminata, corsa, salto, nuoto, parlata.
   - Fatto quando: test di CHAR-002.a verde; screenshot delle pose.
