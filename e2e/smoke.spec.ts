@@ -178,3 +178,18 @@ test('screenshots from fixed viewpoints for visual review (plan P12)', async ({ 
     await page.screenshot({ path: `e2e/screenshots/${name}.png` });
   }
 });
+
+test('screenshots of the player in first and third person (plan P12)', async ({ page }) => {
+  mkdirSync('e2e/screenshots', { recursive: true });
+  await open(page);
+  const settle = () =>
+    page.evaluate(async () => {
+      const h = (globalThis as unknown as HookGlobal).__yw3d;
+      for (let i = 0; i < 30; i++) await h.nextFrame();
+    });
+  await settle();
+  await page.screenshot({ path: 'e2e/screenshots/player-first.png' });
+  await page.keyboard.press('KeyV');
+  await settle();
+  await page.screenshot({ path: 'e2e/screenshots/player-third.png' });
+});

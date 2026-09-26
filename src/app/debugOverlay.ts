@@ -4,6 +4,18 @@ export interface OverlayData {
   fps: number;
   camera: { x: number; y: number; z: number };
   speedMps: number;
+  mode: 'first' | 'third' | 'free';
+  player: {
+    x: number;
+    y: number;
+    z: number;
+    vx: number;
+    vz: number;
+    onGround: boolean;
+    submerged: number;
+  };
+  /** Duration of the last simulation step (PERF-003.a). */
+  stepMs: number;
   seed: number;
   world: string;
   structureCounts: Record<string, number>;
@@ -52,7 +64,10 @@ export class DebugOverlay {
       `fps        ${d.fps.toFixed(0)}`,
       `position   ${block(d.camera.x)}, ${block(d.camera.y)}, ${block(d.camera.z)} blocks`,
       `           ${meters(d.camera.x)}, ${meters(d.camera.y)}, ${meters(d.camera.z)} m`,
-      `speed      ${d.speedMps.toFixed(1)} m/s`,
+      `mode       ${MODE_NAMES[d.mode]}`,
+      `player     ${block(d.player.x)}, ${block(d.player.y)}, ${block(d.player.z)} blocks · ${meters(Math.hypot(d.player.vx, d.player.vz))} m/s${d.player.onGround ? ' · on ground' : ''}${d.player.submerged >= 0.5 ? ' · in water' : ''}`,
+      `step       ${d.stepMs.toFixed(2)} ms (physics)`,
+      `free cam   ${d.speedMps.toFixed(1)} m/s`,
       `world      ${d.world} · seed ${d.seed} · ${d.warnings} warning${d.warnings === 1 ? '' : 's'}`,
       `structures ${formatCounts(d.structureCounts)}`,
       `chunks     ${d.meshedChunks} meshed / ${d.totalChunks}`,
@@ -63,10 +78,18 @@ export class DebugOverlay {
         : []),
       `rebuild    ${d.lastChunkRebuildMs.toFixed(1)} ms (last chunk)`,
       ``,
-      `F3 hide · click to fly · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`,
+      d.mode === 'free'
+        ? `F3 hide · F4 player · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`
+        : `F3 hide · click to look · WASD/arrows walk · Shift run · Space jump/swim up · X swim down · V view · F4 free camera`,
     ].join('\n');
   }
 }
+
+const MODE_NAMES = {
+  first: 'player, first person',
+  third: 'player, third person',
+  free: 'free camera (debug)',
+} as const;
 
 function formatCounts(counts: Record<string, number>): string {
   const entries = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));

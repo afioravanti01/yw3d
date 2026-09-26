@@ -101,6 +101,8 @@ export function initialCameraPose(world: World): CameraPose {
 
 /** Free-flying camera without collisions (CAM-001). */
 export class FlyCamera {
+  /** When false the free camera ignores input: the player mode is active (CAM-001.f). */
+  enabled = true;
   speed = DEFAULT_SPEED_MPS;
   yaw = 0;
   pitch = 0;
@@ -136,6 +138,7 @@ export class FlyCamera {
 
   /** Moves the camera for a frame of `dt` seconds. */
   update(dt: number): void {
+    if (!this.enabled) return;
     const direction = movementDirection(this.keys, this.yaw);
     const distance = metersToBlocks(this.speed) * dt;
     const p = clampCamera(
@@ -159,7 +162,7 @@ export class FlyCamera {
   }
 
   private onMouseMove(e: MouseEvent): void {
-    if (!this.pointerLocked) return;
+    if (!this.enabled || !this.pointerLocked) return;
     this.yaw -= e.movementX * MOUSE_SENSITIVITY;
     this.pitch = clamp(this.pitch - e.movementY * MOUSE_SENSITIVITY, -MAX_PITCH, MAX_PITCH);
   }
@@ -171,6 +174,7 @@ export class FlyCamera {
   }
 
   private onWheel(e: WheelEvent): void {
+    if (!this.enabled) return;
     e.preventDefault();
     this.speed = clampSpeed(this.speed * (e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP));
   }

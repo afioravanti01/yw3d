@@ -1,3 +1,5 @@
+import type { EntityState, Intent } from '../core/physics/entity';
+
 /** State exposed to the end-to-end tests (plan P12). */
 export interface TestHook {
   /** True after the first frame, or once the errors of the first load are shown. */
@@ -19,8 +21,10 @@ export interface TestHook {
   stats(): { meshedChunks: number; triangles: number; rebuiltChunks: number };
   /** Resolves after the next frame has been rendered. */
   nextFrame(): Promise<void>;
-  /** Moves the camera to a fixed viewpoint, for screenshots. */
+  /** Switches to the free camera and moves it to a fixed viewpoint, for screenshots. */
   setView(x: number, y: number, z: number, yaw: number, pitch: number): void;
+  /** Steps a test entity of the player size with the given intents (PHYS-002.d). */
+  simulate(start: { x: number; y: number; z: number }, intents: Intent[]): EntityState;
 }
 
 declare global {

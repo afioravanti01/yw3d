@@ -117,7 +117,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - DDA (P8); distanza della camera in terza persona con margine.
   - Fatto quando: test di PLAYER-003.b verde.
 
-- [ ] **T3.10** Giocatore nell'app
+- [x] **T3.10** Giocatore nell'app
   - Req: PLAYER-002, PLAYER-003, CAM-001, DEBUG-001, PHYS-002, PHYS-005 · Dip: T3.07, T3.08, T3.09
   - Tasti → intenzioni (P11), accumulatore e interpolazione, altezza degli occhi smorzata, V e F4, figura a blocchi (P10), overlay; hook `simulate` (P9). **Punto di controllo con l'utente**: demo in prima e terza persona.
   - Fatto quando: si cammina, si salta, si nuota e si cambia visuale in `npm run dev`; test della mappatura dei tasti verde.

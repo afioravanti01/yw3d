@@ -5,11 +5,15 @@ import { createDefaultStructures } from '../core/structures/builtin';
 import { formatDiagnostic } from '../core/yaml/report';
 import type { World } from '../core/world/world';
 import { ChunkRenderer } from '../render/chunkRenderer';
-import { FlyCamera, initialCameraPose } from '../render/flyCamera';
+import { PhysicsWorld } from '../core/physics/physicsWorld';
+import { PLAYER_SIZE } from '../core/player/player';
+import { FlyCamera } from '../render/flyCamera';
 import { createPalette } from '../render/meshing/palette';
 import { configureRenderer, createWorldScene, type WorldScene } from '../render/scene';
 import { DebugOverlay, FpsMeter } from './debugOverlay';
 import { DiagnosticsPanel, type PanelMessage } from './diagnosticsPanel';
+import { PlayerControls } from './input';
+import { PlayerView } from './playerView';
 import { parseStartParams } from './params';
 import { installTestHook, type TestHook } from './testHook';
 import * as bundledWorlds from './worlds';
@@ -59,7 +63,12 @@ async function main(): Promise<void> {
   configureRenderer(renderer);
   const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 3000);
   let controls: FlyCamera | undefined;
+  let playerView: PlayerView | undefined;
   let current: Loaded | undefined;
+  const playerControls = new PlayerControls(canvas, (code) => {
+    if (code === 'KeyV') playerView?.toggleThirdPerson();
+    if (code === 'F4') playerView?.toggleFree(camera);
+  });
   let reloadMs = 0;
   // Replaced by the hot update of the world files (YAML-007).
   let worlds: typeof bundledWorlds = bundledWorlds;
@@ -91,7 +100,20 @@ async function main(): Promise<void> {
       rebuiltChunks: current?.chunks.stats.rebuiltChunks ?? 0,
     }),
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
-    setView: (x, y, z, yaw, pitch) => controls?.setPose({ position: { x, y, z }, yaw, pitch }),
+    setView: (x, y, z, yaw, pitch) => {
+      if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
+      controls?.setPose({ position: { x, y, z }, yaw, pitch });
+    },
+    simulate: (start, intents) => {
+      // A test entity in the loaded world, stepped with the given intents (plan F03 P9).
+      const physics = new PhysicsWorld(current!.world, registry);
+      const entity = physics.spawn(PLAYER_SIZE, start.x, start.y, start.z);
+      for (const intent of intents) {
+        entity.intent = intent;
+        physics.step();
+      }
+      return entity.state;
+    },
   };
   let frameWaiters: (() => void)[] = [];
   installTestHook(hook);
@@ -143,17 +165,21 @@ async function main(): Promise<void> {
 
     current?.chunks.dispose();
     current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
-    if (!controls) {
+    if (!controls || !playerView) {
       controls = new FlyCamera(camera, canvas, result.world.size);
-      controls.setPose(initialCameraPose(result.world));
+      playerView = new PlayerView(
+        result.world,
+        registry,
+        result.player,
+        playerControls,
+        controls,
+        () => performance.now(),
+      );
     } else {
-      // Keep position and orientation across reloads (YAML-007.a).
-      controls.setPose({
-        position: camera.position,
-        yaw: controls.yaw,
-        pitch: controls.pitch,
-      });
+      // Keep the player and the view across reloads (YAML-007.a).
+      playerView.replaceWorld(result.world);
     }
+    scene.scene.add(playerView.figure);
     renderer.shadowMap.needsUpdate = true;
     hook.seed = result.seed ?? 0;
     hook.structureCounts = result.structureCounts;
@@ -187,9 +213,8 @@ async function main(): Promise<void> {
   timer.connect(document);
   renderer.setAnimationLoop((time) => {
     timer.update(time);
-    if (!current || !controls) return;
-    // Clamp long frames (tab switches) so the camera does not jump.
-    controls.update(Math.min(timer.getDelta(), 0.1));
+    if (!current || !playerView) return;
+    playerView.update(timer.getDelta(), camera);
     if (current.chunks.update() > 0) {
       renderer.shadowMap.needsUpdate = true;
     }
@@ -214,6 +239,9 @@ async function main(): Promise<void> {
       fps,
       camera: camera.position,
       speedMps: controls!.speed,
+      mode: playerView!.mode,
+      player: playerView!.player.state,
+      stepMs: playerView!.lastStepMs,
       seed: hook.seed,
       world: params.world,
       structureCounts: shown.result.structureCounts,
