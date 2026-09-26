@@ -120,7 +120,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Sessione con `AgentWorld`, stato dei personaggi alle viste (P15), tasto E dal giocatore, terminale, misura del passo con 20 personaggi.
   - Fatto quando: test di HOST-001.c, PROTO-002.c, PROTO-003.c e PERF-005.b verdi.
 
-- [ ] **T5.07** Controllori su stdio
+- [x] **T5.07** Controllori su stdio
   - Req: PROTO-003, PROTO-006 · Dip: T5.06
   - `controllers/stdio.ts` e `link.ts` (P8, P9): avvio, righe JSON, stderr, uscita e blocco, rilancio alla ricarica.
   - Fatto quando: test di PROTO-003.a–b e PROTO-006.a verdi.

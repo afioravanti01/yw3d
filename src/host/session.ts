@@ -24,6 +24,7 @@ import {
   type ViewMessage,
   type WorldMessage,
 } from '../protocol/messages';
+import { startStdioController, type RunningController } from './controllers/stdio';
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
 import { structureFiles, type WorldFolder } from './worldFolder';
@@ -47,6 +48,8 @@ export interface SessionOptions {
   readonly display?: (file: string) => string;
   /** URL of a structure file for the views; Vite serves files by absolute path under `/@fs`. */
   readonly moduleUrl?: (file: string) => string;
+  /** Whether the commands of the controllers may run: the user's consent (PROTO-005). */
+  readonly runCommands?: boolean;
 }
 
 /** Intents older than this are dropped: a stalled view does not keep the player walking (P9). */
@@ -83,6 +86,7 @@ export class HostSession {
   agents: AgentWorld | undefined;
   /** Where each character's events and perception go: its controller, when it has one. */
   private readonly controllerSinks = new Map<string, AgentListener>();
+  private controllers: RunningController[] = [];
   private readonly stepper = new FixedStepper();
   /** Simulated time, seconds: intents expire on this clock, so that tests are exact. */
   private time = 0;
@@ -158,6 +162,7 @@ export class HostSession {
     }
     this.world = world;
     this.startSimulation(world);
+    this.restartControllers(world);
     this.broadcast({
       type: 'world',
       world: this.worldMessage()!,
@@ -214,6 +219,36 @@ export class HostSession {
           .join(', ')}`,
       );
     }
+  }
+
+  /**
+   * Stops the controllers of the previous world and starts the ones declared now, when their
+   * commands may run (PROTO-003.b: they restart at every reload).
+   */
+  private restartControllers(world: SessionWorld): void {
+    for (const controller of this.controllers) controller.stop();
+    this.controllers = [];
+    if (!this.options.runCommands) return;
+    for (const character of world.result.characters) {
+      if (!character.command) continue;
+      this.controllers.push(
+        startStdioController(
+          character.id,
+          character.command,
+          this.folder.root,
+          this,
+          this.terminal,
+          // Simulated time: a controller is judged on the world's clock, not the wall clock.
+          () => (this.agents?.time ?? 0) * 1000,
+        ),
+      );
+    }
+  }
+
+  /** Stops the controllers: the host is closing. */
+  close(): void {
+    for (const controller of this.controllers) controller.stop();
+    this.controllers = [];
   }
 
   /** Routes the events and perception of a character to its controller (PROTO-003, PROTO-004). */

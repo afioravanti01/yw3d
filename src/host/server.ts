@@ -92,6 +92,7 @@ export async function startHostServer(
     vite,
     async close() {
       clearInterval(clock);
+      session.close();
       stopWatching();
       for (const client of sockets.clients) client.terminate();
       sockets.close();
