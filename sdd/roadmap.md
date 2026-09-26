@@ -26,6 +26,11 @@
 - Adattamento al terreno (le case livellano il suolo sotto di sé) e segnalazione dei conflitti tra strutture.
 - Ricaricamento a caldo del YAML in sviluppo.
 
+**Note per la spec** (emerse durante F01, 2026-09-26): il terreno è deterministico ma cambia quando cambia il generatore (es. T1.16+), quindi le posizioni nel YAML non devono dipendere dalla forma esatta del terreno.
+- Il YAML dichiara il seed del terreno: il mondo di un file non dipende dall'URL.
+- Le strutture si posizionano con x e z; per default la y è ricavata dalla superficie ("appoggiato a terra"), con y esplicita solo dove serve.
+- Il YAML dichiara la versione del generatore; se non corrisponde a quella in uso compare un avviso.
+
 **Demo:** modifico `world.yaml`, salvo, e il mondo si aggiorna.
 **Aree:** YAML, STRUCT, WORLD (modificati), RENDER (acqua).
 
