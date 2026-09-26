@@ -9,10 +9,11 @@
 | F03 | Fisica e giocatore | `done` (G3, 2026-09-26) | F01, F02 |
 | F04 | Host e riga di comando | `done` (G3, 2026-09-26) | F03 |
 | F05 | Personaggi e protocollo dei controllori | `done` (G3, 2026-09-26) | F04 |
-| F06 | Agenti LLM | planned | F05 |
-| F07 | Natura viva | planned | F02 |
+| F06 | Comportamenti, mappa e dialogo | `specifying` | F05 |
+| F07 | Agenti LLM | planned | F06 |
+| F08 | Natura viva | planned | F02 |
 
-La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio).
+La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM, che passano a F07; la natura viva passa a F08.
 
 ## F01 — Fondamenta e mondo voxel
 **Obiettivo:** un mondo a blocchi finito, generato in modo deterministico, con uno stile riconoscibilmente diverso da Minecraft, esplorabile con una camera libera. Fondamenta tecniche: separazione core/rendering, test headless, tracciabilità automatica.
@@ -73,37 +74,54 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 **Demo:** un guardiano scritto in Python fa il giro del villaggio evitando le case, si ferma al laghetto e mi saluta quando mi avvicino.
 **Aree:** CHAR, NAV, PROTO, YAML (modificati).
 
-## F06 — Agenti LLM
+## F06 — Comportamenti, mappa e dialogo
+**Obiettivo:** i personaggi si programmano nel file del mondo con un linguaggio dichiarativo in YAML; ogni elemento del mondo ha nome, descrizione e id, e la mappa è a disposizione dei personaggi; il giocatore parla con i personaggi. Sono i prerequisiti degli agenti LLM (D-009).
+- Linguaggio dei comportamenti: routine, reazioni agli eventi, stati; flag e contatori; libreria con parametri; scritto nel personaggio o in file esterni. Gira nel core, anche in modalità solo browser, senza consenso.
+- Nomi e descrizioni per mondo, strutture, distribuzioni, luoghi, personaggi e giocatore; luoghi con nome; schema del YAML alla versione 2.
+- Mappa del mondo per comportamenti e controllori; mete per id (`walk_to: laghetto1`) con punto d'arrivo per tipo di struttura.
+- Dialogo: il giocatore scrive dal browser, dal terminale dell'host o da un client esterno; registro delle conversazioni; domande dei personaggi con risposte capite in modo deterministico.
+
+**Demo:** un personaggio mi chiede «Dove devo andare?», scrivo «laghetto1» e lui va sulla sponda del laghetto.
+**Aree:** BEHAV, MAP, DIALOG (nuove); YAML, CHAR, PROTO, STRUCT, HOST, DEBUG (modificati).
+
+## F07 — Agenti LLM
 **Obiettivo:** personaggi guidati da agenti LLM tramite le CLI disponibili sulla macchina dell'utente.
-- Server MCP dell'host: le azioni di F05 come strumenti, la percezione come risorsa o come risposta agli strumenti.
+- Server MCP dell'host: le azioni di F05 come strumenti, mappa (F06) e percezione come risorse o come risposte agli strumenti.
 - Controllori `agent` nel YAML: quale CLI usare (claude, codex, opencode, ollama…), persona, obiettivi, luogo di riferimento; avvio headless e verifica della configurazione.
 - Architettura "cervello e corpo": l'agente decide, il corpo esegue con navigazione e fisica; nessun agente può violare la fisica (P3).
-- Dialogo libero con il giocatore, memoria per personaggio.
+- Dialogo libero con il giocatore, sul dialogo di F06; memoria per personaggio.
 - Budget di costo e latenza, limiti di frequenza, ripiego se l'agente non risponde. Valutazione di una modalità a turni per esperimenti riproducibili (D-008).
 
-**Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
-**Aree:** AGENT, MCP, UI, PROTO (modificati).
+**Note per la spec** (da D-009, 2026-09-26): decidere se un agente può scrivere o modificare il comportamento del suo personaggio (F06), oltre a guidarlo con le azioni.
 
-## F07 — Natura viva
+**Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
+**Aree:** AGENT, MCP (nuove); PROTO, DIALOG (modificati).
+
+## F08 — Natura viva
 Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline, lucciole), audio ambientale.
-**Aree:** RENDER, AUDIO, WORLD.
+
+**Note per la spec** (da F06, 2026-09-26): un orologio del mondo con l'ora del giorno, usabile nelle condizioni dei comportamenti.
+**Aree:** RENDER, AUDIO, WORLD, BEHAV.
 
 ## Idee in attesa (non pianificate)
 - Blocchi non cubici (rampe, cunei) per tetti e terreno più morbido.
 - Modifica dei blocchi in gioco e salvataggio dello stato.
 - Altre strutture: ponti, recinti, mulini, sentieri.
-- Personaggi AI che conversano tra loro.
-- Interazione senza browser (D-008): console di comandi dell'host, mappa testuale nel terminale, screenshot su richiesta, riproduzione delle sessioni registrate.
+- Personaggi AI che conversano tra loro; domande tra personaggi nel linguaggio dei comportamenti.
+- Estensioni del linguaggio dei comportamenti dichiarate nella cartella del mondo.
+- Interazione senza browser (D-008): console di comandi dell'host oltre al dialogo di F06, mappa testuale nel terminale, screenshot su richiesta, riproduzione delle sessioni registrate.
 - Apertura di una cartella del mondo direttamente dal browser, senza host (trascinamento o selettore di file).
 - Pubblicazione del comando `yw3d` su npm.
 - Generazione in un Web Worker e mondi più grandi.
 
 ## Anteprima del YAML (non normativa)
 
-Solo per dare un'idea della direzione. Terreno e strutture sono già definiti (spec viva [world-file.md](specs/world-file.md)); personaggi e controllori li definiranno le spec di F05 e F06.
+Solo per dare un'idea della direzione. Terreno, strutture e personaggi con controllori sono definiti nelle spec vive ([world-file.md](specs/world-file.md), [characters.md](specs/characters.md)); nomi, luoghi e comportamenti li definisce la spec di F06, gli agenti quella di F07.
 
 ```yaml
-version: 1
+version: 2
+name: Valle del Mulino
+description: Una valle con un piccolo borgo, un bosco misto e un laghetto.
 terrain:
   seed: 1234
   generator: 1
@@ -111,23 +129,44 @@ terrain:
 player:
   at: [158, 66]
 
+places:
+  - id: piazza
+    name: Piazza del borgo
+    at: [158, 66]
+
 structures:
   - type: stone_farmhouse
+    id: casa_fabbro
+    name: Casa del fabbro
     at: [120, 100]
     rotation: 180
   - type: pond
+    id: laghetto1
+    name: Laghetto del mulino
     at: [196, 112]
     params: { radius: 10 }
 
 characters:
-  - id: guardiano
+  - id: tobia
+    name: Tobia
+    description: Garzone del fabbro, sempre in cerca di commissioni.
     at: [150, 70]
+    behavior:                           # declarative behavior (F06)
+      routine:
+        - ask: Dove devo andare?
+          expect: place
+          then:
+            - walk_to: answer
+  - id: guardiano
+    name: Il guardiano
+    at: [160, 70]
     controller:
       command: python guardiano.py      # any language, JSON lines on stdio
   - id: marta
+    name: Marta
     at: [196, 118]
     controller:
-      agent: claude                     # or codex, opencode, ollama…
+      agent: claude                     # F07: or codex, opencode, ollama…
       persona: >
         Anziana pescatrice del villaggio, conosce ogni albero della valle
         e diffida dei forestieri finché non le si parla del laghetto.

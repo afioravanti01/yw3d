@@ -83,3 +83,27 @@ Data: 2026-09-26 · Stato: accettata (dopo la chiusura di F03) · Supera la riga
 - Roadmap rivista: F04 host e riga di comando; F05 personaggi e protocollo dei controllori; F06 agenti LLM; F07 natura viva.
 - La costituzione passa alla versione 1.1: visione, stack e un principio nuovo sui controllori esterni (P10).
 - Un controllore lento o bloccato non deve rallentare il mondo: il protocollo avrà tempi limite e ripieghi, da specificare in F05.
+
+## D-009 — Comportamenti in YAML, mappa del mondo e dialogo prima degli agenti LLM
+Data: 2026-09-26 · Stato: accettata (discussione con l'utente dopo la chiusura di F05) · Integra D-008 e ne aggiorna la roadmap
+
+**Contesto.** Dopo F05 un personaggio si programma solo con un programma esterno (stdio o WebSocket): serve il consenso, il comportamento non si legge nel file del mondo né si rigioca in modo deterministico, e in modalità solo browser i personaggi stanno fermi. Per gli agenti LLM mancano inoltre un modo di riferirsi agli elementi del mondo (un personaggio conosce solo coordinate ed entità vicine) e un dialogo con il giocatore.
+
+**Decisione.**
+1. **Linguaggio dei comportamenti.** Un linguaggio dichiarativo in YAML, scritto nel file del mondo o in file esterni, è il modo normale di programmare un personaggio. Modello: una routine che si ripete, reazioni che la interrompono e poi la riprendono, stati facoltativi. Vocabolario chiuso di eventi, condizioni e istruzioni, con flag e contatori, estendibile da codice con un registro tipizzato (P5). Libreria di comportamenti con parametri. Gira nel core: deterministico, testabile senza processi, attivo anche in modalità solo browser, senza consenso perché non esegue codice.
+2. **Controllori esterni.** stdio e WebSocket restano (P10), per ciò che il linguaggio non esprime e come base del canale MCP.
+3. **Nomi e mappa.** Ogni elemento del file del mondo ha nome e descrizione; personaggi, luoghi, strutture e distribuzioni hanno un id in un unico spazio. La mappa di tutti gli elementi è a disposizione di comportamenti e controllori, e le azioni accettano un elemento come meta.
+4. **Dialogo.** Il giocatore parla con i personaggi dal browser, dal terminale dell'host o da un client esterno; un personaggio può fare domande e usare la risposta, capita con regole deterministiche. Il linguaggio libero resta agli LLM.
+5. **Roadmap.** Questi punti formano la nuova F06; gli agenti LLM passano a F07 e la natura viva a F08. Nella costituzione cambiano solo i riferimenti alle fasi (v1.2).
+
+**Alternative.**
+- *Il linguaggio al posto dei processi, o di tutti i controllori esterni*: nessun comando eseguito dalle cartelle, ma si rinuncia a «qualunque linguaggio» (P10).
+- *Solo routine e reazioni; macchina a stati pura; behavior tree*: rispettivamente senza modi di comportamento, scomoda per riprendere un giro interrotto, verboso in YAML.
+- *Condizioni come espressioni in stringhe*: più flessibili, ma un mini-linguaggio da specificare, con gli errori dentro le stringhe.
+- *Il nome come identificatore*: un campo solo, ma rinominare cambia i riferimenti.
+- *Dialogo privato con un personaggio; chat globale*: il primo esclude gli altri personaggi, la seconda ignora lo spazio del mondo.
+
+**Conseguenze.**
+- Lo schema del file del mondo passa alla versione 2; i file in versione 1 vanno aggiornati.
+- Il core cresce di un interprete. Il confine del vocabolario chiuso va difeso spec dopo spec: un DSL tende a diventare un linguaggio di programmazione scritto male.
+- In F07 l'agente LLM userà mappa, mete e dialogo di F06; resta da decidere se un agente può anche scrivere o modificare il comportamento del suo personaggio.

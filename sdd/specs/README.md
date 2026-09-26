@@ -23,6 +23,7 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | CHAR | [`characters.md`](characters.md) | personaggi, figure animate, fumetti | F05 |
 | NAV | [`navigation.md`](navigation.md) | percorsi dei personaggi | F05 |
 | PROTO | [`protocol.md`](protocol.md) | protocollo dei controllori | F05 |
-| AGENT, MCP, UI | — | agenti LLM, server MCP, dialogo | F06 (prevista) |
+| BEHAV, MAP, DIALOG | — | comportamenti dei personaggi, mappa del mondo, dialogo | F06 (in corso) |
+| AGENT, MCP | — | agenti LLM, server MCP | F07 (prevista) |
 
 *Aggiornate alla chiusura di F05 (2026-09-26).*

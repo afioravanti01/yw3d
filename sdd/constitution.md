@@ -3,7 +3,7 @@
 > Principi non negoziabili del progetto. Ogni spec e ogni piano devono rispettarli.
 > Si modifica solo con una decisione esplicita registrata in [decisions.md](decisions.md).
 
-Versione: 1.1 — 2026-09-26 (D-008: host headless e controllori esterni)
+Versione: 1.2 — 2026-09-26 (D-009: solo riferimenti alle fasi; v1.1: D-008, host headless e controllori esterni)
 
 ## Visione
 
@@ -59,10 +59,10 @@ Un personaggio può essere guidato da qualunque programma che parli il protocoll
 | Test end-to-end | Playwright (Chromium) |
 | Formato del mondo | YAML (da F02) |
 | Host | Processo Node headless, avviato con `yw3d <cartella del mondo>` (da F04) |
-| Protocollo dei controllori | Un modello di messaggi su tre canali: JSON a righe su stdio, WebSocket, server MCP (da F05–F06) |
-| Agenti LLM | CLI disponibili sulla macchina dell'utente, in modalità headless, collegate via MCP (da F06; D-008) |
+| Protocollo dei controllori | Un modello di messaggi su tre canali: JSON a righe su stdio, WebSocket, server MCP (da F05–F07) |
+| Agenti LLM | CLI disponibili sulla macchina dell'utente, in modalità headless, collegate via MCP (da F07; D-008, D-009) |
 
-Motivazioni in [decisions.md](decisions.md) (D-001, D-008).
+Motivazioni in [decisions.md](decisions.md) (D-001, D-008, D-009).
 
 ## Qualità
 - `npm run check` (typecheck, lint, test unitari) è verde alla fine di ogni task.
