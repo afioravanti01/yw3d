@@ -42,7 +42,7 @@ Verifica automatica: `npm run check` verde (80 test), `npm run e2e` verde (5 tes
 | LOC src / test | righe di codice prodotte in `src/` e nei test | 1833 / 1229 (più 233 dello script di tracciabilità) |
 | Doc/LOC | (righe spec + piano) / LOC src | 0,21 |
 | Sessioni e tempo | sessioni agente e giorni di calendario | 1 giorno (2026-09-26); sessioni non registrate |
-| Difetti post-chiusura | per origine spec / piano / codice | 0 / 0 / 0 (da aggiornare nelle fasi successive) |
+| Difetti post-chiusura | per origine spec / piano / codice | 0 / 0 / 1 (aggiornato in F02: `sdd-trace` perdeva i criteri invariati dei requisiti MODIFICATI, corretto in T2.18+) |
 
 ## Ipotesi
 - **H1 — Contesto.** Dati insufficienti: è la prima fase e non esistevano spec vive. 536 righe è la base di confronto.

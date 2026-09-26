@@ -14,9 +14,10 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | APP | [`app.md`](app.md) | avvio e parametri | F01 |
 | DEBUG | [`debug.md`](debug.md) | strumenti diagnostici | F01 |
 | SDD | [`tooling.md`](tooling.md) | strumenti del processo SDD | F01 |
-| YAML, STRUCT | — | formato del mondo, strutture | F02 (prevista) |
+| YAML | [`world-file.md`](world-file.md) | formato, validazione e caricamento dei file del mondo | F02 |
+| STRUCT | [`structures.md`](structures.md) | registro e generazione delle strutture, adattamento al terreno | F02 |
 | PHYS, PLAYER | — | fisica, giocatore | F03 (prevista) |
 | CHAR, NAV, BEHAV | — | personaggi, navigazione, comportamenti | F04 (prevista) |
 | AI, UI | — | personaggi AI, interfaccia di dialogo | F05 (prevista) |
 
-*Aggiornate alla chiusura di F01 (2026-09-26).*
+*Aggiornate alla chiusura di F02 (2026-09-26).*

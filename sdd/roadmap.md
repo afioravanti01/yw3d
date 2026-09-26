@@ -5,7 +5,7 @@
 | Fase | Nome | Stato | Dipende da |
 |---|---|---|---|
 | F01 | Fondamenta e mondo voxel | `done` (G3, 2026-09-26) | — |
-| F02 | Mondo da YAML e strutture programmabili | `verifying` | F01 |
+| F02 | Mondo da YAML e strutture programmabili | `done` (G3, 2026-09-26) | F01 |
 | F03 | Fisica e giocatore | planned | F01, F02 |
 | F04 | Personaggi animati e comportamenti programmati | planned | F02, F03 |
 | F05 | Personaggi AI e interazione | planned | F04 |
@@ -43,6 +43,8 @@
 
 **Demo:** entro in una casa dalla porta, non attraverso i muri, cado nel laghetto e nuoto.
 **Aree:** PHYS, PLAYER.
+
+**Note per la spec** (dalla chiusura di F02, 2026-09-26): primo task della fase: avviso di `sdd:trace` per i requisiti senza criteri riconosciuti (D-007).
 
 ## F04 — Personaggi animati e comportamenti programmati
 **Obiettivo:** personaggi a voxel animati che si muovono nel mondo tramite la fisica di F03, guidati da script scritti dall'utente.

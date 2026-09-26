@@ -50,3 +50,10 @@ Data: 2026-09-26 · Stato: accettata, **da rivalutare nella retro di F02**
 Data: 2026-09-26 · Stato: accettata
 
 Documentazione in italiano; codice, identificatori, commenti nel codice e commit in inglese.
+
+## D-007 — Conferma della strumentazione SDD fatta in casa
+Data: 2026-09-26 · Stato: accettata (retro di F02) · Conferma D-005
+
+**Contesto.** D-005 prevedeva di rivalutare la strumentazione fatta in casa nella retro di F02. In due fasi template, convenzioni e `sdd:trace` hanno gestito spec delta, spec vive, emendamenti e task `+`. I costi sono stati un difetto dello script sui requisiti MODIFICATI (corretto in T2.18+) e un emendamento di sola forma (A2.1).
+**Decisione.** Si mantiene la strumentazione fatta in casa, senza adottare un framework.
+**Conseguenze.** `sdd:trace` va esteso con un avviso per i requisiti della fase senza criteri riconosciuti, così un problema di formato della spec emerge subito. Da fare come primo task della prossima fase.

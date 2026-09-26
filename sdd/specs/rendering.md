@@ -37,3 +37,9 @@ Palette naturalistica calda e leggermente desaturata, con luce dorata da tardo p
 *Introdotto in F01 · ultima modifica: F01.*
 - **a** `[unit]` Le facce dei blocchi sul confine esterno del mondo vengono generate: il mondo appare come un plastico chiuso, con la sezione degli strati visibile ai lati.
 - **b** `[manuale]` Guardando verso il bordo dall'interno, la nebbia lo attenua; guardando dall'esterno, la sezione del terreno si legge bene.
+
+### RENDER-007 — Acqua
+*Introdotto in F02 · ultima modifica: F02.*
+- **a** `[unit]` Le facce tra due blocchi d'acqua non si generano; le facce tra acqua e un blocco opaco nemmeno.
+- **b** `[manuale]` L'acqua è semitrasparente: si vede il fondale vicino alla riva, meno dove è profonda. Il colore è in armonia con la palette di RENDER-001.
+- **c** `[manuale]` Nessun artefatto evidente tra acqua e terreno (facce che tremolano, buchi, ordine di disegno sbagliato) guardando da sopra e di lato.

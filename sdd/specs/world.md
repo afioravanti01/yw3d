@@ -23,10 +23,10 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **c** `[unit]` Un osservatore delle modifiche può registrarsi e deregistrarsi.
 
 ### WORLD-004 — Registro dei tipi di blocco
-*Introdotto in F01 · ultima modifica: F01.*
+*Introdotto in F01 · ultima modifica: F02.*
 - **a** `[unit]` Ogni tipo di blocco ha: id numerico stabile, nome univoco, colore base, ampiezza della variazione di colore, `solid` (blocca il movimento; servirà in F03), `opaque` (nasconde le facce adiacenti).
 - **b** `[unit]` Registrare un nome o un id già usato produce un errore.
-- **c** `[unit]` Sono registrati i tipi di F01: `air` (id 0, non solido, non opaco), `grass`, `dirt`, `stone`.
+- **c** `[unit]` Sono registrati i tipi di F01 (`air`, `grass`, `dirt`, `stone`, con gli stessi id) e quelli di F02: `water` (non solido, non opaco), `sand`, `gravel`, legno e foglie di ciascuna specie di STRUCT-005, `planks` (assi), `cobblestone` (pietrame), `roof_tiles` (coppi).
 - **d** `[unit]` Codice esterno al core può registrare un nuovo tipo senza modificare il core.
 
 ### WORLD-005 — Generazione deterministica

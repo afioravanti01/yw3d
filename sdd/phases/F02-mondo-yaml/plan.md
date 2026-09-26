@@ -197,7 +197,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Mondi di prova in `e2e/worlds/`; test di YAML-001.d, YAML-002.d, YAML-003.c, YAML-006.a–b, APP-001.a–b (aggiornati); screenshot di borgo, bosco, laghetto.
   - Fatto quando: `npm run e2e` verde.
 
-- [ ] **T2.16** Verifica di accettazione e chiusura della fase
+- [x] **T2.16** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T2.14, T2.15, T2.12
   - `check`, `e2e`, `sdd:trace -- F02`; checklist dei criteri `[manuale]` con i valori misurati; fusione nelle spec vive; `retro.md`; `experiment.md`, `roadmap.md`. Rivalutazione di D-005 (strumentazione SDD), come previsto.
   - Fatto quando: G3 approvato dall'utente.
