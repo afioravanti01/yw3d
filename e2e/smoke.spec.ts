@@ -2,6 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { AIR } from '../src/core/blocks/builtin';
 import { composeWorld } from '../src/core/compose/composeWorld';
+import type { EntityState, Intent } from '../src/core/physics/entity';
+import { PhysicsWorld } from '../src/core/physics/physicsWorld';
+import { PLAYER_SIZE } from '../src/core/player/player';
+import { createDefaultRegistry } from '../src/core/blocks/builtin';
 import { createDefaultStructures } from '../src/core/structures/builtin';
 import { generateTerrain } from '../src/core/gen/terrain';
 
@@ -21,6 +25,7 @@ interface Hook {
   stats(): { meshedChunks: number; triangles: number; rebuiltChunks: number };
   nextFrame(): Promise<void>;
   setView(x: number, y: number, z: number, yaw: number, pitch: number): void;
+  simulate(start: { x: number; y: number; z: number }, intents: Intent[]): EntityState;
 }
 
 /**
@@ -134,6 +139,40 @@ test('YAML-006.b: an unknown world gives a visible error listing the available o
   expect(await hookValue(page, 'status')).toBe('error');
   await expect(page.locator('#notice .error')).toContainText('Unknown world "nowhere"');
   await expect(page.locator('#notice .error')).toContainText('default');
+});
+
+test('PHYS-002.d: a sequence of intents gives the same state in the browser and in Node', async ({
+  page,
+}) => {
+  // Walk, run and jump around the village for 20 s, then into the pond south of it.
+  const intents: Intent[] = [];
+  for (let i = 0; i < 1200; i++) {
+    const angle = i / 150;
+    const length = Math.hypot(Math.sin(angle), Math.cos(angle));
+    intents.push({
+      moveX: Math.sin(angle) / length,
+      moveZ: Math.cos(angle) / length,
+      run: i % 400 < 200,
+      jump: i % 45 === 0,
+      swim: i % 300 < 100 ? 1 : 0,
+    });
+  }
+  const start = { x: 158.5, y: 60, z: 66.5 };
+  await open(page);
+  const browser = await page.evaluate(
+    ([s, list]) => (globalThis as unknown as HookGlobal).__yw3d.simulate(s, list),
+    [start, intents] as const,
+  );
+  const { world } = nodeWorld('worlds/default.yaml');
+  const physics = new PhysicsWorld(world!, createDefaultRegistry());
+  const entity = physics.spawn(PLAYER_SIZE, start.x, start.y, start.z);
+  for (const intent of intents) {
+    entity.intent = intent;
+    physics.step();
+  }
+  expect(browser).toEqual(entity.state);
+  // The walk really moved the entity around.
+  expect(Math.hypot(entity.state.x - start.x, entity.state.z - start.z)).toBeGreaterThan(5);
 });
 
 test('RENDER-005.b: a block changed through the core is rebuilt by the next frame', async ({

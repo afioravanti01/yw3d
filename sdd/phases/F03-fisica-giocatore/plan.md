@@ -132,7 +132,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Frecce ←/→ che ruotano la visuale (A3.1), anche nella camera libera (A3.3); tasto C per la camera libera (A3.2); giocatore nascosto in camera libera (A3.3); capelli della figura che sfarfallano sulla testa (facce sovrapposte).
   - Fatto quando: `npm run check` verde; test della mappatura dei tasti aggiornato.
 
-- [ ] **T3.12** Test end-to-end
+- [x] **T3.12** Test end-to-end
   - Req: PHYS-002 · Dip: T3.10
   - PHYS-002.d con `simulate`; test e screenshot di F01–F02 adattati all'avvio come giocatore.
   - Fatto quando: `npm run e2e` verde.
