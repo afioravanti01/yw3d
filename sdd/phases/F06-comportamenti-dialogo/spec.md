@@ -72,7 +72,7 @@ Un comportamento descrive in YAML cosa fa un personaggio; non contiene codice. L
 
 ### BEHAV-002 — Routine e reazioni
 - **a** `[unit]` Una routine è una sequenza di istruzioni eseguite una dopo l'altra: finita l'ultima, ricomincia dalla prima. Può essere dichiarata da eseguire una volta sola; finita, il personaggio sta fermo e le reazioni restano attive.
-- **b** `[unit]` Un'istruzione è un'azione di PROTO-001.b (`walk_to`, `look_at`, `say`, `follow`, `wait`) con gli stessi campi e limiti, oppure una domanda (BEHAV-005), una modifica della memoria, un'istruzione condizionale con i suoi rami, un cambio di stato (BEHAV-003). In un comportamento `follow` dichiara una durata.
+- **b** `[unit]` Un'istruzione è un'azione di PROTO-001.b (`walk_to`, `look_at`, `say`, `follow`, `wait`) con gli stessi campi e limiti, oppure una domanda (BEHAV-005), una modifica della memoria, un'istruzione condizionale con i suoi rami, un cambio di stato (BEHAV-003). In un comportamento `follow` dichiara una durata, e `walk_to` con un elenco di mete le visita in ordine, come altrettante istruzioni `walk_to` consecutive (A6.1).
 - **c** `[unit]` Una reazione dichiara un evento, condizioni facoltative e una sequenza di istruzioni. Quando scatta sostituisce l'azione in corso ed esegue le sue istruzioni; poi la routine riprende dall'istruzione interrotta, che ricomincia (Q3).
 - **d** `[unit]` Le reazioni hanno la priorità dell'ordine in cui sono dichiarate: una reazione interrompe quella in corso solo se viene prima; un evento che non può interrompere si ignora (Q1).
 - **e** `[unit]` Una reazione può essere limitata a scattare al più una volta in un intervallo dichiarato, oppure una volta sola.
@@ -133,7 +133,7 @@ Il vocabolario è chiuso: eventi, condizioni e istruzioni hanno forme predefinit
 - **d** `[manuale]` La frase del giocatore compare in un fumetto sopra la sua figura, visibile in terza persona e dalle viste che guardano (CHAR-002.c).
 
 ### DIALOG-002 — Registro delle conversazioni
-- **a** `[e2e]` Ogni vista mostra il registro delle frasi che il giocatore sente, cioè dette entro 16 blocchi da lui, sue comprese, con il nome di chi parla e, se c'è, del destinatario.
+- **a** `[e2e]` Ogni vista mostra il registro delle frasi che il giocatore sente, cioè dette entro 16 blocchi da lui, sue comprese, con il nome di chi parla e, se c'è, del destinatario. Le frasi del giocatore compaiono come «Tu» nella vista che guida e con il suo nome nelle viste che guardano (A6.2).
 - **b** `[manuale]` Il registro mostra le ultime righe senza coprire la scena; le righe vecchie sbiadiscono e tornano visibili quando la casella di testo è aperta.
 
 ### DIALOG-003 — Comprensione delle frasi
@@ -144,7 +144,7 @@ Regole deterministiche, senza LLM, uguali per comportamenti e protocollo.
 - **d** `[unit]` Stessa frase e stessa mappa danno sempre la stessa interpretazione.
 
 ### DIALOG-004 — Console dell'host
-- **a** `[unit]` Il terminale dell'host mostra le frasi che il giocatore sente, con il nome di chi parla e del destinatario, come il registro del browser (Q6).
+- **a** `[unit]` Il terminale dell'host mostra le frasi che il giocatore sente, con il nome di chi parla e del destinatario, come il registro della vista che guida: le frasi del giocatore compaiono come «Tu» (Q6, A6.2).
 - **b** `[unit]` Una riga scritta nel terminale è detta dal giocatore con le regole di DIALOG-001.b; il destinatario si indica con `@id`.
 - **c** `[unit]` La console si attiva solo se il terminale è interattivo, e dopo l'eventuale richiesta di consenso (PROTO-005).
 
@@ -244,3 +244,5 @@ Chiuse con l'utente il 2026-09-26, prima di G1, in tre blocchi di scelte guidate
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A6.1 | 2026-09-26 | BEHAV-002.b | `walk_to` con un elenco di mete le visita in ordine, come altrettante istruzioni `walk_to` consecutive | Emerso scrivendo il piano: senza, un comportamento della libreria non può percorrere tappe ricevute come parametro di tipo lista (BEHAV-006.a) | sì, utente, 2026-09-26 (con G2) |
+| A6.2 | 2026-09-26 | DIALOG-002.a, DIALOG-004.a | Le frasi del giocatore compaiono come «Tu» nella vista che guida e nella console, con il suo nome nelle viste che guardano | Emerso nella revisione del piano (P17): ognuno legge il registro dal proprio punto di vista | sì, utente, 2026-09-26 (con G2) |
