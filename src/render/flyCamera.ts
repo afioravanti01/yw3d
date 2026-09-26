@@ -122,7 +122,12 @@ export class FlyCamera {
     document.addEventListener('mousemove', (e) => this.onMouseMove(e), { signal });
     window.addEventListener('keydown', (e) => this.onKey(e, true), { signal });
     window.addEventListener('keyup', (e) => this.onKey(e, false), { signal });
-    window.addEventListener('blur', () => this.keys.clear(), { signal });
+    // Keys released while the page does not get the events (Esc that frees the mouse, another
+    // window, a hidden tab) would stay pressed forever: forget them all at those moments.
+    const releaseAll = () => this.keys.clear();
+    window.addEventListener('blur', releaseAll, { signal });
+    document.addEventListener('pointerlockchange', releaseAll, { signal });
+    document.addEventListener('visibilitychange', releaseAll, { signal });
     element.addEventListener('wheel', (e) => this.onWheel(e), { signal, passive: false });
   }
 

@@ -71,7 +71,12 @@ export class PlayerControls {
       { signal },
     );
     window.addEventListener('keyup', (e) => this.keys.delete(e.code), { signal });
-    window.addEventListener('blur', () => this.keys.clear(), { signal });
+    // Keys released while the page does not get the events (Esc that frees the mouse, another
+    // window, a hidden tab) would stay pressed forever: forget them all at those moments.
+    const releaseAll = () => this.keys.clear();
+    window.addEventListener('blur', releaseAll, { signal });
+    document.addEventListener('pointerlockchange', releaseAll, { signal });
+    document.addEventListener('visibilitychange', releaseAll, { signal });
     document.addEventListener(
       'mousemove',
       (e) => {
