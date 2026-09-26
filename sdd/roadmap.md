@@ -7,7 +7,7 @@
 | F01 | Fondamenta e mondo voxel | `done` (G3, 2026-09-26) | — |
 | F02 | Mondo da YAML e strutture programmabili | `done` (G3, 2026-09-26) | F01 |
 | F03 | Fisica e giocatore | `done` (G3, 2026-09-26) | F01, F02 |
-| F04 | Host e riga di comando | `specifying` | F03 |
+| F04 | Host e riga di comando | `planning` | F03 |
 | F05 | Personaggi e protocollo dei controllori | planned | F04 |
 | F06 | Agenti LLM | planned | F05 |
 | F07 | Natura viva | planned | F02 |
