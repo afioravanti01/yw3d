@@ -79,11 +79,17 @@ describe('ponds', () => {
 
   it('STRUCT-007.c: the shore is sand or gravel, within 1–3 blocks of the water', () => {
     for (const world of worlds.values()) {
-      const top = (x: number, z: number) => {
-        let y = world.size.y - 1;
-        while (y > 0 && world.getBlock(x, y, z) === AIR) y--;
-        return world.getBlock(x, y, z);
-      };
+      // Surface block of every column around the pond, computed once.
+      const R = 28;
+      const tops = new Map<string, number>();
+      for (let z = CENTER - R; z < CENTER + R; z++) {
+        for (let x = CENTER - R; x < CENTER + R; x++) {
+          let y = world.size.y - 1;
+          while (y > 0 && world.getBlock(x, y, z) === AIR) y--;
+          tops.set(`${x},${z}`, world.getBlock(x, y, z));
+        }
+      }
+      const top = (x: number, z: number) => tops.get(`${x},${z}`)!;
       const isWater = (x: number, z: number) => top(x, z) === WATER;
       const shores = new Set<number>();
       for (let z = CENTER - 24; z < CENTER + 24; z++) {
