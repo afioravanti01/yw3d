@@ -99,7 +99,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Protocollo (`src/protocol`), passo fisso con orologio reale, ruoli guida e spettatore, intenzioni con scadenza (P9), stato del giocatore conservato tra le viste.
   - Fatto quando: test di HOST-001.b e della logica di HOST-002 (ruoli, intenzioni, riconnessione) verdi.
 
-- [ ] **T4.05** Server e comando
+- [x] **T4.05** Server e comando
   - Req: CLI-001, HOST-002, PERF-004 · Dip: T4.04
   - `server.ts` (P1, P5, P10), `cli.ts`, `bin/yw3d.js`, apertura del browser (P12), `--port`, `--lan`, `--seed`; misura del tempo di avvio.
   - Fatto quando: `node bin/yw3d.js e2e/host --no-open` avvia l'host e l'app risponde.
