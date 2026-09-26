@@ -204,16 +204,10 @@ export class HostSession {
     // Characters restart from their declared places at every new world (F05).
     const characters = spawnCharacters(physics, world.result.characters);
     const finder = new Pathfinder(new NavGrid(world.result.world, createDefaultRegistry().solid));
-    this.agents = new AgentWorld(
-      physics,
-      characters,
-      this.player,
-      (from, to) => finder.find(from, to),
-      {
-        event: (id, event) => this.controllerSinks.get(id)?.event(id, event),
-        perception: (id, perception) => this.controllerSinks.get(id)?.perception(id, perception),
-      },
-    );
+    this.agents = new AgentWorld(physics, characters, this.player, finder, {
+      event: (id, event) => this.controllerSinks.get(id)?.event(id, event),
+      perception: (id, perception) => this.controllerSinks.get(id)?.perception(id, perception),
+    });
     if (characters.length > 0) {
       this.terminal.line(
         `${PREFIX}  characters: ${world.result.characters

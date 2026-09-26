@@ -29,16 +29,10 @@ describe('performance with characters', () => {
       appearance: resolveAppearance(undefined, 1, `c${i}`),
       command: undefined,
     }));
-    const agents = new AgentWorld(
-      physics,
-      spawnCharacters(physics, starts),
-      undefined,
-      (f, t) => finder.find(f, t),
-      {
-        event: () => {},
-        perception: () => {},
-      },
-    );
+    const agents = new AgentWorld(physics, spawnCharacters(physics, starts), undefined, finder, {
+      event: () => {},
+      perception: () => {},
+    });
     agents.step();
     // Every character walks somewhere across the village, finding its path at the start.
     starts.forEach((s, i) =>

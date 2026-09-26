@@ -3,7 +3,9 @@ import { createDefaultRegistry, STONE } from '../blocks/builtin';
 import { spawnCharacters } from '../characters/characters';
 import { resolveAppearance } from '../characters/appearance';
 import type { CharacterStart } from '../compose/composeWorld';
+import type { Goal } from '../map/worldMap';
 import { NavGrid } from '../nav/navGrid';
+import type { Navigator } from '../nav/pathFollower';
 import { Pathfinder } from '../nav/pathfinding';
 import { PhysicsWorld } from '../physics/physicsWorld';
 import { spawnPlayer } from '../player/player';
@@ -26,7 +28,8 @@ const start = (id: string, x: number, z: number): CharacterStart => ({
 function setup(
   starts: CharacterStart[],
   player?: [number, number],
-  findPath?: ConstructorParameters<typeof AgentWorld>[3],
+  navigator?: Navigator,
+  goals?: ReadonlyMap<string, Goal>,
 ) {
   const world = new World({ x: 128, y: 32, z: 128 });
   for (let z = 0; z < 128; z++)
@@ -41,11 +44,12 @@ function setup(
     physics,
     characters,
     playerEntity,
-    findPath ?? ((f, t) => finder.find(f, t)),
+    navigator ?? finder,
     {
       event: (id, e) => events.push([id, e]),
       perception: (id, p) => perceptions.push([id, p]),
     },
+    goals,
   );
   const run = (seconds: number) => {
     for (let i = 0; i < Math.round(seconds * 60); i++) agents.step();
@@ -82,7 +86,7 @@ describe('actions', () => {
     agents.request('a', { kind: 'walk_to', id: 'w3', target: 'nobody' });
     expect(events).toContainEqual([
       'a',
-      { type: 'action_failed', id: 'w3', reason: 'there is no entity "nobody"' },
+      { type: 'action_failed', id: 'w3', reason: 'there is no "nobody" in the map' },
     ]);
   });
 
@@ -146,11 +150,15 @@ describe('actions', () => {
   it('PROTO-006.b: an action that runs past its time limit fails with the cause', () => {
     // A misleading search: a path of one point, while the destination is 100 blocks away. The
     // limit (twice the path at walking speed, plus 5 s) expires long before the arrival.
-    const { agents, events, run } = setup([start('a', 10.5, 10.5)], undefined, (from) => ({
-      ok: true,
+    const onTheSpot = (from: { x: number; y: number; z: number }) => ({
+      ok: true as const,
       points: [{ x: from.x, y: from.y, z: from.z, wet: false }],
       length: 0,
-    }));
+    });
+    const { agents, events, run } = setup([start('a', 10.5, 10.5)], undefined, {
+      find: onTheSpot,
+      findRegion: onTheSpot,
+    });
     agents.request('a', { kind: 'walk_to', id: 'far', x: 110, z: 10 });
     run(4.9);
     expect(events).toEqual([]);

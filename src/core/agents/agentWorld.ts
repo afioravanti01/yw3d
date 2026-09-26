@@ -1,5 +1,9 @@
 import type { Character } from '../characters/characters';
-import { PathFollower, type FindPath } from '../nav/pathFollower';
+import { areaContains } from '../compose/areas';
+import { regionOf } from '../map/goals';
+import type { Goal } from '../map/worldMap';
+import { PathFollower, type FindPath, type Navigator } from '../nav/pathFollower';
+import type { Region } from '../nav/pathfinding';
 import { CHARACTER_WALK_SPEED, STEP_SECONDS } from '../physics/constants';
 import { IDLE, type EntityState, type Intent } from '../physics/entity';
 import type { EntityHandle, PhysicsWorld } from '../physics/physicsWorld';
@@ -117,12 +121,17 @@ export class AgentWorld {
   private readonly agents = new Map<string, Agent>();
   private nextPerception = 0;
 
+  /** Regions of the map ids, built when first needed. */
+  private readonly regions = new Map<string, Region>();
+
   constructor(
     readonly physics: PhysicsWorld,
     characters: readonly Character[],
     private readonly player: EntityHandle | undefined,
-    private readonly findPath: FindPath,
+    private readonly navigator: Navigator,
     private readonly listener: AgentListener,
+    /** Where each id of the map leads (MAP-003); characters and the player need no entry. */
+    private readonly goals: ReadonlyMap<string, Goal> = new Map(),
   ) {
     for (const character of characters) {
       this.agents.set(character.start.id, {
@@ -240,31 +249,75 @@ export class AgentWorld {
     return this.agents.get(id)?.character.entity.state;
   }
 
+  /**
+   * Where an id leads (MAP-003): a moving entity, a point, or a region with its center (for
+   * `look_at`) and, for areas, the area itself (already inside means already arrived).
+   */
+  private destinationOf(
+    id: string,
+  ):
+    | { kind: 'entity'; state: EntityState }
+    | { kind: 'point'; x: number; z: number }
+    | { kind: 'region'; region: Region; center: { x: number; z: number }; goal: Goal }
+    | undefined {
+    const entity = this.positionOf(id);
+    if (entity) return { kind: 'entity', state: entity };
+    const goal = this.goals.get(id);
+    if (!goal || goal.kind === 'entity') return undefined;
+    if (goal.kind === 'point') return goal;
+    let region = this.regions.get(id);
+    if (!region) {
+      region = regionOf(goal);
+      this.regions.set(id, region);
+    }
+    return { kind: 'region', region, center: goal.center, goal };
+  }
+
   private start(agent: Agent, running: Running): void {
     const { request } = running;
     const state = agent.character.entity.state;
     switch (request.kind) {
       case 'walk_to': {
-        const goal = 'target' in request ? this.positionOf(request.target) : request;
-        if (!goal)
-          return this.fail(agent, `there is no entity "${(request as { target: string }).target}"`);
         const speed = speedOf(request.speed);
-        running.follower = new PathFollower(
-          this.findPath,
-          { x: goal.x, z: goal.z },
-          state,
-          this.time,
-          speed,
-        );
+        const to = 'target' in request ? this.destinationOf(request.target) : request;
+        if (!to) return this.fail(agent, noSuchTarget((request as { target: string }).target));
+        const find: FindPath = (from, at) => this.navigator.find(from, at);
+        if ('kind' in to && to.kind === 'region') {
+          const { goal } = to;
+          // Already inside an area: arrived (MAP-003.c).
+          if (
+            goal.kind === 'area' &&
+            areaContains(goal.area, Math.floor(state.x), Math.floor(state.z))
+          ) {
+            return this.done(agent.character.start.id, agent);
+          }
+          running.follower = new PathFollower(
+            (from) => this.navigator.findRegion(from, to.region),
+            undefined,
+            state,
+            this.time,
+            speed,
+          );
+        } else {
+          const at = 'kind' in to && to.kind === 'entity' ? to.state : to;
+          running.follower = new PathFollower(find, { x: at.x, z: at.z }, state, this.time, speed);
+        }
         // Time limit: twice the walk along the path at that speed, plus 5 s (plan F05 P6, PROTO-006.b).
         running.deadline = this.time + (2 * running.follower.length) / speed + 5;
         return;
       }
       case 'look_at': {
-        const goal = 'target' in request ? this.positionOf(request.target) : request;
-        if (!goal)
-          return this.fail(agent, `there is no entity "${(request as { target: string }).target}"`);
-        agent.yaw = yawTowards(state, goal);
+        const to = 'target' in request ? this.destinationOf(request.target) : request;
+        if (!to) return this.fail(agent, noSuchTarget((request as { target: string }).target));
+        const at =
+          'kind' in to
+            ? to.kind === 'entity'
+              ? to.state
+              : to.kind === 'region'
+                ? to.center
+                : to
+            : to;
+        agent.yaw = yawTowards(state, at);
         running.deadline = this.time;
         return;
       }
@@ -286,8 +339,14 @@ export class AgentWorld {
         }
         return;
       case 'follow':
-        if (!this.positionOf(request.target))
-          return this.fail(agent, `there is no entity "${request.target}"`);
+        if (!this.positionOf(request.target)) {
+          return this.fail(
+            agent,
+            this.goals.has(request.target)
+              ? `"${request.target}" does not move: follow a character or the player`
+              : noSuchTarget(request.target),
+          );
+        }
         return;
       case 'wait':
         running.deadline = this.time + request.seconds;
@@ -322,7 +381,7 @@ export class AgentWorld {
       if (!running.follower || running.follower.status.kind !== 'moving' || moved > 2) {
         running.goal = { x: target.x, z: target.z };
         running.follower = new PathFollower(
-          this.findPath,
+          (from, at) => this.navigator.find(from, at),
           running.goal,
           state,
           this.time,
@@ -374,6 +433,10 @@ export class AgentWorld {
       reason,
     });
   }
+}
+
+function noSuchTarget(id: string): string {
+  return `there is no "${id}" in the map`;
 }
 
 /** Speed in blocks per second of a request in m/s, the calm default when absent (A5.1). */

@@ -1,6 +1,6 @@
 import { RUN_SPEED, WALK_SPEED } from '../physics/constants';
 import { IDLE, type EntityState, type Intent } from '../physics/entity';
-import type { PathPoint, PathResult } from './pathfinding';
+import type { PathPoint, PathResult, Region } from './pathfinding';
 
 /** A waypoint is passed when the character is this close to it, horizontally. */
 const WAYPOINT_REACHED = 0.4;
@@ -24,28 +24,42 @@ export type FindPath = (
   to: { x: number; z: number },
 ) => PathResult;
 
+/** What a character can search paths with: to a column, or to a region (MAP-003). */
+export interface Navigator {
+  find(from: { x: number; y: number; z: number }, to: { x: number; z: number }): PathResult;
+  findRegion(from: { x: number; y: number; z: number }, region: Region): PathResult;
+}
+
 /**
  * Walks a character to a destination along a path, only through intents (NAV-002.a, P3).
  * When it makes no progress for STUCK_SECONDS it searches the path again; after MAX_REPLANS
  * attempts it fails (NAV-002.b).
+ *
+ * Without a given destination the follower goes where each path found ends: a path to a
+ * region ends at its nearest place along the way (MAP-003, plan F06 P10).
  */
 export class PathFollower {
   status: FollowStatus = { kind: 'moving' };
   /** Times the path was searched again after getting stuck. */
   replans = 0;
+  /** Where the character is going; set by the first path when not given. */
+  destination: { readonly x: number; readonly z: number };
   private points: readonly PathPoint[] = [];
   private index = 0;
   private checkTime: number;
   private checkPosition: { x: number; z: number };
+  private readonly fixed: boolean;
 
   constructor(
     private readonly findPath: FindPath,
-    readonly destination: { readonly x: number; readonly z: number },
+    destination: { readonly x: number; readonly z: number } | undefined,
     start: EntityState,
     time: number,
     /** Walking speed, blocks per second (A5.1). */
     private readonly speed = WALK_SPEED,
   ) {
+    this.fixed = destination !== undefined;
+    this.destination = destination ?? { x: start.x, z: start.z };
     this.checkTime = time;
     this.checkPosition = { x: start.x, z: start.z };
     this.plan(start);
@@ -120,5 +134,9 @@ export class PathFollower {
     }
     this.points = result.points;
     this.index = 0;
+    if (!this.fixed) {
+      const end = result.points[result.points.length - 1]!;
+      this.destination = { x: end.x, z: end.z };
+    }
   }
 }

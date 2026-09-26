@@ -177,7 +177,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Unico spazio di id, `player` riservato, id generati (Q10). Mappa nel risultato della composizione (P9). `approach` nel tipo di struttura e punti d'arrivo di case, laghetti e alberi (P10).
   - Fatto quando: test di MAP-001.a–b, MAP-002.a–d, STRUCT-001.a verdi.
 
-- [ ] **T6.03** Mete della mappa
+- [x] **T6.03** Mete della mappa
   - Req: MAP-003, PROTO-001 · Dip: T6.02
   - Ricerca verso un insieme di colonne (P10). L'`AgentWorld` risolve gli id della mappa per `walk_to`, `look_at` e `follow`, e completa subito un `walk_to` quando si è già dentro l'area. Misura sul mondo predefinito.
   - Fatto quando: test di MAP-003.a–d e PROTO-001.b verdi; da ogni punto del borgo si arriva davanti alla porta di ogni casa.
@@ -277,3 +277,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T6.03 | Verso un'area il personaggio si ferma su un posto che sta tutto dentro l'area (le 4 colonne che occupa), verso una struttura su un posto che tocca le sue colonne d'arrivo | Con il solo «tocca» il personaggio poteva fermarsi sul bordo, fuori dall'area, e un secondo `walk_to` non risultava «già dentro» (MAP-003.c) | Nessuno |

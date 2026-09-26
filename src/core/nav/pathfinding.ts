@@ -18,6 +18,21 @@ export type PathResult =
   | { readonly ok: true; readonly points: readonly PathPoint[]; readonly length: number }
   | { readonly ok: false; readonly reason: string };
 
+/**
+ * A set of columns to reach, such as the shore of a pond or an area (MAP-003, plan F06 P10):
+ * the search stops at the first place to stand next to one of them.
+ */
+export interface Region {
+  /** Rectangle around the columns: min inclusive, max exclusive. */
+  readonly bounds: { minX: number; minZ: number; maxX: number; maxZ: number };
+  has(x: number, z: number): boolean;
+  /**
+   * `touch`: a place to stand next to a column is enough (the door of a house, a shore);
+   * `within`: the place must be inside, on columns of the region only (an area).
+   */
+  readonly reach: 'touch' | 'within';
+}
+
 const DIRECTIONS = [
   [1, 0],
   [-1, 0],
@@ -111,14 +126,60 @@ export class Pathfinder {
     const goals = this.goalNodes(to.x, to.z);
     if (goals.size === 0)
       return { ok: false, reason: 'there is no place to stand at the destination' };
-
-    // The shortest way, water allowed; then a dry way, searched only up to twice its length.
-    const any = this.search(start, goals, true, Infinity);
-    if (!any) return { ok: false, reason: 'there is no path to the destination' };
-    if (!any.points.some((p) => p.wet)) return { ok: true, ...any };
+    const goal = this.grid.point(goals.values().next().value!);
+    const h = (n: number) => {
+      const p = this.grid.point(n);
+      return octile(Math.abs(p.x - goal.x), Math.abs(p.z - goal.z));
+    };
     // A destination in the water cannot be reached dry.
-    if ([...goals].every((g) => this.grid.wet[g] === 1)) return { ok: true, ...any };
-    const dry = this.search(start, goals, false, DRY_DETOUR_FACTOR * any.length);
+    const allWet = [...goals].every((g) => this.grid.wet[g] === 1);
+    return this.shortest(start, (n) => goals.has(n), h, allWet);
+  }
+
+  /**
+   * Path from a position to the nearest place of a region along the way (MAP-003.b–c, plan
+   * F06 P10): a place to stand touching one of its columns, or standing on its columns only.
+   */
+  findRegion(from: { x: number; y: number; z: number }, region: Region): PathResult {
+    const start = this.nearestNode(from.x, from.y, from.z);
+    if (start < 0)
+      return { ok: false, reason: 'the character is not standing on a walkable place' };
+    const { grid } = this;
+    const isGoal = (n: number) => {
+      // Corner (cx, cz) is where columns cx..cx+1 and cz..cz+1 meet.
+      const corner = Math.floor(n / LEVELS);
+      const cx = corner % grid.cornersX;
+      const cz = (corner - cx) / grid.cornersX;
+      const covered = [
+        region.has(cx, cz),
+        region.has(cx + 1, cz),
+        region.has(cx, cz + 1),
+        region.has(cx + 1, cz + 1),
+      ];
+      return region.reach === 'touch' ? covered.some(Boolean) : covered.every(Boolean);
+    };
+    // Distance to the rectangle of the corners that touch the region: never an overestimate.
+    const { minX, minZ, maxX, maxZ } = region.bounds;
+    const h = (n: number) => {
+      const p = grid.point(n);
+      const dx = Math.max(minX - p.x, 0, p.x - maxX);
+      const dz = Math.max(minZ - p.z, 0, p.z - maxZ);
+      return octile(dx, dz);
+    };
+    return this.shortest(start, isGoal, h, false);
+  }
+
+  /** The shortest way, water allowed; then a dry way, searched only up to twice its length. */
+  private shortest(
+    start: number,
+    isGoal: (node: number) => boolean,
+    h: (node: number) => number,
+    allGoalsWet: boolean,
+  ): PathResult {
+    const any = this.search(start, isGoal, h, true, Infinity);
+    if (!any) return { ok: false, reason: 'there is no path to the destination' };
+    if (!any.points.some((p) => p.wet) || allGoalsWet) return { ok: true, ...any };
+    const dry = this.search(start, isGoal, h, false, DRY_DETOUR_FACTOR * any.length);
     return { ok: true, ...(dry ?? any) };
   }
 
@@ -166,23 +227,17 @@ export class Pathfinder {
     return goals;
   }
 
-  /** A* from `start` to any of `goals`; paths costing more than `limit` are not explored. */
+  /** A* from `start` to any goal node; paths costing more than `limit` are not explored. */
   private search(
     start: number,
-    goals: Set<number>,
+    isGoal: (node: number) => boolean,
+    h: (node: number) => number,
     allowWater: boolean,
     limit: number,
   ): { points: PathPoint[]; length: number } | undefined {
     const { grid, cost, came, stamp, heap } = this;
     if (!allowWater && grid.wet[start] === 1) allowWater = true;
     const gen = ++this.generation;
-    const goal = grid.point(goals.values().next().value!);
-    const h = (n: number) => {
-      const p = grid.point(n);
-      const dx = Math.abs(p.x - goal.x);
-      const dz = Math.abs(p.z - goal.z);
-      return Math.max(dx, dz) + (Math.SQRT2 - 1) * Math.min(dx, dz);
-    };
     heap.clear();
     stamp[start] = gen;
     cost[start] = 0;
@@ -190,7 +245,7 @@ export class Pathfinder {
     heap.push(start, h(start));
     while (heap.size > 0) {
       const node = heap.pop();
-      if (goals.has(node)) return this.reconstruct(node);
+      if (isGoal(node)) return this.reconstruct(node);
       const corner = Math.floor(node / LEVELS);
       const cx = corner % grid.cornersX;
       const cz = (corner - cx) / grid.cornersX;
@@ -246,4 +301,9 @@ export class Pathfinder {
     points.reverse();
     return { points, length: this.cost[end]! };
   }
+}
+
+/** Octile distance: 8 directions, diagonals cost √2. */
+function octile(dx: number, dz: number): number {
+  return Math.max(dx, dz) + (Math.SQRT2 - 1) * Math.min(dx, dz);
 }
