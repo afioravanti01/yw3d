@@ -1,4 +1,5 @@
 import type { BoxSize } from '../physics/entity';
+import { raycast, type IsBlocking } from '../physics/raycast';
 import type { EntityHandle, PhysicsWorld } from '../physics/physicsWorld';
 import { metersToBlocks } from '../world/units';
 
@@ -25,4 +26,32 @@ export function spawnAtStart(
   const { size } = physics.world;
   const { x, z, yaw } = start ?? { x: size.x / 2, z: size.z / 2, yaw: 0 };
   return { player: spawnPlayer(physics, x, z), yaw };
+}
+
+/** Distance of the third-person camera behind the eyes: 4 m (PLAYER-003.b). */
+export const THIRD_PERSON_DISTANCE = metersToBlocks(4);
+/** Space kept between the camera and the first block in the way. */
+const CAMERA_MARGIN = 0.3;
+
+/** Unit view direction for a yaw and pitch (yaw 0 looks north, towards -z). */
+export function viewDirection(yaw: number, pitch: number): [number, number, number] {
+  const c = Math.cos(pitch);
+  return [-Math.sin(yaw) * c, Math.sin(pitch), -Math.cos(yaw) * c];
+}
+
+/**
+ * Position of the third-person camera: behind the eyes, opposite to the view direction, at
+ * THIRD_PERSON_DISTANCE, or closer when a block is in the way (PLAYER-003.b).
+ */
+export function thirdPersonCamera(
+  eye: readonly [number, number, number],
+  yaw: number,
+  pitch: number,
+  isBlocking: IsBlocking,
+): [number, number, number] {
+  const [dx, dy, dz] = viewDirection(yaw, pitch);
+  const back: [number, number, number] = [-dx, -dy, -dz];
+  const hit = raycast(eye, back, THIRD_PERSON_DISTANCE + CAMERA_MARGIN, isBlocking);
+  const distance = Math.max(0, Math.min(THIRD_PERSON_DISTANCE, hit - CAMERA_MARGIN));
+  return [eye[0] + back[0] * distance, eye[1] + back[1] * distance, eye[2] + back[2] * distance];
 }

@@ -112,7 +112,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Sezione `player` (`at`, `yaw`), errori nel formato di YAML-002, `worlds/README.md` aggiornato.
   - Fatto quando: test di YAML-008.a–b e PLAYER-001.c verdi.
 
-- [ ] **T3.09** Raggio nella griglia e camera in terza persona
+- [x] **T3.09** Raggio nella griglia e camera in terza persona
   - Req: PLAYER-003 · Dip: T3.03
   - DDA (P8); distanza della camera in terza persona con margine.
   - Fatto quando: test di PLAYER-003.b verde.
