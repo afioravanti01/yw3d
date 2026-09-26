@@ -111,7 +111,7 @@ Convenzione: il titolo di ogni test inizia con i criteri che verifica, es. `it('
 
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T1.01** Scaffold del progetto e controlli di qualità
+- [x] **T1.01** Scaffold del progetto e controlli di qualità
   - Req: ARCH-001, SDD-002 · Dip: —
   - Vite + TS strict, `index.html` con canvas a tutto schermo, `.gitignore`; tsconfig dell'app e del core (P11); ESLint + typescript-eslint con la regola su `src/core`; Prettier; Vitest in ambiente Node. Script npm: `dev`, `build`, `preview`, `typecheck`, `lint`, `format`, `test`, `check`.
   - Fatto quando: `npm run check` è verde; i test ARCH-001.a (`lintText`) e ARCH-001.b passano; `npm run dev` mostra una pagina con il canvas.
@@ -201,3 +201,7 @@ Decisa con l'utente alla revisione del piano:
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T1.01 | Vitest 4.1 invece di 5, TypeScript 6.0 invece di 7 | Vitest 5 richiede Node 22 (qui c'è Node 20.20); typescript-eslint non supporta ancora TypeScript 7. Node 20 è fuori supporto da aprile 2026: aggiornare a Node 22/24 è da pianificare | Nessuno |
+| T1.01 | Dipendenze di sviluppo in più: `@eslint/js`, `@types/node` | Configurazione base di ESLint e tipi di Node per test e script: fanno parte degli strumenti già scelti | Nessuno |
+| T1.01 | `.npmrc` con `maxsockets=3` | Con molte connessioni in parallelo i download da npm si bloccano sulla rete di sviluppo; con 3 l'installazione dura pochi secondi | Nessuno |
+| T1.01 | Test di ARCH-001 in `tests/architecture.test.ts` e non accanto a un file; il controllo sul DOM usa il compilatore TypeScript | Il test è trasversale a tutto il core; così anche ARCH-001.a lato DOM è verificato in automatico | Nessuno |
