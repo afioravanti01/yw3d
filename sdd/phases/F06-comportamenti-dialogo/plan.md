@@ -162,6 +162,11 @@ Nessuna.
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
+- [x] **T6.18+** Tempo limite dei test unitari
+  - Req: — · Dip: —
+  - Con tutti i file in parallelo, i test che compongono il mondo predefinito (PERF-005.b, YAML-005.c) superavano il limite predefinito di 5 s di Vitest; da soli passano in meno di 4 s. Limite portato a 30 s nella configurazione: i budget di tempo restano verificati dai test stessi.
+  - Fatto quando: due esecuzioni di fila di `npm run check` verdi.
+
 - [ ] **T6.01** Schema della versione 2 e migrazione dei file
   - Req: YAML-001, YAML-009, YAML-010, CHAR-001, BEHAV-001 · Dip: —
   - Nomi e descrizioni (Q8) con il default del giocatore. Id facoltativo di strutture e distribuzioni. Sezione `places` e campi `behavior` e `behaviors` (il contenuto si valida in T6.05). Comportamento e controllore esclusivi. Errore della v1 (P18). Migrazione di mondi, esempi e test.
