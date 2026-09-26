@@ -152,7 +152,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Casolare in pietra e capanno in legno: porta, finestre, pavimento, tetto a falde, comignolo, travi agli angoli, basamento.
   - Fatto quando: test di STRUCT-006.a–e verdi su 20 seed e 4 rotazioni; screenshot allegati.
 
-- [ ] **T2.09** Laghetti
+- [x] **T2.09** Laghetti
   - Req: STRUCT-007 · Dip: T2.06, T2.01
   - Contorno irregolare, fondale, pelo dell'acqua, sponde (P10).
   - Fatto quando: test di STRUCT-007.a–c verdi su 20 seed.
