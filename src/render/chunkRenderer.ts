@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE } from '../core/world/chunk';
 import type { World } from '../core/world/world';
-import { meshChunk, type MeshData } from './meshing/mesher';
+import { meshChunk, meshTranslucent, type MeshData } from './meshing/mesher';
 import { copyPaddedChunk, PADDED_VOLUME } from './meshing/padded';
 import type { Palette } from './meshing/palette';
 
@@ -26,6 +26,8 @@ export class ChunkRenderer {
   readonly stats: ChunkRenderStats;
 
   private readonly meshes = new Map<number, THREE.Mesh>();
+  /** Translucent (water) meshes, drawn after the opaque ones (RENDER-007). */
+  private readonly translucentMeshes = new Map<number, THREE.Mesh>();
   private readonly dirty = new Set<number>();
   private readonly padded = new Uint8Array(PADDED_VOLUME);
   private readonly unsubscribe: () => void;
@@ -34,6 +36,7 @@ export class ChunkRenderer {
     private readonly world: World,
     private readonly palette: Palette,
     private readonly material: THREE.Material,
+    private readonly translucentMaterial: THREE.Material = material,
   ) {
     this.group.name = 'chunks';
     this.stats = {
@@ -84,40 +87,73 @@ export class ChunkRenderer {
     for (const key of [...this.meshes.keys()]) {
       this.removeMesh(key);
     }
+    for (const key of [...this.translucentMeshes.keys()]) {
+      this.removeTranslucentMesh(key);
+    }
   }
 
   private rebuild(cx: number, cy: number, cz: number): void {
     const key = this.key(cx, cy, cz);
     this.removeMesh(key);
-    const data = meshChunk(copyPaddedChunk(this.world, cx, cy, cz, this.padded), this.palette, [
-      cx * CHUNK_SIZE,
-      cy * CHUNK_SIZE,
-      cz * CHUNK_SIZE,
-    ]);
-    if (data.faceCount === 0) {
-      return;
+    this.removeTranslucentMesh(key);
+    const padded = copyPaddedChunk(this.world, cx, cy, cz, this.padded);
+    const origin = [cx * CHUNK_SIZE, cy * CHUNK_SIZE, cz * CHUNK_SIZE] as const;
+
+    const data = meshChunk(padded, this.palette, origin);
+    if (data.faceCount > 0) {
+      const mesh = this.createMesh(data, this.material, `chunk ${cx},${cy},${cz}`, origin);
+      mesh.castShadow = true;
+      this.meshes.set(key, mesh);
+      this.stats.meshedChunks++;
     }
-    const mesh = new THREE.Mesh(createGeometry(data), this.material);
-    mesh.position.set(cx * CHUNK_SIZE, cy * CHUNK_SIZE, cz * CHUNK_SIZE);
-    mesh.castShadow = true;
+    const water = meshTranslucent(padded, this.palette, origin);
+    if (water.faceCount > 0) {
+      const mesh = this.createMesh(
+        water,
+        this.translucentMaterial,
+        `water ${cx},${cy},${cz}`,
+        origin,
+      );
+      this.translucentMeshes.set(key, mesh);
+    }
+  }
+
+  private createMesh(
+    data: MeshData,
+    material: THREE.Material,
+    name: string,
+    origin: readonly [number, number, number],
+  ): THREE.Mesh {
+    const mesh = new THREE.Mesh(createGeometry(data), material);
+    mesh.position.set(origin[0], origin[1], origin[2]);
     mesh.receiveShadow = true;
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
-    mesh.name = `chunk ${cx},${cy},${cz}`;
+    mesh.name = name;
     this.group.add(mesh);
-    this.meshes.set(key, mesh);
-    this.stats.meshedChunks++;
     this.stats.triangles += data.faceCount * 2;
+    return mesh;
   }
 
   private removeMesh(key: number): void {
     const mesh = this.meshes.get(key);
     if (!mesh) return;
-    this.group.remove(mesh);
-    mesh.geometry.dispose();
+    this.disposeMesh(mesh);
     this.meshes.delete(key);
     this.stats.meshedChunks--;
+  }
+
+  private removeTranslucentMesh(key: number): void {
+    const mesh = this.translucentMeshes.get(key);
+    if (!mesh) return;
+    this.disposeMesh(mesh);
+    this.translucentMeshes.delete(key);
+  }
+
+  private disposeMesh(mesh: THREE.Mesh): void {
+    this.group.remove(mesh);
     this.stats.triangles -= (mesh.geometry.index?.count ?? 0) / 3;
+    mesh.geometry.dispose();
   }
 
   private key(cx: number, cy: number, cz: number): number {

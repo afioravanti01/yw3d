@@ -157,7 +157,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Contorno irregolare, fondale, pelo dell'acqua, sponde (P10).
   - Fatto quando: test di STRUCT-007.a–c verdi su 20 seed.
 
-- [ ] **T2.10** Rendering dell'acqua
+- [x] **T2.10** Rendering dell'acqua
   - Req: RENDER-007 · Dip: T2.01
   - Passaggio dell'acqua nel mesher, mesh trasparente per chunk (P11). **Punto di controllo con l'utente**: screenshot di alberi, case e laghetto prima di comporre il mondo predefinito.
   - Fatto quando: test di RENDER-007.a verde; screenshot rivisti con l'utente.

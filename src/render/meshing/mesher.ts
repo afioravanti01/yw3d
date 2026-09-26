@@ -69,6 +69,40 @@ export function meshChunk(
   return buildMeshData(faceCount);
 }
 
+/**
+ * Builds the faces of the translucent blocks of a chunk (water, RENDER-007): one quad for every
+ * side facing a block that is neither opaque nor of the same kind, so there are no faces between
+ * two water blocks or between water and an opaque block (RENDER-007.a).
+ */
+export function meshTranslucent(
+  padded: Uint8Array,
+  palette: Palette,
+  origin: readonly [number, number, number] = [0, 0, 0],
+): MeshData {
+  let faceCount = 0;
+  for (let y = 0; y < CHUNK_SIZE; y++) {
+    for (let z = 0; z < CHUNK_SIZE; z++) {
+      for (let x = 0; x < CHUNK_SIZE; x++) {
+        const index = paddedIndex(x, y, z);
+        const block = padded[index]!;
+        if (palette.translucent[block] === 0) {
+          continue;
+        }
+        for (let f = 0; f < FACES.length; f++) {
+          const neighbor = padded[index + NEIGHBOR_OFFSETS[f]!]!;
+          if (neighbor === block || palette.opaque[neighbor] === 1) {
+            continue;
+          }
+          blockColor(color, palette, block, origin[0] + x, origin[1] + y, origin[2] + z);
+          faceAO(padded, palette.opaque, index, f, ao);
+          emitFace(faceCount++, f, x, y, z);
+        }
+      }
+    }
+  }
+  return buildMeshData(faceCount);
+}
+
 /** Writes one quad; reads the block color from `color` and the occlusion levels from `ao`. */
 function emitFace(faceIndex: number, f: number, x: number, y: number, z: number): void {
   const face = FACES[f]!;

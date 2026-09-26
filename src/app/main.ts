@@ -45,6 +45,13 @@ async function main(): Promise<void> {
     world,
     createPalette(registry),
     new THREE.MeshLambertMaterial({ vertexColors: true }),
+    // Water (RENDER-007): see-through near the shore, drawn after the opaque terrain.
+    new THREE.MeshLambertMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false,
+    }),
   );
   const meshingStart = performance.now();
   chunks.buildAll();

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultRegistry, STONE } from '../../core/blocks/builtin';
+import { createDefaultRegistry, STONE, WATER } from '../../core/blocks/builtin';
 import { World, type WorldSize } from '../../core/world/world';
-import { meshChunk, type MeshData } from './mesher';
+import { meshChunk, meshTranslucent, type MeshData } from './mesher';
 import { copyPaddedChunk } from './padded';
 import { createPalette, srgbToLinear } from './palette';
 
@@ -97,5 +97,30 @@ describe('mesher', () => {
     for (let v = 0; v < data.faceCount * 4; v++) {
       expect([...data.colors.slice(v * 3, v * 3 + 3)]).toEqual(expected);
     }
+  });
+
+  it('RENDER-007.a: no faces between two water blocks, nor between water and opaque blocks', () => {
+    const water = (world: World) => meshTranslucent(copyPaddedChunk(world, 0, 0, 0), palette);
+    // A single water block in the air: 6 faces.
+    expect(water(worldWith(small, [[10, 10, 10]], WATER)).faceCount).toBe(6);
+    // Two adjacent water blocks: the shared faces disappear.
+    const pool = worldWith(
+      small,
+      [
+        [10, 10, 10],
+        [11, 10, 10],
+      ],
+      WATER,
+    );
+    expect(water(pool).faceCount).toBe(10);
+    // Water resting on stone: no face towards the stone.
+    pool.setBlock(10, 9, 10, STONE);
+    pool.setBlock(11, 9, 10, STONE);
+    expect(water(pool).faceCount).toBe(8);
+    // The stone keeps its face under the water: the bed stays visible through it.
+    expect(mesh(pool).faceCount).toBe(10);
+    // Water faces never go into the opaque mesh, and vice versa.
+    expect(mesh(worldWith(small, [[10, 10, 10]], WATER)).faceCount).toBe(0);
+    expect(water(worldWith(small, [[10, 10, 10]])).faceCount).toBe(0);
   });
 });
