@@ -182,7 +182,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `KeyZ` sale e `KeyX` scende, in aggiunta a `Space` e `Shift`; aiuto dell'overlay aggiornato.
   - Fatto quando: `npm run check` verde; volo con Z e X verificato a mano.
 
-- [ ] **T2.14** Mondo predefinito
+- [x] **T2.14** Mondo predefinito
   - Req: APP-002, PERF-002 · Dip: T2.07, T2.08, T2.09, T2.11, T2.13
   - `worlds/default.yaml`: borgo in una zona pianeggiante, bosco misto, alberi sparsi, laghetti con salici (P15). Tempi e triangoli misurati.
   - Fatto quando: test di PERF-002.b verde; **punto di controllo con l'utente**: demo del mondo predefinito e della ricarica a caldo.
