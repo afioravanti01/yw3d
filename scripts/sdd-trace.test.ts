@@ -79,4 +79,18 @@ describe('sdd-trace', () => {
     const result = trace(parseSpec(spec), living, parsePlan(plan), []);
     expect(result.errors.some((e) => e.includes('WORLD-999'))).toBe(false);
   });
+
+  it('SDD-001.c: unchanged criteria of a modified requirement stay known', () => {
+    const living = parseSpec(
+      '### CAM-001 — Camera\n- **a** `[manuale]` A.\n- **b** `[manuale]` B.\n- **d** `[unit]` D.\n',
+    );
+    // The phase modifies only criterion b.
+    const phase = parseSpec('### CAM-001 — Camera\n- **Dopo:**\n- **b** `[manuale]` New B.\n');
+    const tasks = parsePlan('- [ ] **T2.01** Camera\n  - Req: CAM-001 · Dip: —\n');
+    const tests = [{ file: 'camera.test.ts', title: 'CAM-001.d: clamp', criteria: ['CAM-001.d'] }];
+    const result = trace(phase, living, tasks, tests);
+    expect(result.errors).toEqual([]);
+    const unknown = [{ file: 'camera.test.ts', title: 'CAM-001.z: nope', criteria: ['CAM-001.z'] }];
+    expect(trace(phase, living, tasks, unknown).errors).toHaveLength(1);
+  });
 });

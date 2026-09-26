@@ -122,9 +122,14 @@ export function trace(
 ): TraceResult {
   const lines: string[] = [];
   const errors: string[] = [];
+  // A requirement MODIFIED by the phase lists only its new or changed criteria: the unchanged
+  // ones still come from the living spec, so the criteria are merged, phase letters winning.
   const known = new Map<string, Requirement>();
   for (const r of [...knownRequirements, ...phase]) {
-    known.set(r.id, r);
+    const previous = known.get(r.id);
+    const letters = new Set(r.criteria.map((c) => c.letter));
+    const kept = previous?.criteria.filter((c) => !letters.has(c.letter)) ?? [];
+    known.set(r.id, { ...r, criteria: [...kept, ...r.criteria] });
   }
 
   for (const task of tasks) {
