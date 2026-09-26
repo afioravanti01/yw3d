@@ -31,13 +31,20 @@
         bottom: 16px;
         left: 50%;
         transform: translateX(-50%);
-        max-width: min(640px, calc(100% - 32px));
+        max-width: min(900px, calc(100% - 32px));
+        max-height: 40vh;
+        overflow: auto;
         padding: 8px 14px;
         background: #fff4d6;
         color: #5a4210;
         border: 1px solid #e6c878;
         border-radius: 6px;
         font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+      #notice .error {
+        color: #8a1f11;
       }
       #debug-overlay {
         position: fixed;

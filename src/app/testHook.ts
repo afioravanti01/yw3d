@@ -1,8 +1,16 @@
 /** State exposed to the end-to-end tests (plan P12). */
 export interface TestHook {
+  /** True after the first frame, or once the errors of the first load are shown. */
   ready: boolean;
+  status: 'loading' | 'ready' | 'error';
+  /** Name of the world file (YAML-006). */
+  world: string;
   seed: number;
+  /** Warning about the URL parameters (APP-001.b). */
   warning: string | null;
+  /** Messages of the diagnostics panel, errors and warnings. */
+  messages: string[];
+  structureCounts: Record<string, number>;
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

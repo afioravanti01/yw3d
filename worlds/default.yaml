@@ -1,0 +1,63 @@
+# The default world of yw3d: a valley with a small village, woods and ponds.
+# Coordinates are in blocks (1 block = 0.5 m); see worlds/README.md for the format.
+version: 1
+terrain:
+  seed: 1
+  generator: 1
+
+structures:
+  # The village, on the flat land in the north.
+  - type: stone_farmhouse
+    at: [132, 42]
+    params: { width: 16, depth: 10 }
+  - type: stone_farmhouse
+    at: [178, 50]
+    rotation: 90
+    params: { width: 13, depth: 9 }
+  - type: wooden_hut
+    at: [150, 76]
+    rotation: 180
+  - type: wooden_hut
+    at: [112, 74]
+    rotation: 270
+  - type: wooden_hut
+    at: [208, 30]
+  - type: wooden_hut
+    at: [205, 78]
+    rotation: 180
+  - type: oak
+    at: [158, 58]
+    params: { height: 19 }
+
+  # Ponds: one south of the village, one in the south-western meadow.
+  - type: pond
+    at: [196, 112]
+    params: { radius: 10, depth: 3 }
+  - type: pond
+    at: [88, 330]
+    params: { radius: 15, depth: 5 }
+
+scatter:
+  # Mixed woods in the east and in the south.
+  - types: { oak: 3, birch: 2 }
+    area: { circle: { center: [450, 66], radius: 46 } }
+    density: 4
+    minDistance: 6
+  - types: { oak: 2, birch: 3 }
+    area: { circle: { center: [340, 405], radius: 60 } }
+    density: 3
+    minDistance: 6
+  # Willows along the shores.
+  - types: { willow: 1 }
+    area: { circle: { center: [196, 112], radius: 20 } }
+    count: 4
+    minDistance: 7
+  - types: { willow: 1 }
+    area: { circle: { center: [88, 330], radius: 27 } }
+    count: 5
+    minDistance: 7
+  # Lone trees in the meadows, all over the valley.
+  - types: { oak: 2, birch: 1 }
+    area: { rect: { from: [8, 8], to: [504, 504] } }
+    density: 0.15
+    minDistance: 22

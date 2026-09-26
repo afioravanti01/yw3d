@@ -5,12 +5,17 @@ export interface OverlayData {
   camera: { x: number; y: number; z: number };
   speedMps: number;
   seed: number;
+  world: string;
+  structureCounts: Record<string, number>;
+  warnings: number;
   meshedChunks: number;
   totalChunks: number;
   triangles: number;
   loadTimeMs: number;
   generationMs: number;
   meshingMs: number;
+  /** Duration of the last hot reload, 0 if none (YAML-007.a). */
+  reloadMs: number;
   lastChunkRebuildMs: number;
 }
 
@@ -48,15 +53,24 @@ export class DebugOverlay {
       `position   ${block(d.camera.x)}, ${block(d.camera.y)}, ${block(d.camera.z)} blocks`,
       `           ${meters(d.camera.x)}, ${meters(d.camera.y)}, ${meters(d.camera.z)} m`,
       `speed      ${d.speedMps.toFixed(1)} m/s`,
-      `seed       ${d.seed}`,
+      `world      ${d.world} · seed ${d.seed} · ${d.warnings} warning${d.warnings === 1 ? '' : 's'}`,
+      `structures ${formatCounts(d.structureCounts)}`,
       `chunks     ${d.meshedChunks} meshed / ${d.totalChunks}`,
       `triangles  ${d.triangles.toLocaleString('en-US')}`,
       `load       ${(d.loadTimeMs / 1000).toFixed(2)} s (generation ${d.generationMs.toFixed(0)} ms, meshing ${d.meshingMs.toFixed(0)} ms)`,
+      ...(d.reloadMs > 0
+        ? [`reload     ${(d.reloadMs / 1000).toFixed(2)} s (last hot reload)`]
+        : []),
       `rebuild    ${d.lastChunkRebuildMs.toFixed(1)} ms (last chunk)`,
       ``,
       `F3 hide · click to fly · WASD/arrows move · Space/Shift up/down · wheel speed`,
     ].join('\n');
   }
+}
+
+function formatCounts(counts: Record<string, number>): string {
+  const entries = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
+  return entries.length === 0 ? 'none' : entries.map(([name, n]) => `${name} ${n}`).join(', ');
 }
 
 /** Frames per second over a sliding window of about one second. */

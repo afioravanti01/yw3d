@@ -82,7 +82,9 @@ test('screenshots from fixed viewpoints for visual review (plan P12)', async ({ 
   await open(page);
   const views = [
     { name: 'overview', pose: [256, 110, 540, 0, -0.35] },
-    { name: 'low-angle', pose: [120, 60, 120, -Math.PI * 0.75, -0.1] },
+    { name: 'village', pose: [160, 62, 118, 0, -0.32] },
+    { name: 'woods', pose: [430, 64, 150, -0.23, -0.18] },
+    { name: 'pond', pose: [116, 52, 364, 0.64, -0.38] },
     { name: 'edge', pose: [-28, 30, 180, -Math.PI * 0.62, -0.05] },
   ] as const;
   for (const { name, pose } of views) {

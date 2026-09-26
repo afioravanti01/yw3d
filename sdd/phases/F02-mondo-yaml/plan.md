@@ -172,7 +172,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `npm run world:check -- <file>`: stampa errori e avvisi nel formato del core, exit ≠ 0 se ci sono errori.
   - Fatto quando: test di YAML-002.e verde.
 
-- [ ] **T2.13** Integrazione nell'app
+- [x] **T2.13** Integrazione nell'app
   - Req: YAML-006, YAML-007, APP-001, DEBUG-001, YAML-002, YAML-003 · Dip: T2.05, T2.10
   - Elenco dei mondi e `?world=` (P13), `?seed=` come sostituto con avviso, pannello di errori e avvisi, overlay con file, strutture e avvisi, ricarica a caldo con posa della camera conservata; hook di test esteso.
   - Fatto quando: l'app carica un file di prova; errori e avvisi visibili; la ricarica a caldo funziona in `npm run dev`.
@@ -214,3 +214,4 @@ Come in F01, salvo diversa indicazione dell'utente alla revisione del piano:
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T2.07 | Screenshot di alberi e case rimandati al punto di controllo, che si sposta da T2.10 a dopo T2.13 | Per vedere le strutture serve che l'app carichi un file YAML (T2.13). Nel frattempo le sagome sono controllate con proiezioni ASCII e con i test | Nessuno |
+| T2.13 | Prima versione di `worlds/default.yaml` scritta in T2.13, non in T2.14; punti di vista degli screenshot aggiornati in anticipo | Serviva un file reale per provare l'app e fare gli screenshot del punto di controllo. T2.14 resta per rifinire il mondo e misurare le prestazioni | Nessuno |
