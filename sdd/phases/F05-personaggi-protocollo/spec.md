@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | draft |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-26 |
 | Piano | [plan.md](plan.md) (dopo G1) |
 
@@ -42,7 +42,7 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 
 ### CHAR-002 — Figura e animazioni
 - **a** `[unit]` La posa della figura (testa, busto, braccia, gambe) dipende solo dallo stato del personaggio: fermo, camminata e corsa con l'oscillazione degli arti proporzionale alla velocità, salto o caduta, nuoto, parlata.
-- **b** `[manuale]` Le animazioni sono fluide e leggibili: si capisce a colpo d'occhio se un personaggio sta fermo, cammina, corre, salta, nuota o parla. Il giocatore in terza persona usa la stessa figura animata.
+- **b** `[manuale]` Le animazioni sono fluide e leggibili: si capisce a colpo d'occhio se un personaggio sta fermo, cammina, corre, salta, nuota o parla. Il giocatore in terza persona, e visto dagli spettatori, usa la stessa figura animata con i suoi colori (Q7).
 - **c** `[manuale]` Ciò che un personaggio dice compare in un fumetto sopra la testa, per un tempo proporzionale alla lunghezza del testo.
 
 ### NAV-001 — Ricerca del percorso
@@ -79,8 +79,9 @@ Lo stesso modello su tutti i canali, in JSON; nomi di campi e azioni in `snake_c
 - **b** `[unit]` Alla chiusura del client il personaggio si ferma e può essere guidato da un altro client.
 
 ### PROTO-005 — Consenso e verifica dei comandi
-- **a** `[unit]` Prima di lanciare i comandi dei controllori l'host li elenca nel terminale e chiede il consenso (Q1); senza consenso i personaggi restano fermi e l'host funziona comunque. L'opzione `--allow-commands` dà il consenso senza chiederlo.
+- **a** `[unit]` Prima di lanciare i comandi dei controllori l'host li elenca nel terminale e chiede il consenso; senza consenso i personaggi restano fermi e l'host funziona comunque. L'opzione `--allow-commands` dà il consenso senza chiederlo.
 - **b** `[unit]` All'avvio l'host verifica che il programma di ogni comando esista; un programma mancante è segnalato con il personaggio e il comando.
+- **c** `[unit]` Il consenso si ricorda per quella cartella finché i suoi comandi non cambiano; se un comando cambia o se ne aggiunge uno, l'host chiede di nuovo. Il consenso è salvato fuori dalla cartella del mondo, così una cartella ricevuta da altri non può portarlo con sé (Q1).
 
 ### PROTO-006 — Il mondo non aspetta i controllori
 - **a** `[unit]` Un controllore lento non rallenta la simulazione: le percezioni non lette si sostituiscono con l'ultima, non si accumulano.
@@ -105,18 +106,28 @@ Stesso hardware di riferimento di PERF-001.
 - **c** `[unit]` Il terminale dell'host riporta: file del mondo, indirizzo, seed, strutture per tipo, avvisi ed errori, collegamento e scollegamento delle viste, personaggi con il loro controllore, avvio e terminazione dei controllori.
 - **Motivo:** con i controllori il terminale è il primo posto dove capire cosa succede senza browser (D-008).
 
+### YAML-008 — Partenza del giocatore
+- **Prima:** a `[unit]` Il file del mondo può dichiarare la posizione orizzontale di partenza del giocatore (x, z in blocchi) e l'orientamento iniziale della visuale.
+- **Dopo:** criterio b invariato; il criterio a diventa:
+- **a** `[unit]` Il file del mondo può dichiarare la posizione orizzontale di partenza del giocatore (x, z in blocchi), l'orientamento iniziale della visuale e l'aspetto (colori come in CHAR-001.a).
+- **Motivo:** il giocatore usa la figura animata dei personaggi, con colori propri (Q7).
+
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Domande aperte
-- **Q1** Consenso ai comandi: proposta **domanda nel terminale a ogni avvio** (elenco dei comandi, sì/no), `--allow-commands` per saltarla (test, script). Alternativa: ricordare il consenso per cartella finché i comandi non cambiano.
-- **Q2** Aspetto: proposta **solo i colori** (pelle, capelli, maglia, pantaloni) con valori di default variati dal seed; altezze e fisionomie diverse più avanti.
-- **Q3** Acqua nei percorsi: proposta **si nuota solo se l'alternativa asciutta è più lunga del doppio**, altrimenti si gira intorno.
-- **Q4** Frequenza della percezione: proposta **4 volte al secondo**, più gli eventi immediati. Più alta costa ai controllori lenti; più bassa rende le reazioni tardive.
-- **Q5** Azioni: proposta **una alla volta, la nuova sostituisce la vecchia**; il controllore mette in fila da sé. Alternativa: coda di azioni nell'host.
-- **Q6** Interazione: proposta **tasto E** entro 3 m, al personaggio più vicino. La chat scritta con i personaggi arriva con il dialogo di F06.
-- **Q7** Figura del giocatore: proposta **stessa figura animata** dei personaggi, al posto di quella statica di F03.
-- **Q8** Stile del protocollo: proposta **`snake_case`** per azioni e campi, comodo in Python e negli strumenti MCP di F06, anche se il codice TypeScript usa `camelCase`.
+## Domande risolte
+Chiuse con l'utente il 2026-09-26, prima di G1. Su Q1 la proposta della bozza (domanda a ogni avvio) è stata corretta dopo un chiarimento.
+
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Consenso ai comandi | Chiesto la prima volta per cartella e ricordato finché i comandi non cambiano; salvato fuori dalla cartella; `--allow-commands` per saltarlo | Nuovo criterio PROTO-005.c |
+| Q2 | Aspetto | Solo colori (pelle, capelli, maglia, pantaloni), con default variati dal seed | CHAR-001.a invariato |
+| Q3 | Acqua nei percorsi | Si nuota solo se il giro asciutto è più lungo del doppio | NAV-001.b invariato |
+| Q4 | Frequenza della percezione | 4 volte al secondo, più gli eventi immediati | PROTO-002.a invariato |
+| Q5 | Azioni | Una alla volta, la nuova sostituisce la vecchia | PROTO-001.c invariato |
+| Q6 | Interazione | Tasto E entro 3 m, al personaggio più vicino; la chat scritta in F06 | PROTO-002.c invariato |
+| Q7 | Figura del giocatore | La stessa figura animata dei personaggi, con colori propri dichiarati nel YAML | CHAR-002.b precisato; YAML-008 modificato |
+| Q8 | Stile del protocollo | `snake_case` per azioni e campi | PROTO-001 invariato |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
