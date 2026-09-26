@@ -7,13 +7,14 @@ import {
 } from '../gen/terrain';
 import { formatPath, type Issue } from '../schema/schema';
 import { WATER } from '../blocks/builtin';
-import { rotateColumn, StructureBuilder } from '../structures/builder';
+import { rotateColumn, StructureBuilder, type Rect } from '../structures/builder';
 import { basinOf, buildStructure, type StructureRegistry } from '../structures/registry';
 import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import { loadWorldFile } from '../yaml/worldFile';
 import { findConflicts, placeStructures, type Placement } from './placement';
+import { scatterStructures } from './scatter';
 
 export interface ComposeOptions {
   readonly registry: StructureRegistry;
@@ -21,6 +22,16 @@ export interface ComposeOptions {
   readonly seedOverride?: number;
   /** Clock for the step timings, e.g. `performance.now`; the core has no clock of its own. */
   readonly now?: () => number;
+}
+
+export interface PlacedStructure {
+  readonly type: string;
+  readonly x: number;
+  readonly z: number;
+  readonly rotation: number;
+  /** Where it comes from, e.g. `structures[2]` or `scatter[0]`. */
+  readonly source: string;
+  readonly rect: Rect;
 }
 
 export interface ComposeResult {
@@ -31,6 +42,8 @@ export interface ComposeResult {
   readonly seed: number | undefined;
   /** Number of structures built, by type name (DEBUG-001.a). */
   readonly structureCounts: Record<string, number>;
+  /** Structures built, in order: declared one by one first, then distributed. */
+  readonly placements: readonly PlacedStructure[];
   /** Duration of each step in milliseconds. */
   readonly timings: Record<string, number>;
 }
@@ -53,6 +66,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     diagnostics,
     seed,
     structureCounts: {},
+    placements: [],
     timings,
   });
 
@@ -84,13 +98,37 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     });
   }
 
-  const placements = placeStructures(decl.structures ?? [], options.registry, seed, size, issues);
-  for (const [a, b] of findConflicts(placements)) {
+  const singles = placeStructures(decl.structures ?? [], options.registry, seed, size, issues);
+  for (const [a, b] of findConflicts(singles)) {
     warnings.push({
       path: b.path,
       message: `overlaps ${formatPath(a.path)} (${a.type.name}, line ${loaded.lineOf(a.path)}): ${formatPath(b.path)} (${b.type.name}) wins`,
     });
   }
+  if (issues.length > 0) return failed(toDiagnostics(), seed);
+
+  // Basins are known before the distributions, which must avoid the water (YAML-005.c).
+  const basinColumns = new Map<Placement, BasinColumns>();
+  const water = new Set<number>();
+  const addBasin = (placement: Placement) => {
+    const columns = basinColumnsOf(placement);
+    if (!columns) return;
+    basinColumns.set(placement, columns);
+    for (const [x, z] of columns.columns) water.add(x + z * size.x);
+  };
+  singles.forEach(addBasin);
+  const scattered = scatterStructures(
+    decl.scatter ?? [],
+    options.registry,
+    seed,
+    size,
+    singles.map((p) => p.rect),
+    water,
+    issues,
+    warnings,
+  );
+  scattered.forEach(addBasin);
+  const placements = [...singles, ...scattered];
   lap('placement');
   if (issues.length > 0) return failed(toDiagnostics(), seed);
 
@@ -101,18 +139,11 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
   const surface = new Uint8Array(size.x * size.z);
   const anchors = new Map<Placement, number>();
   const basins: DugBasin[] = [];
-  for (const placement of placements) {
-    if (placement.type.terrain !== 'dig') continue;
-    const basin = basinOf(placement.type, placement.params, placement.seed);
-    if (!basin) continue;
-    const columns = basin.columns.map(([lx, lz, depth]) => {
-      const [rx, rz] = rotateColumn(lx, lz, placement.rotation);
-      return [placement.x + rx, placement.z + rz, depth] as const;
-    });
+  for (const [placement, basin] of basinColumns) {
     const dug = dig(
       map,
       surface,
-      columns,
+      basin.columns,
       basin.shoreWidth,
       basin.shoreBlock,
       placement.y === undefined ? Infinity : placement.y - 1,
@@ -153,7 +184,36 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     diagnostics,
     seed,
     structureCounts,
+    placements: placements.map((p) => ({
+      type: p.type.name,
+      x: p.x,
+      z: p.z,
+      rotation: p.rotation,
+      source: formatPath(p.path),
+      rect: p.rect,
+    })),
     timings,
+  };
+}
+
+interface BasinColumns {
+  readonly columns: (readonly [x: number, z: number, depth: number])[];
+  readonly shoreWidth: number;
+  readonly shoreBlock: number;
+}
+
+/** World columns of the basin of a `dig` placement, or undefined for other structures. */
+function basinColumnsOf(placement: Placement): BasinColumns | undefined {
+  if (placement.type.terrain !== 'dig') return undefined;
+  const basin = basinOf(placement.type, placement.params, placement.seed);
+  if (!basin) return undefined;
+  return {
+    columns: basin.columns.map(([lx, lz, depth]) => {
+      const [rx, rz] = rotateColumn(lx, lz, placement.rotation);
+      return [placement.x + rx, placement.z + rz, depth] as const;
+    }),
+    shoreWidth: basin.shoreWidth,
+    shoreBlock: basin.shoreBlock,
   };
 }
 

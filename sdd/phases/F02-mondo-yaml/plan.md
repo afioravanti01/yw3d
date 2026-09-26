@@ -162,7 +162,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Passaggio dell'acqua nel mesher, mesh trasparente per chunk (P11). **Punto di controllo con l'utente**: screenshot di alberi, case e laghetto prima di comporre il mondo predefinito.
   - Fatto quando: test di RENDER-007.a verde; screenshot rivisti con l'utente.
 
-- [ ] **T2.11** Distribuzioni
+- [x] **T2.11** Distribuzioni
   - Req: YAML-005 · Dip: T2.05, T2.09
   - Poisson disk deterministico in rettangoli e cerchi, pesi dei tipi, densità o numero, scarto dei conflitti (P7).
   - Fatto quando: test di YAML-005.a–d verdi.
