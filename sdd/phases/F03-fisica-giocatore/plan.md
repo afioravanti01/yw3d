@@ -129,7 +129,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [x] **T3.14+** Correzioni dalla demo
   - Req: PLAYER-002, CAM-001, PLAYER-003 · Dip: T3.10
-  - Frecce ←/→ che ruotano la visuale (A3.1), tasto C per la camera libera (A3.2), capelli della figura che sfarfallano sulla testa (facce sovrapposte).
+  - Frecce ←/→ che ruotano la visuale (A3.1), anche nella camera libera (A3.3); tasto C per la camera libera (A3.2); giocatore nascosto in camera libera (A3.3); capelli della figura che sfarfallano sulla testa (facce sovrapposte).
   - Fatto quando: `npm run check` verde; test della mappatura dei tasti aggiornato.
 
 - [ ] **T3.12** Test end-to-end

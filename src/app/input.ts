@@ -1,8 +1,9 @@
 import { IDLE, type Intent } from '../core/physics/entity';
 
 const MOUSE_SENSITIVITY = 0.0022;
-/** Turning speed with the ←/→ arrows, about 125° per second (A3.1). */
-export const TURN_SPEED = 2.2;
+import { TURN_SPEED } from '../render/flyCamera';
+
+export { TURN_SPEED };
 const MAX_PITCH = (89 * Math.PI) / 180;
 /** Keys whose default browser action (scrolling, menus) would get in the way. */
 const CAPTURED = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);

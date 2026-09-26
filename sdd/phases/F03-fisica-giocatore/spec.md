@@ -101,10 +101,11 @@ Stesso hardware di riferimento di PERF-001.
 - **Motivo:** i salici hanno tende di foglie fino a 2 blocchi da terra e le chiome basse ostacolerebbero il cammino; attraversare il fogliame è anche più naturale (Q5).
 
 ### CAM-001 — Camera libera
-- **Prima:** e `[manuale]` All'avvio la camera è sopra il centro del mondo, più in alto della superficie, e inquadra il terreno.
-- **Dopo:** criteri a, b, c e d invariati (valgono in modalità camera libera); il criterio e diventa, e si aggiunge f:
+- **Prima:** b `[manuale]` W/A/S/D (posizione fisica dei tasti, indipendente dal layout della tastiera) muovono avanti, a sinistra, indietro e a destra nel piano orizzontale secondo la direzione di vista; le frecce ↑/←/↓/→ fanno lo stesso, in alternativa. Spazio e Z salgono, Shift e X scendono (Z e X per posizione fisica, come W/A/S/D). e `[manuale]` All'avvio la camera è sopra il centro del mondo, più in alto della superficie, e inquadra il terreno.
+- **Dopo:** criteri a, c e d invariati (valgono in modalità camera libera); i criteri b ed e diventano, e si aggiunge f:
+- **b** `[manuale]` W/A/S/D (posizione fisica dei tasti, indipendente dal layout della tastiera) muovono avanti, a sinistra, indietro e a destra nel piano orizzontale secondo la direzione di vista; le frecce ↑/↓ vanno avanti e indietro come W/S, le frecce ←/→ ruotano la visuale a sinistra e a destra, come per il giocatore. Spazio e Z salgono, Shift e X scendono (Z e X per posizione fisica, come W/A/S/D). (A3.3)
 - **e** `[manuale]` Passando alla camera libera, la camera parte dalla visuale corrente del giocatore.
-- **f** `[manuale]` Il tasto C alterna giocatore e camera libera (modalità di debug). Mentre la camera libera è attiva il giocatore resta fermo dov'era; tornando al giocatore la visuale riprende dal giocatore. (A3.2)
+- **f** `[manuale]` Il tasto C alterna giocatore e camera libera (modalità di debug). Mentre la camera libera è attiva il giocatore resta fermo dov'era e non è visibile; tornando al giocatore la visuale riprende dal giocatore. (A3.2, A3.3)
 - **Motivo:** dalla F03 si entra nel mondo come giocatore; la camera libera resta per ispezionare (roadmap). Tasto C invece di F4 per l'emendamento A3.2.
 
 ### DEBUG-001 — Overlay diagnostico
@@ -133,3 +134,4 @@ Chiuse con l'utente il 2026-09-26, prima di G1. Tutte le proposte sono state acc
 |---|---|---|---|---|---|
 | A3.1 | 2026-09-26 | PLAYER-002.b | Le frecce ←/→ ruotano la visuale invece di spostare di lato; ↑/↓ restano avanti e indietro | Richiesta dell'utente alla demo: girarsi senza mouse | sì, utente, 2026-09-26 |
 | A3.2 | 2026-09-26 | CAM-001.f | Tasto C invece di F4 per la camera libera | Richiesta dell'utente alla demo | sì, utente, 2026-09-26 |
+| A3.3 | 2026-09-26 | CAM-001.b, CAM-001.f | Nella camera libera le frecce ←/→ ruotano la visuale; il giocatore non è visibile mentre la camera libera è attiva | Richiesta dell'utente: stessi tasti nelle due modalità, e la figura non deve restare nella scena ispezionata | sì, utente, 2026-09-26 |

@@ -45,12 +45,12 @@ describe('fly camera', () => {
     expect(move(['KeyZ', 'KeyX'])).toEqual({ x: 0, y: 0, z: 0 });
   });
 
-  it('arrow keys move like WASD (A1.1)', () => {
+  it('↑/↓ move like W/S (A1.1); ←/→ do not move sideways, they turn (A3.3)', () => {
     const move = (codes: string[], yaw = 0) => round(movementDirection(new Set(codes), yaw));
     expect(move(['ArrowUp'])).toEqual(move(['KeyW']));
     expect(move(['ArrowDown'])).toEqual(move(['KeyS']));
-    expect(move(['ArrowLeft'])).toEqual(move(['KeyA']));
-    expect(move(['ArrowRight'])).toEqual(move(['KeyD']));
+    expect(move(['ArrowLeft'])).toEqual({ x: 0, y: 0, z: 0 });
+    expect(move(['ArrowRight'])).toEqual({ x: 0, y: 0, z: 0 });
     expect(move(['ArrowUp'], -Math.PI / 2)).toEqual({ x: 1, y: 0, z: 0 });
     // The same direction from both key sets does not double the speed.
     expect(move(['KeyW', 'ArrowUp'])).toEqual(move(['KeyW']));

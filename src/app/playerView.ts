@@ -128,7 +128,8 @@ export class PlayerView {
     this.mode = mode;
     this.controls.enabled = mode !== 'free';
     this.freeCamera.enabled = mode === 'free';
-    this.figure.visible = mode !== 'first';
+    // Visible only in third person: hidden in first person and in the free camera (A3.3).
+    this.figure.visible = mode === 'third';
   }
 
   private placeFigure(state: Pick<EntityState, 'x' | 'y' | 'z'>): void {

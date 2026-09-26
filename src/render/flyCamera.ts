@@ -42,23 +42,25 @@ export function clampSpeed(mps: number): number {
   return clamp(mps, MIN_SPEED_MPS, MAX_SPEED_MPS);
 }
 
-/** Keys for each horizontal direction: WASD, and the arrows as an alternative (A1.1). */
+/** Keys for each direction: WASD, and ↑/↓ as an alternative to W/S (A1.1); ←/→ turn (A3.3). */
 const MOVE_KEYS = {
   forward: ['KeyW', 'ArrowUp'],
   back: ['KeyS', 'ArrowDown'],
-  left: ['KeyA', 'ArrowLeft'],
-  right: ['KeyD', 'ArrowRight'],
+  left: ['KeyA'],
+  right: ['KeyD'],
   // Z and X as an alternative to Space and Shift (A2.2).
   up: ['Space', 'KeyZ'],
   down: ['ShiftLeft', 'ShiftRight', 'KeyX'],
 } as const;
 const ARROW_KEYS = new Set<string>(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+/** Turning speed with the ←/→ arrows, the same as the player (A3.3). */
+export const TURN_SPEED = 2.2;
 
 const anyPressed = (keys: ReadonlySet<string>, codes: readonly string[]) =>
   codes.some((code) => keys.has(code)) ? 1 : 0;
 
 /**
- * Movement direction for the pressed keys (KeyboardEvent.code, plan P13): WASD or arrows on the
+ * Movement direction for the pressed keys (KeyboardEvent.code, plan P13): WASD or ↑/↓ on the
  * horizontal plane relative to the yaw, Space or Z up, Shift or X down. Horizontal length is at
  * most 1.
  */
@@ -139,6 +141,10 @@ export class FlyCamera {
   /** Moves the camera for a frame of `dt` seconds. */
   update(dt: number): void {
     if (!this.enabled) return;
+    this.yaw +=
+      (anyPressed(this.keys, ['ArrowLeft']) - anyPressed(this.keys, ['ArrowRight'])) *
+      TURN_SPEED *
+      dt;
     const direction = movementDirection(this.keys, this.yaw);
     const distance = metersToBlocks(this.speed) * dt;
     const p = clampCamera(
