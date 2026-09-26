@@ -87,7 +87,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `constants.ts`, `entity.ts`, `fixedStep.ts`, `PhysicsWorld` con spawn e passo vuoto; determinismo e indipendenza dal frame rate.
   - Fatto quando: test di PHYS-001.a–b e PHYS-002.a–c verdi.
 
-- [ ] **T3.04** Gravità e collisioni
+- [x] **T3.04** Gravità e collisioni
   - Req: PHYS-003, PHYS-004, PHYS-001 · Dip: T3.03, T3.02
   - `collide.ts` (P3), gravità e velocità massima di caduta, stato "a terra", spawn nel primo spazio libero.
   - Fatto quando: test di PHYS-003.a–b, PHYS-004.a–d e PHYS-001.c verdi.
