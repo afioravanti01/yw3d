@@ -63,7 +63,7 @@ export class DebugOverlay {
         : []),
       `rebuild    ${d.lastChunkRebuildMs.toFixed(1)} ms (last chunk)`,
       ``,
-      `F3 hide · click to fly · WASD/arrows move · Space/Shift up/down · wheel speed`,
+      `F3 hide · click to fly · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`,
     ].join('\n');
   }
 }

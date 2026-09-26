@@ -48,6 +48,9 @@ const MOVE_KEYS = {
   back: ['KeyS', 'ArrowDown'],
   left: ['KeyA', 'ArrowLeft'],
   right: ['KeyD', 'ArrowRight'],
+  // Z and X as an alternative to Space and Shift (A2.2).
+  up: ['Space', 'KeyZ'],
+  down: ['ShiftLeft', 'ShiftRight', 'KeyX'],
 } as const;
 const ARROW_KEYS = new Set<string>(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 
@@ -56,13 +59,13 @@ const anyPressed = (keys: ReadonlySet<string>, codes: readonly string[]) =>
 
 /**
  * Movement direction for the pressed keys (KeyboardEvent.code, plan P13): WASD or arrows on the
- * horizontal plane relative to the yaw, Space up, Shift down. Horizontal length is at most 1.
+ * horizontal plane relative to the yaw, Space or Z up, Shift or X down. Horizontal length is at
+ * most 1.
  */
 export function movementDirection(keys: ReadonlySet<string>, yaw: number): Vec3 {
   const forward = anyPressed(keys, MOVE_KEYS.forward) - anyPressed(keys, MOVE_KEYS.back);
   const right = anyPressed(keys, MOVE_KEYS.right) - anyPressed(keys, MOVE_KEYS.left);
-  const up =
-    (keys.has('Space') ? 1 : 0) - (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 1 : 0);
+  const up = anyPressed(keys, MOVE_KEYS.up) - anyPressed(keys, MOVE_KEYS.down);
   const sin = Math.sin(yaw);
   const cos = Math.cos(yaw);
   let x = -sin * forward + cos * right;

@@ -37,6 +37,14 @@ describe('fly camera', () => {
     expect(Math.hypot(diagonal.x, diagonal.z)).toBeCloseTo(1);
   });
 
+  it('Z and X move up and down like Space and Shift (A2.2)', () => {
+    const move = (codes: string[]) => round(movementDirection(new Set(codes), 0));
+    expect(move(['KeyZ'])).toEqual(move(['Space']));
+    expect(move(['KeyX'])).toEqual(move(['ShiftLeft']));
+    expect(move(['KeyZ', 'Space'])).toEqual({ x: 0, y: 1, z: 0 });
+    expect(move(['KeyZ', 'KeyX'])).toEqual({ x: 0, y: 0, z: 0 });
+  });
+
   it('arrow keys move like WASD (A1.1)', () => {
     const move = (codes: string[], yaw = 0) => round(movementDirection(new Set(codes), yaw));
     expect(move(['ArrowUp'])).toEqual(move(['KeyW']));

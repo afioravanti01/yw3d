@@ -152,6 +152,12 @@ Stesso hardware di riferimento di PERF-001.
 - **a** `[manuale]` Come prima, più: nome del file del mondo, numero di strutture per tipo, numero di avvisi.
 - **Motivo:** serve a capire cosa è stato caricato mentre si modifica il YAML.
 
+### CAM-001 — Camera libera
+- **Prima:** b `[manuale]` W/A/S/D (posizione fisica dei tasti, indipendente dal layout della tastiera) muovono avanti, a sinistra, indietro e a destra nel piano orizzontale secondo la direzione di vista; le frecce ↑/←/↓/→ fanno lo stesso, in alternativa. Spazio sale, Shift scende.
+- **Dopo:** criteri a, c, d ed e invariati; il criterio b diventa:
+- **b** `[manuale]` W/A/S/D (posizione fisica dei tasti, indipendente dal layout della tastiera) muovono avanti, a sinistra, indietro e a destra nel piano orizzontale secondo la direzione di vista; le frecce ↑/←/↓/→ fanno lo stesso, in alternativa. Spazio e Z salgono, Shift e X scendono (Z e X per posizione fisica, come W/A/S/D).
+- **Motivo:** richiesta dell'utente: salire e scendere con due tasti vicini, alternativi a Spazio e Shift (emendamento A2.2).
+
 ## Requisiti RIMOSSI
 Nessuno.
 
@@ -173,3 +179,4 @@ Chiuse con l'utente il 2026-09-26, prima di G1. Tutte le proposte sono state acc
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
 | A2.1 | 2026-09-26 | WORLD-004, APP-001, DEBUG-001 (MODIFICATI) | Solo forma: i criteri dopo «Dopo:» su righe proprie, testo invariato | Lo script di tracciabilità riconosce solo i criteri su righe proprie | sì, utente, 2026-09-26 |
+| A2.2 | 2026-09-26 | CAM-001.b (nuovo tra i MODIFICATI) | Z sale e X scende, in aggiunta a Spazio e Shift | Richiesta dell'utente; la spec di F01 è chiusa, quindi la modifica passa dalla fase in corso | sì, utente, 2026-09-26 |

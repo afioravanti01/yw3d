@@ -177,6 +177,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Elenco dei mondi e `?world=` (P13), `?seed=` come sostituto con avviso, pannello di errori e avvisi, overlay con file, strutture e avvisi, ricarica a caldo con posa della camera conservata; hook di test esteso.
   - Fatto quando: l'app carica un file di prova; errori e avvisi visibili; la ricarica a caldo funziona in `npm run dev`.
 
+- [x] **T2.17+** Salire e scendere con Z e X
+  - Req: CAM-001 (A2.2) · Dip: —
+  - `KeyZ` sale e `KeyX` scende, in aggiunta a `Space` e `Shift`; aiuto dell'overlay aggiornato.
+  - Fatto quando: `npm run check` verde; volo con Z e X verificato a mano.
+
 - [ ] **T2.14** Mondo predefinito
   - Req: APP-002, PERF-002 · Dip: T2.07, T2.08, T2.09, T2.11, T2.13
   - `worlds/default.yaml`: borgo in una zona pianeggiante, bosco misto, alberi sparsi, laghetti con salici (P15). Tempi e triangoli misurati.
