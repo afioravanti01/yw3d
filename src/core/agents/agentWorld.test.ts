@@ -55,12 +55,12 @@ function setup(
 describe('actions', () => {
   it('PROTO-001.b: walk_to, look_at, wait and stop end with their outcome', () => {
     const { agents, events, run, state } = setup([start('a', 20.5, 20.5), start('b', 40.5, 20.5)]);
-    agents.request('a', { kind: 'walk_to', id: 'w1', x: 60, z: 60 });
+    agents.request('a', { kind: 'walk_to', id: 'w1', x: 60, z: 60, speed: 4 });
     run(15);
     expect(events).toContainEqual(['a', { type: 'action_done', id: 'w1' }]);
     expect(Math.hypot(state('a').x - 60, state('a').z - 60)).toBeLessThanOrEqual(1);
     // Towards an entity.
-    agents.request('a', { kind: 'walk_to', id: 'w2', target: 'b' });
+    agents.request('a', { kind: 'walk_to', id: 'w2', target: 'b', speed: 4 });
     run(15);
     expect(events).toContainEqual(['a', { type: 'action_done', id: 'w2' }]);
     // look_at turns at once; wait lasts its time; stop ends at once.
@@ -101,11 +101,33 @@ describe('actions', () => {
     run(0.1);
     expect(events).toContainEqual(['a', { type: 'action_done', id: 's1' }]);
     expect(agents.views().find((v) => v.id === 'a')!.speech).toBeNull();
-    agents.request('far', { kind: 'follow', id: 'f1', target: 'a', distance: 4 });
+    agents.request('far', { kind: 'follow', id: 'f1', target: 'a', distance: 4, speed: 5 });
     run(25);
     const d = Math.hypot(state('far').x - state('a').x, state('far').z - state('a').z);
     expect(d).toBeLessThanOrEqual(5);
     expect(events.some(([id, e]) => id === 'far' && e.type !== 'heard')).toBe(false);
+  });
+
+  it('PROTO-001.b: characters walk at 1.5 m/s by default, or at the speed asked for (A5.1)', () => {
+    const measure = (speed: number | undefined) => {
+      const { agents, run, state } = setup([start('a', 10.5, 20.5)]);
+      run(0.2);
+      agents.request('a', {
+        kind: 'walk_to',
+        id: 'w',
+        x: 110,
+        z: 20.5,
+        ...(speed ? { speed } : {}),
+      });
+      run(1);
+      const x0 = state('a').x;
+      run(2);
+      // Blocks per second → m/s.
+      return (state('a').x - x0) / 2 / 2;
+    };
+    expect(measure(undefined)).toBeCloseTo(1.5, 1);
+    expect(measure(0.8)).toBeCloseTo(0.8, 1);
+    expect(measure(6)).toBeCloseTo(6, 1);
   });
 
   it('PROTO-001.c: a new action replaces the running one, which ends as replaced', () => {
@@ -114,7 +136,7 @@ describe('actions', () => {
     run(0.5);
     agents.request('a', { kind: 'walk_to', id: 'second', x: 20, z: 40 });
     expect(events).toContainEqual(['a', { type: 'action_replaced', id: 'first' }]);
-    run(10);
+    run(20);
     expect(events).toContainEqual(['a', { type: 'action_done', id: 'second' }]);
     expect(events).not.toContainEqual(['a', { type: 'action_done', id: 'first' }]);
   });

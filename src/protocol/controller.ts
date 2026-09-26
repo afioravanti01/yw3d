@@ -1,4 +1,5 @@
 import type { ActionRequest, AgentEvent, Perception } from '../core/agents/agentWorld';
+import { MAX_CHARACTER_SPEED_MPS, MIN_CHARACTER_SPEED_MPS } from '../core/physics/constants';
 import {
   formatPath,
   number,
@@ -6,7 +7,6 @@ import {
   oneOf,
   optional,
   str,
-  bool,
   type Issue,
   type Schema,
 } from '../core/schema/schema';
@@ -53,6 +53,8 @@ export function helloMessage(id: string, size: readonly [number, number, number]
 const actionId = () => str();
 const coordinate = () => number({ min: -1e6, max: 1e6 });
 const entity = () => str();
+/** Walking speed in m/s (A5.1). */
+const speed = () => number({ min: MIN_CHARACTER_SPEED_MPS, max: MAX_CHARACTER_SPEED_MPS });
 
 /** Schema of each message a controller can send, by `type` (PROTO-001.b). */
 const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
@@ -63,7 +65,7 @@ const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
       x: optional(coordinate()),
       z: optional(coordinate()),
       target: optional(entity()),
-      run: bool({ default: false }),
+      speed: optional(speed()),
     },
     pointOrTarget,
   ),
@@ -87,6 +89,7 @@ const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
     id: actionId(),
     target: entity(),
     distance: number({ min: 1, max: 32, default: 3 }),
+    speed: optional(speed()),
   }),
   wait: object({ type: oneOf(['wait']), id: actionId(), seconds: number({ min: 0, max: 3600 }) }),
   stop: object({ type: oneOf(['stop']), id: actionId() }),

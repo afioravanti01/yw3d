@@ -32,3 +32,8 @@ export const BUOYANCY_STIFFNESS = 2;
 export const WATER_DRAG = 0.87;
 /** Vertical speed when swimming up or down, and highest vertical speed in water: 3 m/s. */
 export const SWIM_SPEED = metersToBlocks(3);
+/** Walking speed of characters when their controller does not choose one: a calm 1.5 m/s (A5.1). */
+export const CHARACTER_WALK_SPEED = metersToBlocks(1.5);
+/** Speeds a controller may ask for, in m/s (A5.1). */
+export const MIN_CHARACTER_SPEED_MPS = 0.5;
+export const MAX_CHARACTER_SPEED_MPS = 7;

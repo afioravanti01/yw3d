@@ -1,6 +1,6 @@
 import type { Character } from '../characters/characters';
 import { PathFollower, type FindPath } from '../nav/pathFollower';
-import { RUN_SPEED, STEP_SECONDS, WALK_SPEED } from '../physics/constants';
+import { CHARACTER_WALK_SPEED, STEP_SECONDS } from '../physics/constants';
 import { IDLE, type EntityState, type Intent } from '../physics/entity';
 import type { EntityHandle, PhysicsWorld } from '../physics/physicsWorld';
 import { metersToBlocks } from '../world/units';
@@ -25,7 +25,12 @@ export const sayDuration = (text: string) => 1 + 0.06 * text.length;
 export type Target = { readonly x: number; readonly z: number } | { readonly target: string };
 
 export type ActionRequest =
-  | ({ readonly kind: 'walk_to'; readonly id: string; readonly run?: boolean } & Target)
+  | ({
+      readonly kind: 'walk_to';
+      readonly id: string;
+      /** m/s, 0.5–7; CHARACTER_WALK_SPEED when absent (A5.1). */
+      readonly speed?: number;
+    } & Target)
   | ({ readonly kind: 'look_at'; readonly id: string } & Target)
   | { readonly kind: 'say'; readonly id: string; readonly text: string }
   | {
@@ -33,6 +38,7 @@ export type ActionRequest =
       readonly id: string;
       readonly target: string;
       readonly distance: number;
+      readonly speed?: number;
     }
   | { readonly kind: 'wait'; readonly id: string; readonly seconds: number }
   | { readonly kind: 'stop'; readonly id: string };
@@ -242,15 +248,15 @@ export class AgentWorld {
         const goal = 'target' in request ? this.positionOf(request.target) : request;
         if (!goal)
           return this.fail(agent, `there is no entity "${(request as { target: string }).target}"`);
+        const speed = speedOf(request.speed);
         running.follower = new PathFollower(
           this.findPath,
           { x: goal.x, z: goal.z },
           state,
           this.time,
-          request.run,
+          speed,
         );
-        // Time limit: twice the walk along the path, plus 5 s (plan F05 P6, PROTO-006.b).
-        const speed = request.run ? RUN_SPEED : WALK_SPEED;
+        // Time limit: twice the walk along the path at that speed, plus 5 s (plan F05 P6, PROTO-006.b).
         running.deadline = this.time + (2 * running.follower.length) / speed + 5;
         return;
       }
@@ -315,7 +321,13 @@ export class AgentWorld {
         : Infinity;
       if (!running.follower || running.follower.status.kind !== 'moving' || moved > 2) {
         running.goal = { x: target.x, z: target.z };
-        running.follower = new PathFollower(this.findPath, running.goal, state, this.time);
+        running.follower = new PathFollower(
+          this.findPath,
+          running.goal,
+          state,
+          this.time,
+          speedOf(request.speed),
+        );
       }
       return this.walk(agent, running.follower.update(state, this.time));
     }
@@ -362,6 +374,11 @@ export class AgentWorld {
       reason,
     });
   }
+}
+
+/** Speed in blocks per second of a request in m/s, the calm default when absent (A5.1). */
+function speedOf(mps: number | undefined): number {
+  return mps === undefined ? CHARACTER_WALK_SPEED : metersToBlocks(mps);
 }
 
 /** Yaw that looks from `from` towards `to` (0 looks north, towards -z). */

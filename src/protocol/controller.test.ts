@@ -19,11 +19,16 @@ describe('controller messages', () => {
       ok: true,
       message: {
         kind: 'action',
-        request: { kind: 'walk_to', id: 'a1', x: 150, z: 70, run: false },
+        request: { kind: 'walk_to', id: 'a1', x: 150, z: 70 },
       },
     });
-    expect(parse({ type: 'walk_to', id: 'a2', target: 'player', run: true })).toMatchObject({
-      message: { request: { kind: 'walk_to', target: 'player', run: true } },
+    expect(parse({ type: 'walk_to', id: 'a2', target: 'player', speed: 1.2 })).toMatchObject({
+      message: { request: { kind: 'walk_to', target: 'player', speed: 1.2 } },
+    });
+    // A5.1: the speed is in m/s, between 0.5 and 7.
+    expect(parse({ type: 'walk_to', id: 'a3', x: 1, z: 1, speed: 9 })).toMatchObject({ ok: false });
+    expect(parse({ type: 'follow', id: 'f2', target: 'player', speed: 0.5 })).toMatchObject({
+      message: { request: { speed: 0.5 } },
     });
     expect(parse({ type: 'look_at', id: 'l', target: 'marta' })).toMatchObject({ ok: true });
     expect(parse({ type: 'say', id: 's', text: 'Ciao!' })).toMatchObject({

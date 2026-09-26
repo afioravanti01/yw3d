@@ -59,7 +59,7 @@ Un percorso è una sequenza di colonne percorribili: spazio libero per l'altezza
 ### PROTO-001 — Modello dei messaggi
 Lo stesso modello su tutti i canali, in JSON; nomi di campi e azioni in `snake_case` (Q8).
 - **a** `[unit]` Il primo messaggio al controllore dichiara la versione del protocollo, l'identificativo del personaggio e le misure del mondo.
-- **b** `[unit]` Il controllore chiede azioni: `walk_to` (un punto o un'entità), `look_at`, `say`, `follow` (un'entità, a una distanza), `wait`, `stop`. Ogni azione ha un identificativo e riceve un esito: completata, fallita con la causa, o sostituita.
+- **b** `[unit]` Il controllore chiede azioni: `walk_to` (un punto o un'entità), `look_at`, `say`, `follow` (un'entità, a una distanza), `wait`, `stop`. `walk_to` e `follow` accettano una velocità in m/s tra 0,5 e 7; senza, il personaggio cammina a 1,5 m/s (A5.1). Ogni azione ha un identificativo e riceve un esito: completata, fallita con la causa, o sostituita.
 - **c** `[unit]` Un'azione nuova sostituisce quella in corso (Q5).
 - **d** `[unit]` Un messaggio non valido riceve una risposta d'errore che ne indica la causa; l'host e il personaggio continuano a funzionare.
 
@@ -132,3 +132,4 @@ Chiuse con l'utente il 2026-09-26, prima di G1. Su Q1 la proposta della bozza (d
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A5.1 | 2026-09-26 | PROTO-001.b | Velocità facoltativa per `walk_to` e `follow` (0,5–7 m/s), predefinita 1,5 m/s; il campo `run` sparisce | Alla demo i personaggi camminavano a 4 m/s, l'andatura del giocatore: troppo veloci per una passeggiata | sì, utente, 2026-09-26 |

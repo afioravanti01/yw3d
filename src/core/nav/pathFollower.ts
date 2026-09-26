@@ -1,3 +1,4 @@
+import { RUN_SPEED, WALK_SPEED } from '../physics/constants';
 import { IDLE, type EntityState, type Intent } from '../physics/entity';
 import type { PathPoint, PathResult } from './pathfinding';
 
@@ -42,7 +43,8 @@ export class PathFollower {
     readonly destination: { readonly x: number; readonly z: number },
     start: EntityState,
     time: number,
-    private readonly run = false,
+    /** Walking speed, blocks per second (A5.1). */
+    private readonly speed = WALK_SPEED,
   ) {
     this.checkTime = time;
     this.checkPosition = { x: start.x, z: start.z };
@@ -87,10 +89,13 @@ export class PathFollower {
     const length = Math.hypot(dx, dz) || 1;
     // In water, swim up where the way climbs out onto the bank.
     const climbing = state.submerged > 0 && (!target.wet || target.y > state.y + 0.5);
+    // Slower than a walk or a run: a shorter movement vector, the physics scales it (A5.1).
+    const run = this.speed > WALK_SPEED;
+    const scale = Math.min(1, this.speed / (run ? RUN_SPEED : WALK_SPEED));
     return {
-      moveX: dx / length,
-      moveZ: dz / length,
-      run: this.run,
+      moveX: (dx / length) * scale,
+      moveZ: (dz / length) * scale,
+      run,
       jump: false,
       swim: climbing ? 1 : 0,
     };

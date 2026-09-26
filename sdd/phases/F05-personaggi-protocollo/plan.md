@@ -145,6 +145,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Figure dei personaggi e del giocatore, fumetti (P14), tasto E, overlay; modalità solo browser con personaggi fermi. **Punto di controllo con l'utente**: demo con un controllore di prova.
   - Fatto quando: si vedono i personaggi muoversi, parlare e reagire al tasto E.
 
+- [x] **T5.15+** Velocità dei personaggi
+  - Req: PROTO-001 · Dip: T5.04
+  - Campo `speed` di `walk_to` e `follow` (A5.1): il vettore dell'intenzione si accorcia in proporzione, la fisica resta com'è; tempo limite calcolato sulla velocità richiesta.
+  - Fatto quando: test della velocità verde; Pino passeggia a 1,5 m/s.
+
 - [ ] **T5.12** Esempi e documentazione
   - Req: PROTO-003 · Dip: T5.08, T5.09, T5.11
   - `examples/valle/` con il guardiano in Python e un secondo personaggio in JavaScript; `docs/controllori.md`; README aggiornato.
