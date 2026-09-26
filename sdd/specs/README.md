@@ -20,7 +20,9 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | PLAYER | [`player.md`](player.md) | giocatore: misure, controlli, visuali | F03 |
 | CLI | [`cli.md`](cli.md) | comando `yw3d`, cartella del mondo | F04 |
 | HOST | [`host.md`](host.md) | host headless, viste collegate, ricaricamento | F04 |
-| CHAR, NAV, PROTO | — | personaggi, navigazione, protocollo dei controllori | F05 (prevista) |
+| CHAR | [`characters.md`](characters.md) | personaggi, figure animate, fumetti | F05 |
+| NAV | [`navigation.md`](navigation.md) | percorsi dei personaggi | F05 |
+| PROTO | [`protocol.md`](protocol.md) | protocollo dei controllori | F05 |
 | AGENT, MCP, UI | — | agenti LLM, server MCP, dialogo | F06 (prevista) |
 
-*Aggiornate alla chiusura di F04 (2026-09-26).*
+*Aggiornate alla chiusura di F05 (2026-09-26).*

@@ -160,7 +160,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Personaggio con controllore di prova in `e2e/host`, host dei test con `--allow-commands`; CHAR-001.d nelle due modalità.
   - Fatto quando: `npm run e2e` verde.
 
-- [ ] **T5.14** Verifica di accettazione e chiusura della fase
+- [x] **T5.14** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T5.12, T5.13
   - `check`, `e2e`, `sdd:trace -- F05`; checklist dei criteri `[manuale]` con i valori misurati; spec vive; `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

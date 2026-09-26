@@ -50,6 +50,6 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **b** `[manuale]` Se il file salvato non è valido, resta il mondo precedente e compaiono gli errori; alla correzione spariscono.
 
 ### YAML-008 — Partenza del giocatore
-*Introdotto in F03 · ultima modifica: F03.*
-- **a** `[unit]` Il file del mondo può dichiarare la posizione orizzontale di partenza del giocatore (x, z in blocchi) e l'orientamento iniziale della visuale.
+*Introdotto in F03 · ultima modifica: F05.*
+- **a** `[unit]` Il file del mondo può dichiarare la posizione orizzontale di partenza del giocatore (x, z in blocchi), l'orientamento iniziale della visuale e l'aspetto (colori come in CHAR-001.a).
 - **b** `[unit]` Una posizione di partenza fuori dal mondo è un errore nel formato di YAML-002.

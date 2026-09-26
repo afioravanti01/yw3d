@@ -27,3 +27,9 @@ Stesso hardware di riferimento di PERF-001.
 Stesso hardware di riferimento di PERF-001.
 - **a** `[manuale]` Da `yw3d` al mondo visibile nel browser passano al più 8 s, compresa la validazione e l'avvio dell'host.
 - **b** `[manuale]` Con l'host valgono i budget di PERF-001.b nel browser (≥ 60 fps camminando).
+
+### PERF-005 — Personaggi
+*Introdotto in F05 · ultima modifica: F05.*
+Stesso hardware di riferimento di PERF-001.
+- **a** `[manuale]` Con 20 personaggi che camminano, ognuno con il suo controllore, valgono i budget di PERF-001.b nel browser (≥ 60 fps).
+- **b** `[unit]` Con 20 personaggi un passo di simulazione dell'host costa al più 4 ms.
