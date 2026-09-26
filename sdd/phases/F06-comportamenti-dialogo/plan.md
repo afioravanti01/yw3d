@@ -167,6 +167,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Con tutti i file in parallelo, i test che compongono il mondo predefinito (PERF-005.b, YAML-005.c) superavano il limite predefinito di 5 s di Vitest; da soli passano in meno di 4 s. Limite portato a 30 s nella configurazione: i budget di tempo restano verificati dai test stessi.
   - Fatto quando: due esecuzioni di fila di `npm run check` verdi.
 
+- [x] **T6.19+** Misure di tempo isolate
+  - Req: NAV-001, PERF-005, MAP-003 · Dip: —
+  - I test che misurano un budget di tempo (NAV-001.d, PERF-005.b, la ricerca verso le aree) stanno in file `*.timing.test.ts`, che Vitest esegue dopo gli altri e uno alla volta. Con tutti i file in parallelo la stessa ricerca misurava fino a 66 ms invece di 14.
+  - Fatto quando: le misure girano per ultime, da sole, e `npm run check` è verde più volte di fila.
+
 - [x] **T6.01** Schema della versione 2 e migrazione dei file
   - Req: YAML-001, YAML-009, YAML-010, CHAR-001, BEHAV-001 · Dip: —
   - Nomi e descrizioni (Q8) con il default del giocatore. Id facoltativo di strutture e distribuzioni. Sezione `places` e campi `behavior` e `behaviors` (il contenuto si valida in T6.05). Comportamento e controllore esclusivi. Errore della v1 (P18). Migrazione di mondi, esempi e test.
@@ -192,7 +197,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Registro (P3) e vocabolario predefinito; forma delle istruzioni (P2); compilazione con i riferimenti (P4); memoria dichiarata; stati.
   - Fatto quando: test di BEHAV-001.c, BEHAV-004.f, MAP-001.c e degli errori di BEHAV-003 e BEHAV-004.d verdi.
 
-- [ ] **T6.06** Libreria, parametri e file esterni
+- [x] **T6.06** Libreria, parametri e file esterni
   - Req: BEHAV-001, BEHAV-006 · Dip: T6.05
   - Sezione `behaviors`, `use` con parametri (P5), comportamenti in file esterni con il lettore (P14), percorsi fuori dalla cartella; `walk_to` con un elenco di mete (A6.1).
   - Fatto quando: test di BEHAV-001.a e BEHAV-006.a–b verdi.
@@ -278,4 +283,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T6.03 | Verso un'area il personaggio si ferma su un posto che sta tutto dentro l'area (le 4 colonne che occupa), verso una struttura su un posto che tocca le sue colonne d'arrivo | Con il solo «tocca» il personaggio poteva fermarsi sul bordo, fuori dall'area, e un secondo `walk_to` non risultava «già dentro» (MAP-003.c) | Nessuno |
-| T6.04 | Le misure di tempo di una ricerca del percorso (NAV-001.d e quella nuova verso le aree) prendono la migliore di più ripetizioni invece della media | Con la suite cresciuta, la media superava i 50 ms solo per il carico degli altri test in parallelo (54 ms; 14 ms da sola, uguale al codice di F05). Il commit di T6.04 è partito con questo test rosso: la catena di comandi controllava l'esito di `grep`, non di `npm run check`; corretto con un commit esplicito | Nessuno |
+| T6.04 | Le misure di tempo di una ricerca del percorso presero per un momento la migliore di più ripetizioni invece della media; con T6.19+ sono tornate alla media, misurata da sola | Con la suite cresciuta, la media superava i 50 ms solo per il carico degli altri test in parallelo (54 ms; 14 ms da sola, uguale al codice di F05). Il commit di T6.04 è partito con questo test rosso: la catena di comandi controllava l'esito di `grep`, non di `npm run check`; corretto con un commit esplicito, e da lì i commit passano da uno script che si ferma se il check fallisce | Nessuno |

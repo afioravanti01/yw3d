@@ -5,7 +5,6 @@ import { createDefaultRegistry } from '../src/core/blocks/builtin';
 import { resolveAppearance } from '../src/core/characters/appearance';
 import { spawnCharacters } from '../src/core/characters/characters';
 import { composeWorld } from '../src/core/compose/composeWorld';
-import { regionOf } from '../src/core/map/goals';
 import type { Goal } from '../src/core/map/worldMap';
 import { NavGrid } from '../src/core/nav/navGrid';
 import { Pathfinder } from '../src/core/nav/pathfinding';
@@ -77,23 +76,6 @@ describe('destinations in the default world', () => {
         );
         expect(distance, where).toBeLessThanOrEqual(ARRIVED);
       });
-    }
-  });
-
-  it('MAP-003.c: the search towards a large area far away stays within the budget of NAV-001.d', () => {
-    // The eastern woods, 300 blocks from the village, and the whole meadow of the valley.
-    for (const id of ['scatter#1', 'scatter#5', 'pond#2']) {
-      const goal = result.goals.get(id)!;
-      expect(goal.kind === 'area' || goal.kind === 'columns', id).toBe(true);
-      const region = regionOf(goal as Extract<Goal, { kind: 'columns' | 'area' }>);
-      // The best of several searches, as for NAV-001.d.
-      let best = Infinity;
-      for (let i = 0; i < 3; i++) {
-        const start = performance.now();
-        expect(finder.findRegion({ x: 158.5, y: 34, z: 66.5 }, region).ok, id).toBe(true);
-        best = Math.min(best, performance.now() - start);
-      }
-      expect(best, id).toBeLessThanOrEqual(50);
     }
   });
 });

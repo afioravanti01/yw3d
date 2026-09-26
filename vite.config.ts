@@ -14,9 +14,30 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts', 'scripts/**/*.test.ts'],
     // Several tests compose the default world (1–2 s each): with all files running in parallel
     // the default 5 s limit is too tight. Budgets are checked by the tests themselves.
     testTimeout: 30_000,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.ts', 'tests/**/*.test.ts', 'scripts/**/*.test.ts'],
+          exclude: ['**/*.timing.test.ts'],
+          sequence: { groupOrder: 0 },
+        },
+      },
+      {
+        // Time budgets (NAV-001.d, PERF-005.b, …) measured alone, after the other tests: with
+        // every file in parallel the machine is busy and the times say nothing (plan F06 T6.19+).
+        extends: true,
+        test: {
+          name: 'timing',
+          include: ['tests/**/*.timing.test.ts'],
+          fileParallelism: false,
+          sequence: { groupOrder: 1 },
+        },
+      },
+    ],
   },
 });
