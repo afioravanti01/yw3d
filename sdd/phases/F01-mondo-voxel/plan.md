@@ -177,7 +177,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Configurazione Playwright (Chromium, SwiftShader, `vite preview`); test APP-001.a–b, WORLD-005.d (hash browser = hash Node), RENDER-005.b; screenshot da 3 punti di vista fissi (P12). Script npm `e2e`. Prerequisito: l'utente esegue una volta `sudo npx playwright install-deps chromium`.
   - Fatto quando: `npm run e2e` è verde in locale.
 
-- [ ] **T1.15+** Movimento della camera anche con le frecce
+- [x] **T1.15+** Movimento della camera anche con le frecce
   - Req: CAM-001 (A1.1) · Dip: T1.11
   - `ArrowUp`/`ArrowLeft`/`ArrowDown`/`ArrowRight` aggiunti ai codici di movimento, equivalenti a W/A/S/D.
   - Fatto quando: `npm run check` verde; volo con le frecce verificato a mano.

@@ -37,6 +37,17 @@ describe('fly camera', () => {
     expect(Math.hypot(diagonal.x, diagonal.z)).toBeCloseTo(1);
   });
 
+  it('arrow keys move like WASD (A1.1)', () => {
+    const move = (codes: string[], yaw = 0) => round(movementDirection(new Set(codes), yaw));
+    expect(move(['ArrowUp'])).toEqual(move(['KeyW']));
+    expect(move(['ArrowDown'])).toEqual(move(['KeyS']));
+    expect(move(['ArrowLeft'])).toEqual(move(['KeyA']));
+    expect(move(['ArrowRight'])).toEqual(move(['KeyD']));
+    expect(move(['ArrowUp'], -Math.PI / 2)).toEqual({ x: 1, y: 0, z: 0 });
+    // The same direction from both key sets does not double the speed.
+    expect(move(['KeyW', 'ArrowUp'])).toEqual(move(['KeyW']));
+  });
+
   it('starts above the center of the world, higher than the terrain', () => {
     const world = World.fromColumns({ x: 128, y: 96, z: 128 }, (_x, _z, c) => c.fill(STONE, 0, 41));
     const pose = initialCameraPose(world);

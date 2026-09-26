@@ -42,13 +42,25 @@ export function clampSpeed(mps: number): number {
   return clamp(mps, MIN_SPEED_MPS, MAX_SPEED_MPS);
 }
 
+/** Keys for each horizontal direction: WASD, and the arrows as an alternative (A1.1). */
+const MOVE_KEYS = {
+  forward: ['KeyW', 'ArrowUp'],
+  back: ['KeyS', 'ArrowDown'],
+  left: ['KeyA', 'ArrowLeft'],
+  right: ['KeyD', 'ArrowRight'],
+} as const;
+const ARROW_KEYS = new Set<string>(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+
+const anyPressed = (keys: ReadonlySet<string>, codes: readonly string[]) =>
+  codes.some((code) => keys.has(code)) ? 1 : 0;
+
 /**
- * Movement direction for the pressed keys (KeyboardEvent.code, plan P13): WASD on the
+ * Movement direction for the pressed keys (KeyboardEvent.code, plan P13): WASD or arrows on the
  * horizontal plane relative to the yaw, Space up, Shift down. Horizontal length is at most 1.
  */
 export function movementDirection(keys: ReadonlySet<string>, yaw: number): Vec3 {
-  const forward = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0);
-  const right = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
+  const forward = anyPressed(keys, MOVE_KEYS.forward) - anyPressed(keys, MOVE_KEYS.back);
+  const right = anyPressed(keys, MOVE_KEYS.right) - anyPressed(keys, MOVE_KEYS.left);
   const up =
     (keys.has('Space') ? 1 : 0) - (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 1 : 0);
   const sin = Math.sin(yaw);
@@ -150,7 +162,7 @@ export class FlyCamera {
   }
 
   private onKey(e: KeyboardEvent, down: boolean): void {
-    if (e.code === 'Space') e.preventDefault();
+    if (e.code === 'Space' || ARROW_KEYS.has(e.code)) e.preventDefault();
     if (down) this.keys.add(e.code);
     else this.keys.delete(e.code);
   }
