@@ -74,7 +74,8 @@ Verificato con la configurazione di default su 5 seed di test.
 - **d** `[unit]` Stratificazione, senza vuoti sotto la superficie: una colonna erbosa è, dal basso, pietra, poi 3–5 blocchi di terra, poi erba; una colonna rocciosa è tutta pietra.
 - **e** `[unit]` Una colonna è rocciosa se il dislivello con almeno uno dei 4 vicini è di 3 blocchi o più; può esserlo anche nelle zone rocciose dei rilievi.
 - **f** `[unit]` Almeno il 60% delle colonne ha erba in superficie e almeno l'1% ha roccia affiorante.
-- **g** `[manuale]` L'insieme appare come una valle collinare naturale (prati ondulati, uno o più poggi con roccia), non come rumore casuale.
+- **g** `[manuale]` L'insieme appare come una valle naturale con ampie radure pianeggianti, colline morbide e uno o più poggi con roccia, non come rumore casuale. (A1.2)
+- **h** `[unit]` Aree pianeggianti: almeno il 25% delle colonne appartiene a una zona di 16 × 16 blocchi (8 m × 8 m) con dislivello interno di al più 1 blocco. (A1.2)
 
 ### RENDER-001 — Colore senza texture
 Palette naturalistica calda e leggermente desaturata, con luce dorata da tardo pomeriggio (Q4).
@@ -112,7 +113,7 @@ Hardware di riferimento: il PC di sviluppo dell'utente, Chrome su Windows colleg
 ### CAM-001 — Camera libera
 In F01 la camera non ha collisioni e attraversa il terreno.
 - **a** `[manuale]` Un click sulla scena cattura il puntatore ed Esc lo rilascia; muovendo il mouse la visuale ruota, con inclinazione limitata a ±89°.
-- **b** `[manuale]` W/A/S/D (posizione fisica dei tasti, indipendente dal layout della tastiera) muovono avanti, a sinistra, indietro e a destra nel piano orizzontale secondo la direzione di vista; Spazio sale, Shift scende.
+- **b** `[manuale]` W/A/S/D (posizione fisica dei tasti, indipendente dal layout della tastiera) muovono avanti, a sinistra, indietro e a destra nel piano orizzontale secondo la direzione di vista; le frecce ↑/←/↓/→ fanno lo stesso, in alternativa. Spazio sale, Shift scende. (A1.1)
 - **c** `[manuale]` La rotella del mouse regola la velocità tra 2 e 40 m/s (default 8 m/s).
 - **d** `[unit]` La camera resta entro i limiti del mondo estesi di 16 m su ogni lato e in alto, e non scende sotto y = 0.
 - **e** `[manuale]` All'avvio la camera è sopra il centro del mondo, più in alto della superficie, e inquadra il terreno.
@@ -146,3 +147,5 @@ Chiuse con l'utente il 2026-09-26, prima di G1.
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A1.1 | 2026-09-26 | CAM-001.b | Le frecce della tastiera muovono la camera come W/A/S/D | Richiesta dell'utente: navigazione alternativa con le frecce | sì, utente, 2026-09-26 |
+| A1.2 | 2026-09-26 | WORLD-006.g, WORLD-006.h (nuovo) | Aggiunte ampie aree pianeggianti; criterio misurabile sulla loro estensione | Alla demo il mondo è risultato troppo montuoso: servono spazi piani per costruire edifici e boschi (F02). Prototipo: 28–44% di colonne in zone piane sui 5 seed, gli altri criteri di WORLD-006 restano soddisfatti | sì, utente, 2026-09-26 |

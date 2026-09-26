@@ -76,6 +76,7 @@ h ← clamp(round(h), 16, 72)
 - Colonna rocciosa se il dislivello con un vicino è ≥ 3, oppure se sta su un poggio e un rumore dedicato supera una soglia.
 - Colonna rocciosa: tutta pietra. Colonna erbosa: pietra fino a `h − d`, poi `d` ∈ [3, 5] blocchi di terra (d da rumore), poi erba.
 - I poggi garantiscono il rilievo (WORLD-006.c) e la roccia minima (WORLD-006.f) anche con seed "piatti".
+- Pianure (A1.2, T1.16+): un rumore a grande scala (λ ≈ 200 blocchi) definisce una maschera 0–1 di pianura; dove vale 1, colline e dettaglio sono ridotti al 5%, mentre i poggi restano interi per non perdere rilievo (WORLD-006.c).
 - La taratura dei parametri fa parte di T1.06. È finita quando i test di WORLD-006 passano sui 5 seed; l'aspetto si valuta con l'utente al punto di controllo dopo T1.12.
 
 ## Strategia di test
@@ -176,8 +177,18 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Configurazione Playwright (Chromium, SwiftShader, `vite preview`); test APP-001.a–b, WORLD-005.d (hash browser = hash Node), RENDER-005.b; screenshot da 3 punti di vista fissi (P12). Script npm `e2e`. Prerequisito: l'utente esegue una volta `sudo npx playwright install-deps chromium`.
   - Fatto quando: `npm run e2e` è verde in locale.
 
+- [ ] **T1.15+** Movimento della camera anche con le frecce
+  - Req: CAM-001 (A1.1) · Dip: T1.11
+  - `ArrowUp`/`ArrowLeft`/`ArrowDown`/`ArrowRight` aggiunti ai codici di movimento, equivalenti a W/A/S/D.
+  - Fatto quando: `npm run check` verde; volo con le frecce verificato a mano.
+
+- [ ] **T1.16+** Aree pianeggianti nel terreno
+  - Req: WORLD-006 (A1.2) · Dip: T1.06
+  - Maschera di pianura nel generatore (vedi "Generazione del terreno"); test WORLD-006.h; hash di riferimento di WORLD-005.b aggiornato con deviazione registrata.
+  - Fatto quando: tutti i test di WORLD-006 verdi sui 5 seed; aspetto rivisto con l'utente.
+
 - [ ] **T1.14** Verifica di accettazione e chiusura della fase
-  - Req: — (tutti) · Dip: T1.13
+  - Req: — (tutti) · Dip: T1.13, T1.15+, T1.16+
   - `check`, `e2e`, `sdd:trace -- F01`; checklist dei criteri `[manuale]` compilata con l'utente; spec vive create da questa spec; `retro.md`; aggiornamento di `experiment.md` e `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.
 
@@ -190,7 +201,7 @@ T1.01 ─┬─ T1.02
                          └─ T1.07 ─ T1.08 ─ T1.09 ─┬─ T1.10 ─┤
                                                    └─ T1.11 ─┴─ T1.12 ─ T1.13 ─ T1.14
 ```
-(T1.08 dipende anche da T1.03.)
+(T1.08 dipende anche da T1.03.) Emendamenti A1.1 e A1.2: T1.15+ (dopo T1.11) e T1.16+ (dopo T1.06) precedono T1.14.
 
 ## Modalità di esecuzione
 Decisa con l'utente alla revisione del piano:
