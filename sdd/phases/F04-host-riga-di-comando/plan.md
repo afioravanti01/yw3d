@@ -89,7 +89,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `args.ts` e `worldFolder.ts`: cartella, `world.yaml`, `structures/`, opzioni, aiuto, messaggi d'errore.
   - Fatto quando: test di CLI-001.a e CLI-001.c verdi.
 
-- [ ] **T4.03** Sessione dell'host: mondo e strutture dell'autore
+- [x] **T4.03** Sessione dell'host: mondo e strutture dell'autore
   - Req: HOST-001, CLI-001, STRUCT-008 · Dip: T4.01, T4.02
   - `HostSession` con caricatore di moduli (P2, P4), composizione, diagnostica nel terminale, avvio con errori e attesa di un file valido, avviso sul codice eseguito.
   - Fatto quando: test di HOST-001.a, HOST-001.c, CLI-001.b, STRUCT-008.a, b, d verdi.
