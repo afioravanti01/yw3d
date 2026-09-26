@@ -11,6 +11,9 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "yw3d": ["./src/api/index.ts"]
+    }
   }
 }

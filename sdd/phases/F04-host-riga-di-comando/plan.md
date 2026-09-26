@@ -79,7 +79,7 @@ Da host a vista: `hello` (versione, ruolo `driver` o `spectator`, mondo o diagno
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T4.01** API pubblica per gli autori
+- [x] **T4.01** API pubblica per gli autori
   - Req: STRUCT-008 · Dip: —
   - `src/api/index.ts` (P3), confine di `src/host` (P13), dipendenze (`ws`, `vite` e `tsx` di esecuzione).
   - Fatto quando: un file di prova importa `yw3d` e definisce una struttura; `npm run check` verde.

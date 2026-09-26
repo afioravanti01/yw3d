@@ -8,7 +8,8 @@ export default defineConfig(
   tseslint.configs.recommended,
   {
     // ARCH-001: the core is pure simulation code, independent of rendering and of the app shell.
-    files: ['src/core/**/*.ts'],
+    // The host (F04, plan P13), the public API and the protocol share the boundary of the core.
+    files: ['src/core/**/*.ts', 'src/api/**/*.ts', 'src/protocol/**/*.ts', 'src/host/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -16,11 +17,13 @@ export default defineConfig(
           patterns: [
             {
               group: ['three', 'three/*'],
-              message: 'src/core must not depend on three (ARCH-001).',
+              message:
+                'src/core, src/api, src/protocol and src/host must not depend on three (ARCH-001).',
             },
             {
               group: ['**/render/**', '**/app/**'],
-              message: 'src/core must not depend on render or app code (ARCH-001).',
+              message:
+                'src/core, src/api, src/protocol and src/host must not depend on render or app code (ARCH-001).',
             },
           ],
         },
