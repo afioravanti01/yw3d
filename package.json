@@ -15,7 +15,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "sdd:trace": "tsx scripts/sdd-trace.ts"
   },
   "dependencies": {
     "simplex-noise": "^4.0.3",
@@ -27,6 +28,7 @@
     "@types/three": "^0.186.0",
     "eslint": "^10.11.0",
     "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.1",
     "vite": "^8.3.1",

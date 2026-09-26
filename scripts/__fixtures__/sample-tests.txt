@@ -1,0 +1,8 @@
+Sample test source for sdd-trace. Stored as .txt so the real trace does not scan it.
+
+describe('x', () => {
+  it('WORLD-101.a: does something', () => {});
+  test("RENDER-101.a WORLD-101.a: both", () => {});
+  it('no id here', () => {});
+  it('WORLD-101.z: unknown letter', () => {});
+});
