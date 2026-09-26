@@ -6,17 +6,17 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 
 | Area | File | Contenuto | Introdotta in |
 |---|---|---|---|
-| ARCH | `architecture.md` | vincoli architetturali verificabili | F01 |
-| WORLD | `world.md` | unità, coordinate, blocchi, generazione del terreno | F01 |
-| RENDER | `rendering.md` | stile visivo e rendering | F01 |
-| PERF | `performance.md` | budget di prestazioni | F01 |
-| CAM | `camera.md` | camera e controlli di visuale | F01 |
-| APP | `app.md` | avvio e parametri | F01 |
-| DEBUG | `debug.md` | strumenti diagnostici | F01 |
-| SDD | `tooling.md` | strumenti del processo SDD | F01 |
+| ARCH | [`architecture.md`](architecture.md) | vincoli architetturali verificabili | F01 |
+| WORLD | [`world.md`](world.md) | unità, coordinate, blocchi, generazione del terreno | F01 |
+| RENDER | [`rendering.md`](rendering.md) | stile visivo e rendering | F01 |
+| PERF | [`performance.md`](performance.md) | budget di prestazioni | F01 |
+| CAM | [`camera.md`](camera.md) | camera e controlli di visuale | F01 |
+| APP | [`app.md`](app.md) | avvio e parametri | F01 |
+| DEBUG | [`debug.md`](debug.md) | strumenti diagnostici | F01 |
+| SDD | [`tooling.md`](tooling.md) | strumenti del processo SDD | F01 |
 | YAML, STRUCT | — | formato del mondo, strutture | F02 (prevista) |
 | PHYS, PLAYER | — | fisica, giocatore | F03 (prevista) |
 | CHAR, NAV, BEHAV | — | personaggi, navigazione, comportamenti | F04 (prevista) |
 | AI, UI | — | personaggi AI, interfaccia di dialogo | F05 (prevista) |
 
-*Nessuna spec viva esiste ancora: le prime nascono alla chiusura di F01.*
+*Aggiornate alla chiusura di F01 (2026-09-26).*

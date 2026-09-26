@@ -187,7 +187,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Maschera di pianura nel generatore (vedi "Generazione del terreno"); test WORLD-006.h; hash di riferimento di WORLD-005.b aggiornato con deviazione registrata.
   - Fatto quando: tutti i test di WORLD-006 verdi sui 5 seed; aspetto rivisto con l'utente.
 
-- [ ] **T1.14** Verifica di accettazione e chiusura della fase
+- [x] **T1.14** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T1.13, T1.15+, T1.16+
   - `check`, `e2e`, `sdd:trace -- F01`; checklist dei criteri `[manuale]` compilata con l'utente; spec vive create da questa spec; `retro.md`; aggiornamento di `experiment.md` e `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.
@@ -227,3 +227,4 @@ Decisa con l'utente alla revisione del piano:
 | T1.12 | L'overlay diagnostico è visibile all'avvio (F3 lo nasconde) e mostra anche i tempi di generazione e meshing; i testi dell'interfaccia sono in inglese come il codice | Utile alla demo e alla misura di PERF-001.a; la spec non fissa lo stato iniziale né la lingua dell'interfaccia | Nessuno |
 | T1.16+ | Hash di riferimento di WORLD-005.b da `decee4b7` a `b8c27500` | Il generatore produce un terreno diverso per le pianure dell'emendamento A1.2, come previsto da WORLD-005.b | Nessuno. Sui 5 seed: zone piane 31–47% (soglia 25%); il rilievo di WORLD-006.c scende a 17 blocchi sui seed 1 e 2, con 1 blocco di margine |
 | T1.13 | Niente `sudo npx playwright install-deps chromium`; WebGL software forzato con `--use-angle=swiftshader` | Lo sviluppo è passato a macOS, dove i browser di Playwright erano già installati e le dipendenze di sistema non servono. SwiftShader esplicito rende il rendering uguale su ogni macchina | Nessuno. Il riferimento hardware di PERF-001 (PC Windows + WSL2) va riconsiderato alla verifica di T1.14 |
+| T1.14 | Prestazioni misurate con Chrome sul PC Windows di riferimento, ma con la build servita da macOS invece che da WSL2 (opzione A, scelta dall'utente) | Lo sviluppo è passato a macOS; chi serve i file incide solo sul trasferimento iniziale, non su fps e tempi di rendering | Nessuno: PERF-001 resta invariato |
