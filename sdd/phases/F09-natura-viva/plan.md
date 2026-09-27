@@ -104,12 +104,12 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Fatto quando: test delle luci delle case verdi; finestre accese di notte nel browser.
 
 - [x] **T9.07** ~~Vento sulle foglie~~ — annullato (A9.3)
-  - Req: RENDER-009 · Dip: T9.05
+  - Req: — (il requisito del vento è stato rimosso) · Dip: T9.05
   - Attributo delle foglie nel mesher e spostamento nel materiale (P9).
   - Fatto quando: test del mesher verdi; foglie che ondeggiano nel browser.
 
 - [x] **T9.08** ~~Acqua animata~~ — annullato (A9.4)
-  - Req: RENDER-009 · Dip: T9.05
+  - Req: — (il requisito dell'acqua è stato rimosso) · Dip: T9.05
   - Onde e colore del cielo nel materiale dell'acqua (P10).
   - Fatto quando: acqua che si muove nel browser.
 
@@ -146,7 +146,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Esito: 32 test nei due progetti; aggiunto il mondo della scimmietta, con il nome sopra la testa e uno screenshot (`e2e/screenshots/monkey.png`) per la checklist di CHAR-003.b.
 
 - [ ] **T9.11** Verifica di accettazione e chiusura della fase
-  - Req: — (tutti) · Dip: T9.09, T9.10
+  - Req: PERF-001, e tutti gli altri · Dip: T9.09, T9.10
   - `check`, `e2e`, `sdd:trace -- F09`; checklist con le misure a parte; spec vive (nuova `time.md`); `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.
 

@@ -8,7 +8,7 @@
 | Piano | [plan.md](plan.md) |
 
 ## Obiettivo
-Il mondo ha un'**ora del giorno** che scorre: il sole attraversa il cielo, tramonta, arriva una notte leggibile con la luna e le finestre illuminate, poi l'alba. Agenti e programmi conoscono l'ora e decidono loro cosa farne. Le foglie ondeggiano al vento e l'acqua si muove. Particelle e audio ambientale restano a una fase successiva.
+Il mondo ha un'**ora del giorno** che scorre: il sole attraversa il cielo, tramonta, arriva una notte leggibile con la luna e le finestre illuminate, poi l'alba. Agenti e programmi conoscono l'ora e decidono loro cosa farne. Nel mondo arriva il primo animale, una scimmietta guidata da un LLM (A9.1). Particelle e audio ambientale restano a una fase successiva.
 
 ## Contesto
 - Roadmap F09 (natura viva), nota di F06: un orologio del mondo a disposizione dei programmi. Costituzione: P2 (il core resta deterministico), P3 (solo la fisica muove).
@@ -21,6 +21,7 @@ Il mondo ha un'**ora del giorno** che scorre: il sole attraversa il cielo, tramo
 - Erba animata: l'erba non esiste come oggetto, solo come colore dei blocchi.
 - Regole del mondo per la notte (personaggi che dormono, negozi chiusi): le decide chi programma i personaggi.
 - Luci portate dai personaggi (lanterne).
+- Vento sulle foglie e acqua animata: previsti, poi tolti durante la fase (A9.3, A9.4).
 
 ## Storie utente
 - **US-1** Come osservatore, vedo passare il giorno: il sole sale e scende, il cielo cambia colore, al tramonto la luce diventa calda.
@@ -47,10 +48,6 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **a** `[manuale]` Di notte il mondo si vede: una luce lunare fredda e debole, il cielo blu scuro con le stelle, le forme riconoscibili a qualche decina di metri.
 - **b** `[manuale]` Di notte le finestre delle case sono illuminate di una luce calda, visibile da lontano; di giorno no.
 
-### RENDER-009 — Vento e acqua
-- **a** ~~Le foglie degli alberi ondeggiano leggermente, come mosse dal vento~~ — rimosso (A9.3).
-- **b** ~~La superficie dell'acqua si muove con piccole onde~~ — rimosso (A9.4).
-
 ### TIME-003 — Osservare un giorno
 - **a** `[manuale]` Seguire il mondo per un giorno intero è piacevole e leggibile: alba e tramonto si riconoscono, la notte non è mai nera, i passaggi di luce sono continui, senza scatti; le ombre cambiano direzione solo ogni decimo del giorno (A9.2).
 
@@ -74,11 +71,6 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **Dopo:** b invariato; a diventa:
 - **a** `[manuale]` Il cielo è un gradiente verticale, chiaro all'orizzonte e più saturo allo zenit, con colori che seguono l'ora: azzurro di giorno, caldi all'alba e al tramonto, blu scuro con le stelle di notte. Si vedono il sole e, di notte, la luna.
 - **Motivo:** il cielo segue il ciclo del giorno; la nebbia, del colore dell'orizzonte, lo segue da sé.
-
-### RENDER-007 — Acqua
-- **Prima:** criteri a–c.
-- **Dopo:** criteri a–c invariati; l'acqua animata è in RENDER-009.b.
-- **Motivo:** nessun cambiamento ai criteri esistenti; la voce resta per rimandare al nuovo criterio.
 
 ### YAML-001 — File del mondo
 - **Prima:** a `[unit]` […] i luoghi (`places`), i personaggi (`characters`) e le impostazioni degli agenti (`agents`) […].
@@ -106,19 +98,21 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 
 ### DIALOG-005 — Console dei messaggi
 - **Prima:** f `[unit]` […] `/help`, `/world`, `/describe` […].
-- **Dopo:** f come prima, con in più `/time` (TIME-002) nell'elenco di `/help`, e l'ora del mondo nell'intestazione di `/world`.
+- **Dopo:** a–e invariati; f diventa:
+- **f** `[unit]` Un messaggio che inizia con `/` è un comando della console e non è detto nel mondo. `/help` descrive l'uso della console, `/time` compreso (TIME-002); `/world` si apre con l'ora del mondo e la parte del giorno, poi elenca il giocatore e i personaggi con la posizione attuale, i luoghi, le strutture e i gruppi di strutture con la loro posizione, in blocchi; `/describe @nome` mostra nome, id e descrizione di un personaggio e i suoi dati tecnici: posizione, chi lo guida (agente con modalità, cervello, modello, effort, risposte, iniziativa; programma con file; controllore con comando; nessuno), stato, azione in corso, persona e obiettivi dell'agente. La risposta di un comando è un unico blocco; un comando sconosciuto mostra un errore che rimanda a `/help`.
 - **Motivo:** l'ora si legge e si imposta dalla console.
 
 ### DEBUG-001 — Overlay diagnostico
 - **Prima:** a `[manuale]` […].
-- **Dopo:** a `[manuale]` Come prima, con in più l'ora del mondo e la parte del giorno.
+- **Dopo:** a diventa:
+- **a** `[manuale]` Il tasto F3 mostra e nasconde un overlay con: fps, collegamento (host o solo browser; con l'host: indirizzo, numero di viste collegate, se questa vista guida il giocatore o guarda, ritardo di andata e ritorno), modalità (giocatore in prima o terza persona, camera libera), posizione della camera (in blocchi e in metri), posizione e velocità del giocatore, se è a terra o in acqua, numero di personaggi e, per il più vicino, id, nome, controllore (tipo e stato), azione in corso e, se ha un programma, il file e lo stato (in esecuzione, fermo, in errore), se ha un agente, cervello, modello, stato (in attesa dell'LLM, in azione, fermo, in errore) e durata dell'ultima richiesta, velocità della camera libera, ora del mondo e parte del giorno, seed, nome del file del mondo, numero di strutture per tipo, numero di avvisi, numero di regioni e di triangoli, tempo di caricamento, durata dell'ultima ricostruzione di una regione, durata dell'ultimo passo di simulazione. Un pulsante con la X riduce l'overlay a un piccolo pulsante trasparente «Stats», che lo riapre; la pagina ricorda la scelta. F3 continua a mostrare e nascondere tutto, pulsante compreso.
 - **Motivo:** l'ora è la prima cosa da sapere guardando la luce.
 
 ### PERF-001 — Prestazioni
 - **Prima:** b `[manuale]` Il frame rate medio è di almeno 60 fps durante 30 s di volo a quota media sopra il mondo.
 - **Dopo:** a invariato; b diventa:
-- **b** `[manuale]` Il frame rate medio è di almeno 60 fps durante 30 s di volo a quota media sopra il mondo, con il ciclo del giorno, il vento sulle foglie e l'acqua animata, a qualunque ora.
-- **Motivo:** ombre che si muovono e animazioni hanno un costo.
+- **b** `[manuale]` Il frame rate medio è di almeno 60 fps durante 30 s di volo a quota media sopra il mondo, con il ciclo del giorno, le finestre illuminate e le figure, a qualunque ora.
+- **Motivo:** luce, cielo e ombre che cambiano con l'ora hanno un costo.
 
 ### CHAR-001 — Personaggi nel file del mondo (emendamento A9.5)
 - **Prima:** criteri a–d; nessuno dice dove si ferma un personaggio accanto a un gradino.
@@ -127,7 +121,7 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **Motivo:** largo 1,2 blocchi, un personaggio al centro di una colonna sporge di un decimo di blocco su quelle vicine; accanto a un gradino più alto restava sospeso su quella striscia, con i piedi in aria.
 
 ## Requisiti RIMOSSI
-Nessuno.
+- **RENDER-009** — vento sulle foglie e acqua animata: aggiunto da questa fase, poi tolto con entrambi i criteri (A9.3, A9.4). L'ID non si riusa.
 
 ## Domande risolte
 Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
@@ -148,3 +142,4 @@ Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 | A9.3 | 2026-09-27 | RENDER-009.a | Rimosso: niente vento sulle foglie | Nella prova il movimento non si vedeva; l'utente: «non mi interessa questo movimento delle foglie e potrebbe appesantire molto la scena» | Utente (richiesta diretta) |
 | A9.4 | 2026-09-27 | RENDER-009.b, RENDER-007 | Rimosso: niente acqua animata; RENDER-009 resta senza criteri | L'utente: «salta l'acqua» | Utente (richiesta diretta) |
 | A9.5 | 2026-09-27 | CHAR-001.e (nuovo) | Un personaggio fermo appoggiato solo al bordo di un gradino si scosta e scende sulla propria colonna | L'utente: Anselmo e Nina «non si poggiano sul suolo ma sono accanto a uno scalino in aria» | Utente («si approvo A9.5») |
+| A9.6 | 2026-09-27 | Obiettivo, Fuori scope, RENDER-009, RENDER-007, PERF-001.b | Testo allineato ad A9.1, A9.3 e A9.4: l'obiettivo nomina la scimmietta e non più vento e acqua; RENDER-009 passa ai RIMOSSI; RENDER-007 esce dai MODIFICATI, perché non cambia più; PERF-001.b misura il ciclo del giorno, le finestre e le figure. DIALOG-005.f e DEBUG-001.a riscritti per intero, un criterio per riga, senza cambiarne il contenuto | Alla verifica di T9.11 la spec diceva ancora cose tolte, e `sdd:trace` segnalava requisiti senza criteri | Utente (scelte guidate, tutte sulla proposta) |

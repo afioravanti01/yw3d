@@ -14,6 +14,16 @@ describe('commands of the console', () => {
     expect(HELP).toMatch(/Tab/);
   });
 
+  it('DIALOG-005.f: /help lists /time; /world opens with the hour of the world and the part of the day', () => {
+    expect(HELP).toMatch(/`\/time`.*`\/time HH:MM`/);
+    const map: WorldMap = { name: 'Borgo', description: null, size: [64, 64, 64], entries: [] };
+    const world = (clock?: () => number | undefined) =>
+      (runCommand('/world', { map, position: () => undefined, clock }) as { text: string }).text;
+    expect(world(() => 19 * 60 + 5)).toMatch(/^\*\*Borgo\*\* · 19:05 \(dusk\) · /);
+    expect(world()).toMatch(/^\*\*Borgo\*\* · /);
+    expect(world()).not.toMatch(/\d\d:\d\d/);
+  });
+
   it('DIALOG-005.f: an unknown command is an error that points to /help', () => {
     expect(runCommand('/vola alto')).toEqual({
       ok: false,
