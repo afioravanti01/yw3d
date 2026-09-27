@@ -18,8 +18,9 @@ export const ACTION_TYPES = ['walk_to', 'look_at', 'follow', 'wait', 'stop'] as 
 export const REPLY_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['say', 'actions'],
+  required: ['say', 'actions', 'continue'],
   properties: {
+    continue: { type: 'boolean' },
     say: {
       type: ['object', 'null'],
       additionalProperties: false,
@@ -61,6 +62,8 @@ export interface Reply {
   readonly steps: readonly Step[];
   /** What was set aside, and why (AGENT-003.b). */
   readonly discarded: readonly string[];
+  /** Whether the agent wants to decide again when its actions are over (A8.5). */
+  readonly continueAfter?: boolean;
 }
 
 /**
@@ -133,7 +136,7 @@ export function readReply(
     if (typeof step === 'string') discarded.push(`actions[${i}]: ${step}`);
     else steps.push(step);
   });
-  return { steps, discarded };
+  return { steps, discarded, ...(value.continue === true ? { continueAfter: true } : {}) };
 }
 
 /** One action of the reply, or why it is set aside. */
@@ -188,8 +191,11 @@ export class Sequence {
     private readonly steps: readonly Step[],
     private readonly request: (request: ActionRequest) => void,
     private readonly newId: () => string,
-    /** The sequence ended: all done, a step failed, or cancelled. */
-    private readonly ended: (outcome: { failed?: { step: Step; reason: string } }) => void,
+    /** The sequence ended: all done, a step failed, or cancelled (or replaced). */
+    private readonly ended: (outcome: {
+      failed?: { step: Step; reason: string };
+      cancelled?: boolean;
+    }) => void,
   ) {}
 
   get finished(): boolean {
@@ -208,12 +214,12 @@ export class Sequence {
     } else if (event.type === 'action_failed') {
       this.finish({ failed: { step: this.steps[this.next - 1]!, reason: event.reason } });
     } else if (event.type === 'action_replaced') {
-      this.finish({});
+      this.finish({ cancelled: true });
     }
   }
 
   cancel(): void {
-    this.finish({});
+    this.finish({ cancelled: true });
   }
 
   private advance(): void {
@@ -227,7 +233,7 @@ export class Sequence {
     this.request({ ...step, id } as ActionRequest);
   }
 
-  private finish(outcome: { failed?: { step: Step; reason: string } }): void {
+  private finish(outcome: { failed?: { step: Step; reason: string }; cancelled?: boolean }): void {
     if (this.done) return;
     this.done = true;
     this.running = undefined;

@@ -46,7 +46,8 @@ export type AgentTrigger =
     }
   | { readonly kind: 'near'; readonly who: string; readonly whoName: string }
   | { readonly kind: 'interact' }
-  | { readonly kind: 'autonomous' };
+  | { readonly kind: 'autonomous' }
+  | { readonly kind: 'continue'; readonly done: string; readonly failed?: string };
 
 export interface ContextInput {
   readonly identity: AgentIdentity;
@@ -191,6 +192,10 @@ function describeTrigger(t: AgentTrigger): string {
       return 'The player turned to you (pressed E near you).';
     case 'autonomous':
       return 'Nothing in particular: decide what to do now, following your goals.';
+    case 'continue':
+      return t.failed
+        ? `Your last actions stopped: ${t.failed}. Decide the next step.`
+        : `You finished your last actions (${t.done}). Decide the next step, if any.`;
   }
 }
 
@@ -202,10 +207,14 @@ function instructions(identity: AgentIdentity): string {
     identity.persona ?? '',
     identity.goals?.length ? `Your goals: ${identity.goals.join('; ')}.` : '',
     'Stay in character. Answer in the language of whoever speaks to you.',
+    'The player can ask you to do things: do them, unless they are impossible in this world. Your character colors how you speak, never whether you help: grumble if it fits you, but go. "Vai da Anselmo", "portami al laghetto", "seguimi" are requests to you.',
+    'When someone speaks to you, answer them: say.to = their id.',
+    'Plans in steps: set "continue": true when your actions are one step of a longer plan and you must decide again once they are done (you will be asked); set it to false when you are done.',
+    'Errands: when the player asks you to ask someone something, first reply with walk_to that character and "continue": true; once there, say the question to them (say.to = their id); their answer will reach you as a new message; then walk_to "player" with "continue": true, and once there tell the player what they said. Your memory tells you which errand you are on.',
     'First use what the world state below says: places, characters, where things are. When asked what you see, or where something is, name the places and the characters of your surroundings with their names, their direction and roughly their distance in meters. When a question is not about this world, answer with your own knowledge, as your character would.',
     `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
     'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',
-    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …]}. ' +
+    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …], "continue": false}. ' +
       (identity.answers === 'long'
         ? `When a question asks for it, answer fully and precisely, up to about 300 words (at most ${LONG_SAY_LENGTH} characters); otherwise keep it short. Markdown is allowed.`
         : 'Keep what you say short: one to three sentences; Markdown is allowed.'),

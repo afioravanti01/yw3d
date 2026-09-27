@@ -127,6 +127,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Fatto quando: test di AGENT-001.a, AGENT-003.a, CHAR-002.c e DIALOG-005.f verdi; risposta lunga provata dal vivo.
   - Con A8.3 `/describe` mostra anche i dati tecnici, costruiti da `src/protocol/details.ts` allo stesso modo nell'host e nelle viste.
 
+- [x] **T8.16+** Agenti che eseguono le richieste e fanno commissioni (A8.4, A8.5)
+  - Req: AGENT-003, AGENT-004 · Dip: T8.15+
+  - Nato alla prova d'uso: Marta rifiutava di andare da Anselmo («resto a badare alle reti»), poi andava senza fare la domanda, e un saluto la interrompeva a metà. Istruzioni: le richieste del giocatore si eseguono, il carattere colora solo il modo; si risponde a chi ha parlato; le commissioni per passi. Risposta con `continue`; attesa della risposta di chi si è interpellato; chi si avvicina e l'autonomia non interrompono; nessun saluto a chi era già vicino all'avvio.
+  - Fatto quando: test del runtime verdi; la commissione «vai da Anselmo e chiedigli una perla di saggezza» riesce dal vivo.
+
 - [ ] **T8.08** Cervelli Codex e opencode
   - Req: AGENT-001 · Dip: T8.07
   - `brains/codex.ts`, `brains/opencode.ts` secondo la tabella «Cervelli».

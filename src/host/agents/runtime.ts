@@ -30,6 +30,8 @@ export const MEMORY_SIZE = 12;
 export const NEAR_DISTANCE = 8;
 /** How long the player must have been far to be greeted again, seconds (Q1). */
 export const AWAY_SECONDS = 60;
+/** How long an agent waits for the answer of someone it spoke to, seconds (A8.4). */
+export const ANSWER_SECONDS = 60;
 
 export type AgentState = 'idle' | 'thinking' | 'acting' | 'stopped' | 'error';
 
@@ -62,6 +64,8 @@ export interface AgentHost {
   map(): WorldMap;
   /** Whether an id is another agent, for the limit of exchanges between agents. */
   isAgent(id: string): boolean;
+  /** Whether an id is a character of the world. */
+  isCharacter(id: string): boolean;
   /** A line in the terminal of the host, with the character's id. */
   log(line: string): void;
 }
@@ -81,6 +85,8 @@ export class AgentRuntime {
   private playerFarSince = -Infinity;
   private playerNear = false;
   private lastAutonomous = 0;
+  /** Characters it spoke to, and until when their answer counts as one to it (A8.4). */
+  private readonly awaiting = new Map<string, number>();
   private nextId = 0;
   private stopped = false;
 
@@ -119,9 +125,11 @@ export class AgentRuntime {
     if (this.stopped) return;
     const first = !this.seen;
     this.seen = perception;
-    if (first) this.ask();
     const player = perception.nearby.find((e) => e.kind === 'player');
     const time = perception.time;
+    // A player already near at the start was never away: no greeting for that (Q1).
+    if (first && player && player.distance <= HEARING_DISTANCE) this.playerFarSince = time;
+    if (first) this.ask();
     // The player coming near after being far for a while (Q1).
     if (!player || player.distance > HEARING_DISTANCE) {
       if (this.playerNear) this.playerFarSince = time;
@@ -163,8 +171,11 @@ export class AgentRuntime {
         to === this.id ? 'you' : to ? nameOf(to) : 'everyone'
       }: ${event.text}`,
     );
-    // Only messages to it make it think (Q1).
-    if (to !== this.id) return;
+    // Only messages to it make it think (Q1), and the answer of someone it just spoke to (A8.4).
+    const now = this.seen?.time ?? 0;
+    const answer = (this.awaiting.get(event.from) ?? -Infinity) >= now;
+    if (to !== this.id && !answer) return;
+    this.awaiting.delete(event.from);
     if (this.host.isAgent(event.from)) {
       // Two agents do not talk for ever (Q5).
       if (this.agentExchanges >= MAX_AGENT_EXCHANGES) return;
@@ -182,6 +193,9 @@ export class AgentRuntime {
   }
 
   private trigger(trigger: AgentTrigger): void {
+    // Someone coming near, or the autonomy, does not interrupt what the agent is doing.
+    const busy = this.thinking !== undefined || (this.sequence && !this.sequence.finished);
+    if ((trigger.kind === 'near' || trigger.kind === 'autonomous') && busy) return;
     this.pending.push(trigger);
     this.ask();
   }
@@ -266,9 +280,14 @@ export class AgentRuntime {
       this.stateNow = 'idle';
       return;
     }
-    for (const step of reply.steps)
-      if (step.kind === 'say') this.remember(`you said: ${step.text}`);
-    this.run(reply.steps);
+    for (const step of reply.steps) {
+      if (step.kind !== 'say') continue;
+      this.remember(`you said${step.to ? ` to ${step.to}` : ''}: ${step.text}`);
+      if (step.to && step.to !== 'player' && this.host.isCharacter(step.to)) {
+        this.awaiting.set(step.to, (this.seen?.time ?? 0) + ANSWER_SECONDS);
+      }
+    }
+    this.run(reply.steps, reply.continueAfter === true);
   }
 
   private failed(error: unknown): void {
@@ -280,16 +299,25 @@ export class AgentRuntime {
     if (this.config.fallback) this.run([{ kind: 'say', text: this.config.fallback }]);
   }
 
-  private run(steps: readonly Step[]): void {
+  private run(steps: readonly Step[], continueAfter = false): void {
     this.sequence?.cancel();
     this.stateNow = 'acting';
+    const done = steps.map((s) => ('target' in s ? `${s.kind} ${s.target}` : s.kind)).join(', ');
     const sequence = new Sequence(
       steps,
       (request) => this.host.request(request),
       () => `agent-${++this.nextId}`,
-      ({ failed }) => {
+      ({ failed, cancelled }) => {
         if (failed) this.remember(`your ${failed.step.kind} failed: ${failed.reason}`);
         if (this.sequence === sequence && this.stateNow === 'acting') this.stateNow = 'idle';
+        // A step of a longer plan: the agent decides the next one (A8.5).
+        if (continueAfter && !cancelled && this.sequence === sequence) {
+          this.trigger({
+            kind: 'continue',
+            done,
+            ...(failed ? { failed: `${failed.step.kind} failed: ${failed.reason}` } : {}),
+          });
+        }
       },
     );
     this.sequence = sequence;

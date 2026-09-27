@@ -94,7 +94,7 @@ describe('the reply of an LLM', () => {
     );
     second.start();
     second.cancel();
-    expect(endings.at(-1)).toEqual({});
+    expect(endings.at(-1)).toEqual({ cancelled: true });
   });
 
   it('AGENT-003.a: the steps move the character through the actions of the world', () => {

@@ -410,6 +410,7 @@ export class HostSession {
         request: (request) => this.sim?.agents.request(id, request),
         map: () => this.world!.result.map!,
         isAgent: (other) => this.runtimes.has(other),
+        isCharacter: (other) => this.sim?.agents.ids.includes(other) ?? false,
         log: (line) => this.terminal.line(`${PREFIX}  [${id}] ${line}`),
       },
       this.options.agentClock,

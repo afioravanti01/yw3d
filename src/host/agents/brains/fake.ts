@@ -14,6 +14,7 @@ export class FakeBrain implements Brain {
   think({ input }: BrainRequest): Promise<unknown> {
     const trigger = input.triggers.at(-1);
     const say = (text: string, to: string | null = null) => ({ text, to });
+    if (trigger?.kind === 'continue') return Promise.resolve({ say: null, actions: [] });
     if (!trigger || trigger.kind === 'autonomous') {
       return Promise.resolve({
         say: null,

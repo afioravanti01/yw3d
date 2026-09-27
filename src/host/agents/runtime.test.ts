@@ -108,6 +108,7 @@ function setup(config: Partial<AgentDecl> = {}) {
       request: (r) => requests.push(r),
       map: () => MAP,
       isAgent: (id) => id === 'tobia',
+      isCharacter: (id) => id === 'tobia' || id === 'marta',
       log: (l) => log.push(l),
     },
     clock,
@@ -142,7 +143,9 @@ function setup(config: Partial<AgentDecl> = {}) {
 
 describe('the runtime of an agent', () => {
   it('AGENT-004.a: a message to it, E, and the player coming near after a while make it ask; other sentences do not', async () => {
-    const { brain, runtime, message, perceive } = setup();
+    const { brain, requests, runtime, message, perceive } = setup();
+    // Each reply is a sentence: its end lets the next event through.
+    const said = () => runtime.event('marta', { type: 'action_done', id: requests.at(-1)!.id });
     message('ciao a tutti', 'player', null);
     message('Tobia, vieni?', 'player', 'tobia');
     expect(brain.requests).toHaveLength(0);
@@ -155,6 +158,7 @@ describe('the runtime of an agent', () => {
     runtime.event('marta', { type: 'interacted', by: 'player' });
     expect(brain.requests[1]!.request.input.triggers).toEqual([{ kind: 'interact' }]);
     await brain.answer(1, say('Dimmi.'));
+    said();
     // The player comes near for the first time: greeted once.
     perceive(10, 30);
     perceive(11, 6);
@@ -162,6 +166,7 @@ describe('the runtime of an agent', () => {
       { kind: 'near', who: 'player', whoName: 'Ada' },
     ]);
     await brain.answer(2, say('Ciao Ada!'));
+    said();
     // Away for a short while: no new greeting; away for more than 60 s: greeted again.
     perceive(20, 20);
     perceive(40, 5);
@@ -270,5 +275,53 @@ describe('the runtime of an agent', () => {
     expect(brain.requests).toHaveLength(MAX_REQUESTS_PER_MINUTE);
     await clock.advance(60_000);
     expect(brain.requests).toHaveLength(MAX_REQUESTS_PER_MINUTE + 1);
+  });
+
+  it('AGENT-003.a, AGENT-004.a: a plan in steps goes on when its actions end; the answer of whom it asked counts; coming near does not interrupt (A8.4, A8.5)', async () => {
+    const { brain, requests, runtime, message, perceive } = setup();
+    const done = () => runtime.event('marta', { type: 'action_done', id: requests.at(-1)!.id });
+    message('vai da Tobia e chiedigli se piove');
+    await brain.answer(0, {
+      say: { text: 'Vado.', to: 'player' },
+      actions: [{ type: 'walk_to', target: 'tobia' }],
+      continue: true,
+    });
+    done();
+    // Walking, the player comes near: no request that would stop the errand.
+    perceive(100, 30);
+    perceive(170, 5);
+    expect(brain.requests).toHaveLength(1);
+    done();
+    expect(brain.requests[1]!.request.input.triggers).toEqual([
+      { kind: 'continue', done: 'say, walk_to tobia' },
+    ]);
+    await brain.answer(1, {
+      say: { text: 'Tobia, piove?', to: 'tobia' },
+      actions: [],
+      continue: true,
+    });
+    done();
+    await brain.answer(2, { say: null, actions: [], continue: false });
+    // Tobia answers aloud, not to Marta: still the answer she waits for.
+    message('No, non piove.', 'tobia', null);
+    expect(brain.requests[3]!.request.input.triggers).toMatchObject([
+      { kind: 'message', from: 'tobia', text: 'No, non piove.' },
+    ]);
+    await brain.answer(3, say('Torno dal viandante.'));
+    // Only once: the next sentence of Tobia aloud is not an answer any more.
+    message('Anzi, forse sì.', 'tobia', null);
+    expect(brain.requests).toHaveLength(4);
+    // A cancelled step of a plan does not go on.
+    message('fermati');
+    await brain.answer(4, {
+      say: null,
+      actions: [{ type: 'walk_to', target: 'pozzo' }],
+      continue: true,
+    });
+    message('anzi no');
+    runtime.event('marta', { type: 'action_replaced', id: requests.at(-1)!.id });
+    expect(brain.requests.at(-1)!.request.input.triggers).toMatchObject([
+      { kind: 'message', text: 'anzi no' },
+    ]);
   });
 });
