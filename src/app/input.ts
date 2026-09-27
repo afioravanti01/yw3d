@@ -6,7 +6,16 @@ import { TURN_SPEED } from '../render/flyCamera';
 export { TURN_SPEED };
 const MAX_PITCH = (89 * Math.PI) / 180;
 /** Keys whose default browser action (scrolling, menus) would get in the way. */
-const CAPTURED = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+// Enter moves to the box of the console: its own new line must not end up in it (A7.4).
+const CAPTURED = new Set([
+  'Space',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'Enter',
+  'NumpadEnter',
+]);
 
 const pressed = (keys: ReadonlySet<string>, ...codes: string[]) =>
   codes.some((code) => keys.has(code)) ? 1 : 0;

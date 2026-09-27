@@ -27,7 +27,7 @@ export class MessageConsole {
   /** The world now running, for commands such as `/world` (A7.2). */
   context: () => CommandContext | undefined = () => undefined;
   private readonly list: HTMLOListElement;
-  private readonly input: HTMLInputElement;
+  private readonly input: HTMLTextAreaElement;
   private readonly suggestions: HTMLUListElement;
   private readonly reopen: HTMLButtonElement;
   private shown: Nameable[] = [];
@@ -44,7 +44,7 @@ export class MessageConsole {
     },
   ) {
     this.list = root.querySelector(':scope > ol')!;
-    this.input = root.querySelector('input')!;
+    this.input = root.querySelector('textarea')!;
     this.suggestions = root.querySelector('ul.suggestions')!;
     this.reopen = root.querySelector<HTMLButtonElement>('button.reopen')!;
     const reduce = root.querySelector<HTMLButtonElement>('button.reduce')!;
@@ -90,7 +90,7 @@ export class MessageConsole {
   set canWrite(value: boolean) {
     this.input.disabled = !value;
     this.input.placeholder = value
-      ? 'Enter to write… (@name to someone, /help)'
+      ? 'Enter to write… (@name to someone, /help; Shift+Enter new line)'
       : 'Only the view that drives the player writes here';
     if (!value) this.input.blur();
   }
@@ -165,7 +165,9 @@ export class MessageConsole {
     // Keys typed in the box never reach the game (DIALOG-005.c).
     e.stopPropagation();
     const suggesting = this.shown.length > 0;
-    if (e.key === 'Enter') {
+    // Shift+Enter goes to a new line of the same message.
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       const text = this.input.value.trim();
       this.input.value = '';
       this.close();

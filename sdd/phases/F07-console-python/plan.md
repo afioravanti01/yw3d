@@ -190,7 +190,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 
 - [x] **T7.17+** Console alta quanto la finestra, testo libero con Markdown (A7.4)
   - Req: DIALOG-005, DIALOG-004 · Dip: T7.16+
-  - Nato alla prova d'uso. Dopo una seconda richiesta dell'utente: niente ombre sul testo, fondo bianco in trasparenza sotto tutto il blocco, testo scuro e monospace.
+  - Nato alla prova d'uso. Dopo una seconda richiesta dell'utente: niente ombre sul testo, fondo bianco in trasparenza sotto tutto il blocco, testo scuro e monospace; una linea chiude la risposta di ogni comando; la casella è una textarea di due righe (Invio manda, Maiusc+Invio va a capo).
   - Fatto quando: test del Markdown e di `/world` in un blocco verdi; e2e di DIALOG-005.a–c e .f verdi.
 
 - [ ] **T7.10** Libreria: domande, altri gestori, errori

@@ -151,7 +151,7 @@ test('DIALOG-005.c, DIALOG-001.a: Enter moves to the box of the console; while w
   expect(await talk(page, 'consoleOpen')).toBe(false);
   await page.keyboard.press('Enter');
   expect(await talk(page, 'consoleOpen')).toBe(true);
-  await expect(page.locator('#console input')).toBeFocused();
+  await expect(page.locator('#console textarea')).toBeFocused();
   const before = await talk(page, 'player');
   await page.keyboard.down('KeyW');
   await page.waitForTimeout(700);
@@ -159,7 +159,7 @@ test('DIALOG-005.c, DIALOG-001.a: Enter moves to the box of the console; while w
   await page.keyboard.type('dddd ssss');
   const after = await talk(page, 'player');
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.05);
-  await expect(page.locator('#console input')).toHaveValue('wdddd ssss');
+  await expect(page.locator('#console textarea')).toHaveValue('wdddd ssss');
   await page.keyboard.press('Escape');
   expect(await talk(page, 'consoleOpen')).toBe(false);
   // Nothing was said; the keys move the player again.
@@ -220,13 +220,13 @@ test('DIALOG-005.a, DIALOG-005.b, DIALOG-005.c: the console is a block as high a
     );
   // The block is always there, as high as the window, with its box at the bottom (A7.1, A7.4).
   const block = (await page.locator('#console').boundingBox())!;
-  const box = (await page.locator('#console input').boundingBox())!;
+  const box = (await page.locator('#console textarea').boundingBox())!;
   const { width, height } = page.viewportSize()!;
-  await expect(page.locator('#console input')).toBeVisible();
+  await expect(page.locator('#console textarea')).toBeVisible();
   expect(block.y).toBeLessThanOrEqual(16);
   expect(block.y + block.height).toBeGreaterThanOrEqual(height - 16);
   expect(box.y + box.height).toBeGreaterThan(block.y + block.height - 20);
-  expect(await at(box.x + box.width / 2, box.y + box.height / 2)).toBe('INPUT');
+  expect(await at(box.x + box.width / 2, box.y + box.height / 2)).toBe('TEXTAREA');
   // Left of the block, the scene.
   expect(await at(block.x - 20, height / 2)).toBe('world');
   expect(block.x).toBeGreaterThan(width / 2);
@@ -259,7 +259,19 @@ test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab
   await page.keyboard.type('b');
   expect(await talk(page, 'consoleSuggestions')).toEqual(['bruno']);
   await page.keyboard.press('Tab');
-  await expect(page.locator('#console input')).toHaveValue('@Bruno ');
+  await expect(page.locator('#console textarea')).toHaveValue('@Bruno ');
+  // The box has two lines; Shift+Enter starts a new line of the same message.
+  expect(await page.locator('#console textarea').getAttribute('rows')).toBe('2');
+  await page.keyboard.type('prima riga');
+  await page.keyboard.press('Shift+Enter');
+  await page.keyboard.type('seconda riga');
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(() => talk(page, 'consoleLines'))
+    .toContain('Tu → Bruno: prima rigaseconda riga');
+  await expect(page.locator('#console > ol > li').last().locator('br')).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('@Bruno ');
   expect(await talk(page, 'consoleSuggestions')).toEqual([]);
   await page.keyboard.type('ciao');
   await page.keyboard.press('Enter');
