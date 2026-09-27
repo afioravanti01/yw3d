@@ -180,4 +180,24 @@ describe('the shared simulation', () => {
       ),
     ).toBeGreaterThan(1);
   });
+
+  it('DIALOG-001.b: the sentence of the player comes in the log before the replies it causes', () => {
+    const text = WORLD.replace(
+      '      routine:\n        - walk_to: [pozzo, prato]\n        - say: Tutto bene al pozzo vecchio.\n        - if: { chance: 0.5 }\n          then: [{ wait: 1s }]',
+      '      routine:\n        - ask: Dove vado?\n          then: [{ say: "Vado a {answer}." }]',
+    );
+    const result = composeWorld(text, 'w.yaml', { registry: createDefaultStructures() });
+    const lines: string[] = [];
+    const sim = new Simulation(result as typeof result & { world: World }, {
+      heard: (line) => lines.push(`${line.from}: ${line.text}`),
+    });
+    for (let i = 0; i < 120; i++) sim.step();
+    sim.playerSays('al pozzo vecchio');
+    for (let i = 0; i < 10; i++) sim.step();
+    expect(lines).toEqual([
+      'tobia: Dove vado?',
+      'player: al pozzo vecchio',
+      'tobia: Vado a Pozzo vecchio.',
+    ]);
+  });
 });

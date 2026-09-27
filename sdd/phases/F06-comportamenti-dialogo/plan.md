@@ -242,7 +242,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `chat.ts` (P17): casella, registro, spettatori; fumetto del giocatore; messaggi tra viste e host; overlay con nome, stato e istruzione.
   - Fatto quando: si parla con un personaggio dal browser, con e senza host.
 
-- [ ] **T6.15** Esempi e guida
+- [x] **T6.15** Esempi e guida
   - Req: BEHAV-007 · Dip: T6.11, T6.12, T6.14
   - Esempi:
     - `examples/valle`: nomi e luoghi; Tobia che chiede dove andare; un personaggio con stati e reazioni.

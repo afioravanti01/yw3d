@@ -50,7 +50,7 @@ export default defineStructure({
 });
 ```
 
-I personaggi si dichiarano nel `world.yaml` e si guidano con programmi in qualunque linguaggio, lanciati dall'host o collegati via WebSocket: il protocollo è in [docs/controllori.md](docs/controllori.md). Un esempio completo, con un controllore in Python e uno in JavaScript, è in [examples/valle/](examples/valle/):
+I personaggi si dichiarano nel `world.yaml`. Il loro **comportamento** si scrive in YAML, nel file stesso o in file della cartella: routine, reazioni, stati, domande al giocatore ([docs/comportamenti.md](docs/comportamenti.md)). Per ciò che il linguaggio non esprime, un personaggio si guida con un programma in qualunque linguaggio, lanciato dall'host o collegato via WebSocket ([docs/controllori.md](docs/controllori.md)). Il giocatore parla con i personaggi: Invio nel browser apre la casella, e nel terminale di `yw3d` si scrive direttamente. Esempi: [examples/valle/](examples/valle/) (Tobia chiede dove andare: rispondigli «laghetto1»; controllori in Python e JavaScript) ed [examples/paese/](examples/paese/) (venti abitanti con lo stesso comportamento):
 
 ```sh
 yw3d examples/valle

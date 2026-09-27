@@ -203,6 +203,9 @@ export class Simulation {
       const distance = Math.hypot(s.x - p.x, s.y - p.y, s.z - p.z);
       return distance <= HEARING_DISTANCE ? [{ id, distance }] : [];
     });
+    // The sentence is in the log before the replies it causes.
+    this.playerSpeech = { text: body, until: this.time + sayDuration(body) };
+    const line = this.spoken({ from: PLAYER_ID, to, text: body }, p);
     const answeredBy = this.behaviors.answer(body, to, hearers);
     const mentions = understandElement(body, this.elements) ?? null;
     for (const { id, distance } of hearers) {
@@ -218,8 +221,6 @@ export class Simulation {
       this.sinks.get(id)?.event(id, event);
       this.behaviors.event(id, event);
     }
-    this.playerSpeech = { text: body, until: this.time + sayDuration(body) };
-    const line = this.spoken({ from: PLAYER_ID, to, text: body }, p);
     return { ok: true, line, answeredBy };
   }
 

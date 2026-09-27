@@ -1,6 +1,6 @@
 # Controllori dei personaggi
 
-Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
+Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Per molti personaggi basta un [comportamento](comportamenti.md) scritto nel file del mondo, senza programmi; il controllore serve per ciò che il linguaggio dei comportamenti non esprime. Questa guida descrive il protocollo, versione 2. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
 
 ## Collegare un controllore
 
@@ -24,15 +24,30 @@ La prima volta che una cartella vuole lanciare dei comandi, yw3d li elenca e chi
 { "type": "control", "character": "guardiano" }
 ```
 
-Da lì in poi i messaggi sono gli stessi di stdio, uno per frame.
+Da lì in poi i messaggi sono gli stessi di stdio, uno per frame. Il client può prendere anche un personaggio che ha un **comportamento**: il comportamento si sospende e il personaggio si ferma; quando il client si scollega, il comportamento riprende da dov'era, con la sua memoria.
 
 ## Messaggi dall'host
 
 Il primo messaggio è il saluto:
 
 ```json
-{ "type": "hello", "version": 1, "character": { "id": "guardiano" }, "world": { "size": [512, 96, 512] } }
+{
+  "type": "hello",
+  "version": 2,
+  "character": { "id": "guardiano", "name": "Bruno", "description": null },
+  "world": { "size": [512, 96, 512] },
+  "map": { "name": "La valle", "description": "…", "size": [512, 96, 512], "entries": ["…"] }
+}
 ```
+
+La **mappa** elenca ogni elemento del mondo con `id`, `kind` (`place`, `structure`, `scatter`, `character`, `player`), `name`, `description` e `shape`: un punto (`{ "kind": "point", "x", "z" }`), un rettangolo (`{ "kind": "rect", "from": [x, z], "to": [x, z] }`, `to` escluso) o un cerchio (`{ "kind": "circle", "center", "radius" }`). Le strutture hanno anche `type` e `base_y` (la quota della base), le distribuzioni `types`. Per i personaggi e il giocatore la forma è il punto di partenza: dove sono adesso lo dice la percezione. Le strutture senza `id` nel file ne hanno uno generato, come `pond#1`.
+
+```json
+{ "id": "laghetto1", "kind": "structure", "type": "pond", "name": "Laghetto del borgo", "description": null,
+  "shape": { "kind": "rect", "from": [180, 96], "to": [212, 128] }, "base_y": 32 }
+```
+
+Quando il mondo si ricarica, i client sul WebSocket ricevono la mappa nuova: `{ "type": "map", "map": { … } }`. I programmi lanciati dall'host invece ripartono e ricevono un nuovo `hello`.
 
 Poi, **4 volte al secondo**, la percezione:
 
@@ -42,7 +57,9 @@ Poi, **4 volte al secondo**, la percezione:
   "time": 12.5,
   "self": { "x": 158.5, "y": 34, "z": 66.5, "yaw": 0, "on_ground": true, "in_water": false },
   "action": { "id": "walk-3", "kind": "walk_to" },
-  "nearby": [{ "id": "player", "kind": "player", "x": 162.1, "y": 34, "z": 70.4, "distance": 5.4 }]
+  "nearby": [
+    { "id": "player", "name": "viandante", "kind": "player", "x": 162.1, "y": 34, "z": 70.4, "distance": 5.4 }
+  ]
 }
 ```
 
@@ -54,7 +71,7 @@ E subito, quando succedono, gli **eventi**:
 
 | Messaggio | Quando |
 |---|---|
-| `{ "type": "heard", "from": "pescatrice", "text": "…", "distance": 6 }` | qualcuno entro 16 blocchi ha detto qualcosa |
+| `{ "type": "heard", "from": "player", "text": "…", "distance": 6, "to": "guardiano", "mentions": "laghetto1" }` | qualcuno entro 16 blocchi ha detto qualcosa: un personaggio o il giocatore; `to` è a chi l'ha detto (o `null`), `mentions` l'elemento della mappa che la frase nomina, se ne nomina uno solo (o `null`) |
 | `{ "type": "interacted", "by": "player" }` | il giocatore, entro 3 m, ha premuto E |
 | `{ "type": "action_done", "id": "walk-3" }` | l'azione è finita |
 | `{ "type": "action_failed", "id": "walk-3", "reason": "…" }` | l'azione non è riuscita, con la causa |
@@ -67,10 +84,10 @@ Ogni azione ha un `id` scelto dal controllore, che ritorna nel suo esito. Un per
 
 | Azione | Campi | Finisce |
 |---|---|---|
-| `walk_to` | `x`, `z` oppure `target` (un id, o `player`); `speed` facoltativa, 0,5–7 m/s, predefinita 1,5 | all'arrivo, entro 1 blocco |
-| `look_at` | `x`, `z` oppure `target` | subito |
+| `walk_to` | `x`, `z` oppure `target` (un id della mappa, o `player`); `speed` facoltativa, 0,5–7 m/s, predefinita 1,5 | all'arrivo, entro 1 blocco |
+| `look_at` | `x`, `z` oppure `target` (un id della mappa; un elemento esteso si guarda al centro) | subito |
 | `say` | `text`, 1–500 caratteri | dopo 1 s + 0,06 s per carattere |
-| `follow` | `target`; `distance` 1–32 blocchi, predefinita 3; `speed` | mai: finché non la sostituisci |
+| `follow` | `target` (un personaggio o `player`); `distance` 1–32 blocchi, predefinita 3; `speed` | mai: finché non la sostituisci |
 | `wait` | `seconds`, 0–3600 | dopo i secondi indicati |
 | `stop` | — | subito, fermando l'azione in corso |
 
@@ -82,7 +99,28 @@ Esempi:
 { "type": "follow", "id": "f1", "target": "player", "distance": 4 }
 ```
 
-Il personaggio trova da solo la strada: sale i gradini di un blocco, scende fino a tre, passa dalle porte e nuota solo se il giro all'asciutto è più lungo del doppio. Se resta bloccato ricalcola la strada; dopo tre tentativi `walk_to` fallisce. Ogni `walk_to` ha anche un tempo limite, il doppio del tempo previsto più 5 s.
+```json
+{ "type": "walk_to", "id": "w2", "target": "laghetto1" }
+```
+
+Verso un elemento della mappa il personaggio arriva dove ha senso: davanti alla porta di una casa, sulla sponda di un laghetto più vicina lungo la strada, ai piedi di un albero, dentro un'area (se c'è già, `walk_to` è subito finito). Il personaggio trova da solo la strada: sale i gradini di un blocco, scende fino a tre, passa dalle porte e nuota solo se il giro all'asciutto è più lungo del doppio. Se resta bloccato ricalcola la strada; dopo tre tentativi `walk_to` fallisce. Ogni `walk_to` ha anche un tempo limite, il doppio del tempo previsto più 5 s.
+
+## Parlare come il giocatore
+
+Un client sul WebSocket può parlare **come il giocatore** invece di guidare un personaggio: un bot di prova, un'altra interfaccia. Il primo messaggio è `{ "type": "player" }`; l'host risponde con un saluto che contiene il nome del giocatore e la mappa:
+
+```json
+{ "type": "hello", "version": 2, "player": { "id": "player", "name": "viandante" }, "world": { "size": [512, 96, 512] }, "map": { … } }
+```
+
+Poi il client dice frasi, con un destinatario facoltativo (o `@id` all'inizio del testo), e riceve quelle che il giocatore sente, sue comprese:
+
+```json
+{ "type": "say", "text": "Portami al laghetto1", "to": "tobia" }
+{ "type": "heard", "from": "tobia", "from_name": "Tobia", "to": null, "to_name": null, "text": "Vado subito a Laghetto del borgo!" }
+```
+
+Una frase senza destinatario vale come risposta per il personaggio più vicino che sta aspettando una risposta (vedi le domande dei [comportamenti](comportamenti.md#domande-al-giocatore)).
 
 ## Uno scheletro in Python
 
