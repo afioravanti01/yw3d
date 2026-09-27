@@ -44,11 +44,13 @@ Stati dei documenti: `draft` → `approved`. Una spec approvata che riceve emend
 - Ogni criterio dichiara come si verifica: `[unit]`, `[e2e]` o `[manuale]`.
 - Descrive comportamento osservabile, non implementazione: niente nomi di file, classi o algoritmi, salvo vincoli esterni.
 - Le domande aperte si chiudono (o si rinviano esplicitamente) prima di G1.
+- **Criteri sull'esperienza.** Per un linguaggio, un'interazione o un'API destinata agli autori, accanto ai criteri funzionali la spec dichiara criteri `[manuale]` sulla comodità d'uso: cosa l'utente deve riuscire a scrivere, leggere o fare, e con quale sforzo. (Dalla retro di F06: 80 criteri su 80 superati per un linguaggio poi rifiutato.)
 
 ### 2. Piano
 - Si scrive dopo G1. (Per F01 spec e piano sono stati scritti insieme: la spec si approva comunque per prima.)
 - Contiene struttura del codice, decisioni tecniche con alternative scartate, dipendenze nuove, strategia di test, rischi, **task**.
 - Un task è piccolo (circa una sessione di lavoro di un agente), ha un ID `T<fase>.<nn>`, cita i requisiti che copre, le dipendenze e un criterio di "fatto".
+- **Prova d'uso presto.** Se la fase introduce un linguaggio, un'interazione o un'API per gli autori, il piano mette subito, dopo il primo nucleo funzionante, un punto di controllo in cui l'utente scrive o usa qualcosa di vero; libreria completa, esempi e guida vengono dopo. (Dalla retro di F06.)
 
 ### 3. Implementazione
 - Un task alla volta, rispettando le dipendenze. A fine task: `npm run check` verde, checkbox spuntata nel piano, commit `T1.05: <descrizione>`.
