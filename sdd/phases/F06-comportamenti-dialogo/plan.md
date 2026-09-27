@@ -269,7 +269,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - I nomi lasciavano scie visibili per qualche secondo mentre i personaggi si muovevano: ogni etichetta ora sta su un livello di composizione proprio (`will-change`, `translate3d`, `contain`) e si sposta a pixel interi. Difetto trovato dall'utente, di origine codice.
   - Fatto quando: `npm run check` verde; verificato a mano dall'utente (il browser dei test disegna in software e non mostra il difetto).
 
-- [ ] **T6.17** Verifica di accettazione e chiusura della fase
+- [x] **T6.17** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T6.15, T6.16
   - `check`, `e2e`, `sdd:trace -- F06`; checklist dei criteri `[manuale]`; spec vive (nuove: `behaviors.md`, `map.md`, `dialogue.md`); `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

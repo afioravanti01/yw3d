@@ -5,8 +5,8 @@ Spec viva: registro, generazione e adattamento al terreno di alberi, case e lagh
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### STRUCT-001 — Registro delle strutture
-*Introdotto in F02 · ultima modifica: F02.*
-- **a** `[unit]` Un tipo di struttura ha: nome univoco, schema dei parametri con tipi, intervalli e default, un generatore deterministico e un modo di adattamento al terreno (STRUCT-003).
+*Introdotto in F02 · ultima modifica: F06.*
+- **a** `[unit]` Un tipo di struttura ha: nome univoco, schema dei parametri con tipi, intervalli e default, un generatore deterministico, un modo di adattamento al terreno (STRUCT-003) e, facoltativo, il punto d'arrivo per chi va verso la struttura (MAP-003.b).
 - **b** `[unit]` Registrare un nome già usato produce un errore.
 - **c** `[unit]` Codice esterno al core può registrare un nuovo tipo senza modificare il core; il tipo è subito utilizzabile nel YAML.
 - **d** `[unit]` I parametri del YAML sono validati con lo schema del tipo, con errori nel formato di YAML-002.

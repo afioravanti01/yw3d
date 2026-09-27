@@ -5,11 +5,12 @@ Spec viva: formato, validazione e caricamento dei file YAML del mondo. Descrive 
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### YAML-001 — File del mondo
-*Introdotto in F02 · ultima modifica: F02.*
-- **a** `[unit]` Un file del mondo dichiara la versione dello schema (`version`), il terreno (`terrain`) e, facoltative, le strutture (`structures`) e le distribuzioni (`scatter`). Una versione dello schema non gestita è un errore.
+*Introdotto in F02 · ultima modifica: F06.*
+- **a** `[unit]` Un file del mondo dichiara la versione dello schema (`version: 2`), nome e descrizione del mondo (YAML-009), il terreno (`terrain`) e, facoltativi, il giocatore (`player`), le strutture (`structures`), le distribuzioni (`scatter`), i luoghi (`places`), i personaggi (`characters`) e la libreria dei comportamenti (`behaviors`). Una versione dello schema non gestita è un errore.
 - **b** `[unit]` Un campo sconosciuto è un errore (così un refuso non passa inosservato).
 - **c** `[unit]` Lo stesso file e lo stesso codice registrato producono un mondo identico (stesso hash) in esecuzioni ripetute (P4).
 - **d** `[e2e]` Il mondo di un file generato nel browser ha lo stesso hash di quello generato in Node.
+- **e** `[unit]` Un file in versione 1 produce un errore che indica cosa aggiungere per passare alla versione 2.
 
 ### YAML-002 — Validazione ed errori
 *Introdotto in F02 · ultima modifica: F02.*
@@ -53,3 +54,14 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 *Introdotto in F03 · ultima modifica: F05.*
 - **a** `[unit]` Il file del mondo può dichiarare la posizione orizzontale di partenza del giocatore (x, z in blocchi), l'orientamento iniziale della visuale e l'aspetto (colori come in CHAR-001.a).
 - **b** `[unit]` Una posizione di partenza fuori dal mondo è un errore nel formato di YAML-002.
+
+### YAML-009 — Nomi e descrizioni
+*Introdotto in F06 · ultima modifica: F06.*
+- **a** `[unit]` Il mondo, ogni struttura posata, distribuzione, luogo e personaggio dichiarano un nome (`name`, testo libero di 1–60 caratteri) e, facoltativa, una descrizione (`description`, al più 1000 caratteri) (Q8). Un nome mancante, vuoto o troppo lungo è un errore nel formato di YAML-002.
+- **b** `[unit]` Il giocatore può dichiarare nome e descrizione; senza, il suo nome è «viandante» (Q8).
+- **c** `[e2e]` Il titolo della pagina è il nome del mondo.
+
+### YAML-010 — Luoghi
+*Introdotto in F06 · ultima modifica: F06.*
+- **a** `[unit]` La sezione `places` dichiara luoghi con id, nome, descrizione facoltativa e forma: un punto, un rettangolo o un cerchio, come le aree di YAML-005. Un luogo che esce dal mondo è un errore nel formato di YAML-002.
+- **b** `[unit]` I luoghi non modificano il mondo: lo stesso file con o senza luoghi produce lo stesso hash.

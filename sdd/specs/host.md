@@ -5,10 +5,10 @@ Spec viva: processo headless che simula il mondo e viste collegate. Descrive il 
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### HOST-001 — Host headless
-*Introdotto in F04 · ultima modifica: F05.*
+*Introdotto in F04 · ultima modifica: F06.*
 - **a** `[unit]` L'host compone il mondo dalla cartella e fa girare la simulazione a passo fisso (PHYS-002) senza alcun browser collegato.
 - **b** `[unit]` Il giocatore è simulato dall'host, che è l'autorità sul suo stato; senza browser collegati il giocatore resta fermo dov'è.
-- **c** `[unit]` Il terminale dell'host riporta: file del mondo, indirizzo, seed, strutture per tipo, avvisi ed errori, collegamento e scollegamento delle viste, personaggi con il loro controllore, avvio e terminazione dei controllori.
+- **c** `[unit]` Il terminale dell'host riporta: nome e file del mondo, indirizzo, seed, strutture per tipo, avvisi ed errori, collegamento e scollegamento delle viste, personaggi con il loro comportamento o controllore, avvio e terminazione dei controllori, azioni fallite dei comportamenti.
 
 ### HOST-002 — Browser collegato all'host
 *Introdotto in F04 · ultima modifica: F04 (emendamento A4.1).*

@@ -33,3 +33,8 @@ Stesso hardware di riferimento di PERF-001.
 Stesso hardware di riferimento di PERF-001.
 - **a** `[manuale]` Con 20 personaggi che camminano, ognuno con il suo controllore, valgono i budget di PERF-001.b nel browser (≥ 60 fps).
 - **b** `[unit]` Con 20 personaggi un passo di simulazione dell'host costa al più 4 ms.
+
+### PERF-006 — Comportamenti
+*Introdotto in F06 · ultima modifica: F06.*
+Stesso hardware di riferimento di PERF-001.
+- **a** `[unit]` Con 20 personaggi guidati da comportamenti un passo di simulazione dell'host costa al più 4 ms.
