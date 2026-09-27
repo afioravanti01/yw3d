@@ -5,7 +5,7 @@
 | Stato | **approved** (G1, 2026-09-27) |
 | Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-27 |
-| Piano | plan.md (dopo G1) |
+| Piano | [plan.md](plan.md) |
 
 ## Obiettivo
 Il mondo ha un'**ora del giorno** che scorre: il sole attraversa il cielo, tramonta, arriva una notte leggibile con la luna e le finestre illuminate, poi l'alba. Agenti e programmi conoscono l'ora e decidono loro cosa farne. Le foglie ondeggiano al vento e l'acqua si muove. Particelle e audio ambientale restano a una fase successiva.
