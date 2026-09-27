@@ -111,4 +111,51 @@ describe('commands of the console', () => {
     expect(runCommand('/world')).toEqual({ ok: false, error: 'there is no world yet' });
     expect(HELP).toMatch(/\/world/);
   });
+
+  it('DIALOG-005.f: /describe @name gives the description of a character (A8.2)', () => {
+    const map: WorldMap = {
+      name: 'Valle',
+      description: null,
+      size: [64, 96, 64],
+      entries: [
+        {
+          id: 'pescatrice',
+          kind: 'character',
+          name: 'Marta',
+          description: 'La pescatrice del laghetto.',
+          shape: { kind: 'point', x: 1, z: 1 },
+        },
+        {
+          id: 'nina',
+          kind: 'character',
+          name: 'Nina',
+          description: null,
+          shape: { kind: 'point', x: 2, z: 2 },
+        },
+        {
+          id: 'piazza',
+          kind: 'place',
+          name: 'Piazza',
+          description: 'Il centro.',
+          shape: { kind: 'point', x: 3, z: 3 },
+        },
+      ],
+    };
+    const context = { map, position: () => undefined };
+    expect(runCommand('/describe @Marta', context)).toEqual({
+      ok: true,
+      text: '**Marta** (`pescatrice`)\n\nLa pescatrice del laghetto.',
+    });
+    expect(runCommand('/describe pescatrice', context)).toMatchObject({ ok: true });
+    expect(runCommand('/describe @nina', context)).toEqual({
+      ok: true,
+      text: '**Nina** (`nina`)\n\n*No description.*',
+    });
+    expect(runCommand('/describe', context)).toEqual({ ok: false, error: 'write /describe @name' });
+    expect(runCommand('/describe @piazza', context)).toEqual({
+      ok: false,
+      error: 'no character is called "piazza"; the characters are: Marta (pescatrice), Nina (nina)',
+    });
+    expect(HELP).toMatch(/\/describe @name/);
+  });
 });

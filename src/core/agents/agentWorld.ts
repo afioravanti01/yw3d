@@ -26,7 +26,11 @@ export const HEARING_DISTANCE = 16;
 /** The player interacts with the nearest character within 3 m (PROTO-002.c). */
 export const INTERACTION_DISTANCE = metersToBlocks(3);
 /** Time a sentence stays in the air: 1 s + 0.06 s per character (plan F05 P6). */
-export const sayDuration = (text: string) => 1 + 0.06 * text.length;
+/**
+ * How long a sentence stays in the bubble, seconds: longer for longer texts, up to the time of
+ * the longest sentence of a controller, also for the long answers of an agent (A8.1).
+ */
+export const sayDuration = (text: string) => 1 + 0.06 * Math.min(text.length, MAX_SAY_LENGTH);
 
 export type Target = { readonly x: number; readonly z: number } | { readonly target: string };
 

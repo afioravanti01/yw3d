@@ -116,7 +116,9 @@ characters:
   # Nina works in the fields and offers a courgette to whoever walks by.
   - id: nina
     name: Nina
-    description: Contadina degli orti di ponente.
+    description: >-
+      Contadina degli orti di ponente. Coltiva zucchine, pomodori e fagioli, conosce le stagioni
+      della semina e del raccolto, e porta la verdura in piazza il sabato.
     at: [120, 88]
     appearance: { shirt: '#6f7f3a', hair: '#b07a3a' }
     program: characters/nina.py
@@ -130,7 +132,10 @@ characters:
   # Marta fishes at the pond and knows every fish of the valley.
   - id: pescatrice
     name: Marta
-    description: La pescatrice del laghetto, esperta di pesci.
+    description: >-
+      La pescatrice del laghetto del borgo. Ha studiato biologia marina e ora vive di pesca:
+      conosce ogni pesce della valle, dei fiumi e del mare, dove vive, cosa mangia e quando
+      abbocca.
     at: [182, 108]
     yaw: 90
     appearance: { shirt: '#b38a3e', hair: '#8a8a86' }

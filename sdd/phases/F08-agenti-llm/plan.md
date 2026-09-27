@@ -115,10 +115,16 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `brains/claude.ts` (P5–P7): argomenti, stdin, schema, tempo limite, errori della CLI nel terminale.
   - Fatto quando: test di AGENT-001.b con una CLI finta verdi; un agente con Claude Code vero risponde (manuale).
 
-- [ ] **T8.07** Prova d'uso con l'utente
+- [x] **T8.07** Prova d'uso con l'utente
   - Req: AGENT-002, AGENT-007 · Dip: T8.06
   - **Punto di controllo**: in una bozza di `examples/agenti` l'utente parla con la pescatrice guidata da Claude Code: «Cosa vedi?», «dove si pesca meglio?», una domanda fuori dal mondo. Si misura la latenza. Le osservazioni diventano deviazioni o emendamenti prima di T8.08.
   - Fatto quando: l'utente ha parlato con l'agente e le osservazioni sono registrate nel piano.
+  - Osservazioni (2026-09-27): risposte in pochi secondi (misurate 3,8–8,3 s con `sonnet` ed effort `low`); Marta si muove su comando e funziona bene. Per «Cosa vedi?» le istruzioni ora chiedono di nominare posti e personaggi con direzione e distanza (prima la risposta era poetica). Personalità e specializzazione (Marta biologa marina) funzionano con `persona`, senza modifiche. Richiesti: risposte lunghe (A8.1) e `/describe` (A8.2), nel task T8.15+; descrizioni di Marta e Nina più ricche.
+
+- [x] **T8.15+** Risposte lunghe e `/describe` (A8.1, A8.2)
+  - Req: AGENT-001, AGENT-003, CHAR-002, DIALOG-005 · Dip: T8.07
+  - Nato alla prova d'uso. `answers: short | long`; istruzioni per le risposte lunghe; 2000 caratteri; vignetta con l'inizio del testo (`bubbleText`); durata della vignetta limitata; comando `/describe` nel core, per browser e terminale.
+  - Fatto quando: test di AGENT-001.a, AGENT-003.a, CHAR-002.c e DIALOG-005.f verdi; risposta lunga provata dal vivo.
 
 - [ ] **T8.08** Cervelli Codex e opencode
   - Req: AGENT-001 · Dip: T8.07

@@ -130,4 +130,12 @@ characters:
     const marta = sim.agents.stateOf('marta')!;
     expect(Math.hypot(marta.x - 40.5, marta.z - 30.5)).toBeLessThanOrEqual(1.8);
   });
+
+  it('AGENT-003.a: a long answer keeps up to 2000 characters, a short one 500 (A8.1)', () => {
+    const text = 'pesce '.repeat(500);
+    const short = readReply({ say: { text, to: null }, actions: [] }, KNOWN);
+    expect((short.steps[0] as { text: string }).text).toHaveLength(500);
+    const long = readReply({ say: { text, to: null }, actions: [] }, KNOWN, 2000);
+    expect((long.steps[0] as { text: string }).text).toHaveLength(2000);
+  });
 });

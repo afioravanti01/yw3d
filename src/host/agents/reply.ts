@@ -7,6 +7,8 @@ import { MAX_SAY_LENGTH, type ActionRequest, type AgentEvent } from '../../core/
  */
 
 export const MAX_ACTIONS = 5;
+/** Longest sentence of an agent with long answers (A8.1): the console shows it all. */
+export const LONG_SAY_LENGTH = 2000;
 export const ACTION_TYPES = ['walk_to', 'look_at', 'follow', 'wait', 'stop'] as const;
 
 /**
@@ -96,7 +98,11 @@ const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.is
  * Checks a reply against the ids the world knows (the map, the characters, `player`), turning
  * it into steps (plan F08 P4). `raw` is the parsed object, or the text to extract it from.
  */
-export function readReply(raw: unknown, knownIds: ReadonlySet<string>): Reply {
+export function readReply(
+  raw: unknown,
+  knownIds: ReadonlySet<string>,
+  maxSay: number = MAX_SAY_LENGTH,
+): Reply {
   const value = typeof raw === 'string' ? extractJson(raw) : raw;
   if (!isObject(value)) {
     return { steps: [], discarded: ['the reply is not a JSON object'] };
@@ -110,7 +116,7 @@ export function readReply(raw: unknown, knownIds: ReadonlySet<string>): Reply {
     if (text === '') discarded.push('say: no text');
     else if (to !== undefined && !knownIds.has(to))
       discarded.push(`say: unknown addressee "${to}"`);
-    else steps.push({ kind: 'say', text: text.slice(0, MAX_SAY_LENGTH), ...(to ? { to } : {}) });
+    else steps.push({ kind: 'say', text: text.slice(0, maxSay), ...(to ? { to } : {}) });
   } else if (say !== null && say !== undefined) {
     discarded.push('say: not an object');
   }

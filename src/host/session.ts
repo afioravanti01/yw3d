@@ -402,6 +402,7 @@ export class HostSession {
         description: character.description ?? null,
         persona: agent.persona,
         goals: agent.goals,
+        answers: agent.answers,
       },
       agent,
       brain,

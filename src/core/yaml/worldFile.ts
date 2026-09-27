@@ -183,6 +183,7 @@ const agentSchema = object(
     initiative: oneOf(['reactive', 'autonomous'], { default: 'reactive' }),
     every: number({ min: 10, max: 3600, default: 60 }),
     fallback: optional(text({ min: 1, max: 500 })),
+    answers: oneOf(['short', 'long'], { default: 'short' }),
   },
   (agent, path, issues) => {
     const refuse = (field: string, message: string) =>

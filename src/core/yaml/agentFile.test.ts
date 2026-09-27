@@ -15,6 +15,7 @@ describe('agents in the world file', () => {
       cli: 'claude',
       initiative: 'reactive',
       every: 60,
+      answers: 'short',
     });
     expect(
       load(

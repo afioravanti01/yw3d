@@ -110,7 +110,10 @@ characters:
   # «@Marta cosa vedi?», or anything else.
   - id: pescatrice
     name: Marta
-    description: La pescatrice del laghetto del borgo. Conosce ogni pesce della valle.
+    description: >-
+      La pescatrice del laghetto del borgo. Ha studiato biologia marina e ora vive di pesca:
+      conosce ogni pesce della valle, dei fiumi e del mare, dove vive, cosa mangia e quando
+      abbocca. Burbera, ma non nega mai un consiglio a chi le chiede dove pescare.
     at: [182, 108]
     yaw: 90
     appearance: { shirt: '#b38a3e', hair: '#8a8a86' }
@@ -119,11 +122,21 @@ characters:
       cli: claude
       model: sonnet
       effort: low
-      persona: Burbera ma generosa; parla poco e con parole semplici.
+      # Long answers: in full in the console, the beginning in her speech bubble.
+      answers: long
+      # The persona gives her a character and an expertise: she answers questions about fish
+      # and the sea with what a marine biologist knows, also when this world has no answer.
+      persona: >-
+        Burbera ma generosa; parla poco e con parole semplici. Prima di fare la pescatrice ha
+        studiato biologia marina: è un'esperta di ittiologia e di ecologia dei mari, dei laghi e
+        dei fiumi. Conosce le specie, i loro habitat, il comportamento, l'alimentazione e la
+        riproduzione, e ne parla con precisione quando glielo chiedono, sempre a modo suo.
   # Nina uses the fake brain: it answers with fixed rules, to try the world without an LLM.
   - id: nina
     name: Nina
-    description: Contadina degli orti di ponente.
+    description: >-
+      Contadina degli orti di ponente. Coltiva zucchine, pomodori e fagioli, conosce le stagioni
+      della semina e del raccolto, e porta la verdura in piazza il sabato. Allegra e chiacchierona.
     at: [174, 104]
     appearance: { shirt: '#6f7f3a', hair: '#b07a3a' }
     agent: { mode: fake }

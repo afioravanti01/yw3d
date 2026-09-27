@@ -248,7 +248,7 @@ test('DIALOG-005.a, DIALOG-005.b, DIALOG-005.c: the console is a block as high a
   expect(style).toEqual({ background: 'rgba(0, 0, 0, 0)', select: 'text' });
 });
 
-test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help and /world answer in the console', async ({
+test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help, /world and /describe answer in the console', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
@@ -302,6 +302,12 @@ test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab
         ).getComputedStyle(li)['borderBottomStyle'],
     ),
   ).toBe('solid');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/describe @Anna');
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(() => talk(page, 'consoleLines'))
+    .toContainEqual(expect.stringContaining('Anna (anna)'));
   // Commands are not said in the world.
   expect((await talk(page, 'consoleLines')).some((l) => l.includes('Tu: /help'))).toBe(false);
 });

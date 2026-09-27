@@ -1,4 +1,5 @@
 import { HEARING_DISTANCE } from '../../core/agents/agentWorld';
+import { LONG_SAY_LENGTH } from './reply';
 import type { MapEntry, MapShape, WorldMap } from '../../core/map/worldMap';
 
 /**
@@ -16,6 +17,8 @@ export interface AgentIdentity {
   readonly description: string | null;
   readonly persona?: string;
   readonly goals?: readonly string[];
+  /** Short answers for the bubble, or long ones for the console (A8.1). */
+  readonly answers?: 'short' | 'long';
 }
 
 export interface Point {
@@ -202,7 +205,10 @@ function instructions(identity: AgentIdentity): string {
     'First use what the world state below says: places, characters, where things are. When asked what you see, or where something is, name the places and the characters of your surroundings with their names, their direction and roughly their distance in meters. When a question is not about this world, answer with your own knowledge, as your character would.',
     `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
     'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',
-    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …]}. Keep what you say short: one to three sentences; Markdown is allowed.',
+    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …]}. ' +
+      (identity.answers === 'long'
+        ? `When a question asks for it, answer fully and precisely, up to about 300 words (at most ${LONG_SAY_LENGTH} characters); otherwise keep it short. Markdown is allowed.`
+        : 'Keep what you say short: one to three sentences; Markdown is allowed.'),
   ]
     .filter((line) => line !== '')
     .join('\n');

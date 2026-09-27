@@ -114,3 +114,5 @@ Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A8.1 | 2026-09-27 | AGENT-001.a, AGENT-003.a, CHAR-002.c | L'agente ha `answers: short` (predefinito, una-tre frasi) o `long`: con `long` risponde per intero quando la domanda lo chiede, fino a 2000 caratteri, che la console mostra tutti; la vignetta mostra l'inizio del testo, tagliato a una parola, e resta al più quanto una frase di 500 caratteri | Un'esperta deve poter rispondere per esteso; la vignetta resta leggibile | Utente, alla prova d'uso (richiesta diretta) |
+| A8.2 | 2026-09-27 | DIALOG-005.f | Comando `/describe @nome` (anche senza `@`): mostra nome, id e descrizione del personaggio; un nome che non è di un personaggio dà l'errore con i nomi disponibili | Sapere chi è un personaggio prima di parlargli | Utente, alla prova d'uso (richiesta diretta) |

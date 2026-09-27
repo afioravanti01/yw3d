@@ -61,7 +61,7 @@ export class SpeechBubbles {
       if (f.speech !== null && label.speech !== f.speech) {
         // The same Markdown as the console, built as nodes, never as HTML (A7.8).
         label.speech = f.speech;
-        label.bubble.replaceChildren(...blocksToDom(parseMarkdown(f.speech)));
+        label.bubble.replaceChildren(...blocksToDom(parseMarkdown(bubbleText(f.speech))));
       }
       const x = ((this.point.x + 1) / 2) * width;
       const y = ((1 - this.point.y) / 2) * height;
@@ -75,4 +75,15 @@ export class SpeechBubbles {
       }
     }
   }
+}
+
+/** Longest text of a bubble: a long answer shows its beginning, the console has it all (A8.1). */
+export const BUBBLE_LENGTH = 220;
+
+/** The text of a bubble: the whole sentence, or its beginning cut at a word, with an ellipsis. */
+export function bubbleText(text: string): string {
+  if (text.length <= BUBBLE_LENGTH) return text;
+  const cut = text.slice(0, BUBBLE_LENGTH);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > BUBBLE_LENGTH / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
 }

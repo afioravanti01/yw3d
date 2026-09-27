@@ -1,9 +1,11 @@
 import type { MapEntry, MapShape, WorldMap } from '../map/worldMap';
+import { address } from './address';
 
 /**
  * Commands of the message console (DIALOG-005.f, plan F07 P5, A7.2): a line that starts with
  * `/` is for the console, not said in the world. F07 has `/help` and `/world`; the programming
  * commands of later phases go here. The answer of a command is one block of Markdown (A7.4).
+ * `/describe` comes with F08 (A8.2).
  */
 export type CommandResult =
   { readonly ok: true; readonly text: string } | { readonly ok: false; readonly error: string };
@@ -22,6 +24,7 @@ export const HELP = [
   '- `@name message`: to one character within 16 blocks of you (id or name; Tab completes it).',
   '- Esc goes back to the game; the × at the top of the console reduces it.',
   '- `/world`: the characters and the player where they are now, the places and the structures.',
+  '- `/describe @name`: the description of a character.',
   '- `/help`: this help.',
 ].join('\n');
 
@@ -36,7 +39,24 @@ export function runCommand(text: string, context?: CommandContext): CommandResul
     if (!context) return { ok: false, error: 'there is no world yet' };
     return { ok: true, text: describeWorld(context) };
   }
+  if (name === 'describe') {
+    if (!context) return { ok: false, error: 'there is no world yet' };
+    return describeCharacter(text.trim().slice('/describe'.length).trim(), context.map);
+  }
   return { ok: false, error: `unknown command "/${name}": write /help` };
+}
+
+/** `/describe @name`: who a character is, as the world file describes it (A8.2). */
+function describeCharacter(written: string, map: WorldMap): CommandResult {
+  if (written === '') return { ok: false, error: 'write /describe @name' };
+  const characters = map.entries.filter((e) => e.kind === 'character');
+  const addressed = address(written.startsWith('@') ? written : `@${written}`, characters);
+  if (!addressed.ok) return addressed;
+  const who = characters.find((c) => c.id === addressed.to)!;
+  return {
+    ok: true,
+    text: `**${who.name}** (\`${who.id}\`)\n\n${who.description ?? '*No description.*'}`,
+  };
 }
 
 const round = (v: number) => String(Math.round(v));

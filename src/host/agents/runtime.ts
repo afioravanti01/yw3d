@@ -1,5 +1,6 @@
 import {
   HEARING_DISTANCE,
+  MAX_SAY_LENGTH,
   type ActionRequest,
   type AgentEvent,
   type Perception,
@@ -8,7 +9,7 @@ import type { WorldMap } from '../../core/map/worldMap';
 import type { AgentDecl } from '../../core/yaml/worldFile';
 import type { Brain } from './brain';
 import { buildContext, type AgentIdentity, type AgentTrigger, type ContextInput } from './context';
-import { readReply, Sequence, type Step } from './reply';
+import { LONG_SAY_LENGTH, readReply, Sequence, type Step } from './reply';
 
 /**
  * An agent drives its character from the host (AGENT-003–006, plan F08 P1, P8–P10): it listens
@@ -255,7 +256,11 @@ export class AgentRuntime {
     if (this.stopped) return;
     const map = this.host.map();
     const known = new Set([...map.entries.map((e) => e.id), 'player']);
-    const reply = readReply(raw, known);
+    const reply = readReply(
+      raw,
+      known,
+      this.config.answers === 'long' ? LONG_SAY_LENGTH : MAX_SAY_LENGTH,
+    );
     for (const reason of reply.discarded) this.host.log(`reply set aside: ${reason}`);
     if (reply.steps.length === 0) {
       this.stateNow = 'idle';

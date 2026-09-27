@@ -89,4 +89,13 @@ describe('what an agent knows of the world', () => {
     });
     expect(state.memory).toEqual(['t=100s viandante → you: ciao']);
   });
+
+  it('AGENT-002.a: an agent with long answers is told it may answer fully (A8.1)', () => {
+    const input = { map, self, nearby, time: 0, memory: [], triggers: [] };
+    const identity = { id: 'marta', name: 'Marta', description: null };
+    expect(buildContext({ ...input, identity })).toContain('Keep what you say short');
+    expect(buildContext({ ...input, identity: { ...identity, answers: 'long' } })).toContain(
+      'answer fully and precisely, up to about 300 words',
+    );
+  });
 });
