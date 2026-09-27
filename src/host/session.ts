@@ -24,6 +24,9 @@ import { checkPrograms, type CommandConsent } from './consent';
 import { startStdioController, type RunningController } from './controllers/stdio';
 import { checkPython, defaultPython, programCommand, programEnv, type PythonCheck } from './python';
 import { checkAgent, describeAgent } from './agents/config';
+import type { Brain } from './agents/brain';
+import { createBrain } from './agents/brains';
+import { AgentRuntime, type AgentStatus, type Clock } from './agents/runtime';
 import type { AgentDecl } from '../core/yaml/worldFile';
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
@@ -54,6 +57,10 @@ export interface SessionOptions {
   readonly python?: string;
   /** The environment of the agents (PATH of the CLIs, keys); the host's own by default. */
   readonly env?: NodeJS.ProcessEnv;
+  /** Makes the brain of an agent; replaced in tests (plan F08 P2). */
+  readonly brain?: (agent: AgentDecl) => Brain;
+  /** Clock of the agents' requests; replaced in tests. */
+  readonly agentClock?: Clock;
   /** Checks the interpreter; replaced in tests. */
   readonly checkPython?: (python: string) => PythonCheck;
   /** The sentences the player hears (DIALOG-004.a): the console of the host. */
@@ -111,8 +118,10 @@ export class HostSession {
   private controllers: RunningController[] = [];
   /** The agents declared by the world now running (AGENT-001). */
   private agentsToStart: { readonly id: string; readonly agent: AgentDecl }[] = [];
-  /** Called when an agent may start; the runtime of the agents comes with T8.05. */
+  /** Called when an agent starts, for the tests. */
   agentStarted: ((id: string, agent: AgentDecl) => void) | undefined;
+  /** The agents now running, by character (AGENT-003–006). */
+  private readonly runtimes = new Map<string, AgentRuntime>();
   /** State of the program of each character that has one (DEBUG-001.a, plan F07 P15). */
   private readonly programs = new Map<string, ProgramStatus>();
   private python: PythonCheck | undefined;
@@ -370,8 +379,56 @@ export class HostSession {
         this.terminal.line(`${PREFIX}  [${id}] cannot start the agent: ${check.error}`);
         continue;
       }
+      this.startAgent(id, agent);
       this.agentStarted?.(id, agent);
     }
+  }
+
+  /** An agent drives its character from the host, as an internal controller (plan F08 P1). */
+  private startAgent(id: string, agent: AgentDecl): void {
+    let brain: Brain;
+    try {
+      brain = (this.options.brain ?? createBrain)(agent);
+    } catch (error) {
+      this.terminal.line(`${PREFIX}  [${id}] cannot start the agent: ${(error as Error).message}`);
+      return;
+    }
+    const character = this.world!.result.characters.find((c) => c.id === id)!;
+    const runtime = new AgentRuntime(
+      id,
+      {
+        id,
+        name: character.name,
+        description: character.description ?? null,
+        persona: agent.persona,
+        goals: agent.goals,
+      },
+      agent,
+      brain,
+      {
+        request: (request) => this.sim?.agents.request(id, request),
+        map: () => this.world!.result.map!,
+        isAgent: (other) => this.runtimes.has(other),
+        log: (line) => this.terminal.line(`${PREFIX}  [${id}] ${line}`),
+      },
+      this.options.agentClock,
+    );
+    this.runtimes.set(id, runtime);
+    this.attachController(id, runtime);
+    this.terminal.line(`${PREFIX}  [${id}] agent started: ${describeAgent(agent)}`);
+    this.controllers.push({
+      characterId: id,
+      stop: () => {
+        runtime.stop();
+        this.detachController(id, runtime);
+        if (this.runtimes.get(id) === runtime) this.runtimes.delete(id);
+      },
+    });
+  }
+
+  /** The agent of a character and what it is doing, if it has one (DEBUG-001.a). */
+  agentOf(characterId: string): AgentStatus | undefined {
+    return this.runtimes.get(characterId)?.status;
   }
 
   /** The program of a character and its state, if it has one (DEBUG-001.a). */
@@ -456,6 +513,7 @@ export class HostSession {
       controlled: this.controllerSinks.has(c.id),
       action: this.agents?.perceive(c.id).action?.kind ?? null,
       program: this.programs.has(c.id) ? { ...this.programs.get(c.id)! } : null,
+      agent: this.runtimes.get(c.id)?.status ?? null,
     }));
   }
 

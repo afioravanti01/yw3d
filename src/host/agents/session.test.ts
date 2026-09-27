@@ -81,4 +81,83 @@ describe('agents in the host', () => {
     const { started } = await session(false);
     expect(started).toEqual(['prova']);
   });
+
+  it('AGENT-002.a, AGENT-003.a: a fake agent answers from the console, says what it sees and goes where it is told', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'yw3d-fake-'));
+    writeFileSync(
+      path.join(root, WORLD_FILE),
+      `version: 2
+name: Borgo
+terrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }
+player: { at: [30, 26], name: Ada }
+places:
+  - { id: pozzo, name: Pozzo vecchio, at: [40, 30] }
+characters:
+  - { id: prova, name: Prova, at: [30, 30], agent: { mode: fake } }
+`,
+    );
+    const resolved = resolveWorldFolder(root);
+    if (!resolved.ok) throw new Error(resolved.message);
+    const lines: string[] = [];
+    const s = new HostSession(resolved.folder, noModules, { line: (t) => lines.push(t) }, {});
+    sessions.push(s);
+    const said: string[] = [];
+    s.listen((l) => said.push(`${l.from}: ${l.text}`));
+    await s.load();
+    expect(lines).toContain('yw3d  [prova] agent started: agent fake (no LLM)');
+    const run = async (done: () => boolean) => {
+      for (let i = 0; i < 2000 && !done(); i++) {
+        s.advance(1 / 60);
+        if (i % 20 === 0) await new Promise((r) => setTimeout(r, 0));
+      }
+    };
+    // A quarter of a second: the agent perceives the world first.
+    for (let i = 0; i < 20; i++) s.advance(1 / 60);
+    s.playerSays('@prova cosa vedi?');
+    await run(() => said.some((l) => l.startsWith('prova: Vedo')));
+    expect(said.find((l) => l.startsWith('prova: Vedo'))).toMatch(/Ada \(north, 2 m\)/);
+    s.playerSays('@prova vai al pozzo vecchio');
+    await run(() => {
+      const p = s.agents!.stateOf('prova')!;
+      return Math.hypot(p.x - 40.5, p.z - 30.5) <= 1.8;
+    });
+    expect(said).toContain('prova: Vado a Pozzo vecchio.');
+    for (let i = 0; i < 30; i++) s.advance(1 / 60);
+    expect(s.agentOf('prova')).toMatchObject({ mode: 'fake', brain: 'fake', state: 'idle' });
+    expect(s.characterSnapshots()[0]!.agent).toMatchObject({ brain: 'fake' });
+  });
+
+  it('AGENT-006.a: the world does not wait for a brain that does not answer', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'yw3d-slow-'));
+    writeFileSync(
+      path.join(root, WORLD_FILE),
+      `version: 2
+name: Borgo
+terrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }
+player: { at: [30, 26] }
+characters:
+  - { id: lenta, name: Lenta, at: [30, 30], agent: { mode: fake } }
+`,
+    );
+    const resolved = resolveWorldFolder(root);
+    if (!resolved.ok) throw new Error(resolved.message);
+    const s = new HostSession(
+      resolved.folder,
+      noModules,
+      { line: () => {} },
+      {
+        brain: () => ({ name: 'never', think: () => new Promise(() => {}) }),
+      },
+    );
+    sessions.push(s);
+    await s.load();
+    for (let i = 0; i < 20; i++) s.advance(1 / 60);
+    s.playerSays('@lenta ciao');
+    expect(s.agentOf('lenta')!.state).toBe('thinking');
+    const before = s.agents!.time;
+    const start = performance.now();
+    for (let i = 0; i < 120; i++) s.advance(1 / 60);
+    expect(s.agents!.time - before).toBeCloseTo(2, 1);
+    expect(performance.now() - start).toBeLessThan(2000);
+  });
 });

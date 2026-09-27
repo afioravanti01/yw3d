@@ -105,7 +105,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `reply.ts` (P4, P5): schema, validazione, parti scartate, estrazione del JSON; esecuzione in sequenza con l'`AgentWorld`.
   - Fatto quando: test di AGENT-003.a–b verdi.
 
-- [ ] **T8.05** Runtime dell'agente e cervello finto
+- [x] **T8.05** Runtime dell'agente e cervello finto
   - Req: AGENT-003, AGENT-004, AGENT-005, AGENT-006 · Dip: T8.03, T8.04
   - `runtime.ts` (P8–P10), `brain.ts`, `brains/fake.ts` (P11); stato per l'overlay (P14).
   - Fatto quando: test di AGENT-003.c, AGENT-004.a–c, AGENT-005.a, AGENT-006.a–d verdi; un agente `fake` risponde nella console.

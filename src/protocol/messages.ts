@@ -57,6 +57,14 @@ export interface CharacterSnapshot {
   /** Whether a controller drives it now, and its running action (DEBUG-001.a). */
   readonly controlled: boolean;
   readonly action: string | null;
+  /** Its LLM agent and what it is doing, if it has one (DEBUG-001.a, plan F08 P14). */
+  readonly agent: {
+    readonly mode: 'headless' | 'api' | 'fake';
+    readonly brain: string;
+    readonly model: string | null;
+    readonly state: 'idle' | 'thinking' | 'acting' | 'stopped' | 'error';
+    readonly last_ms: number | null;
+  } | null;
   /** Its Python program and whether it runs, if it has one (DEBUG-001.a). */
   readonly program: {
     readonly file: string;

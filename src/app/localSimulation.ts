@@ -22,6 +22,8 @@ export class LocalSimulation implements PlayerSource {
   private readonly stepper = new FixedStepper();
   private previous: EntityState;
   private previousCharacters = new Map<string, EntityState>();
+  /** The agents the characters declare, which only the host runs. */
+  private agents: ReadonlyMap<string, NonNullable<CharacterSnapshot['agent']>>;
   /** The programs the characters declare, which only the host runs. */
   private programs: ReadonlyMap<string, string>;
 
@@ -32,6 +34,7 @@ export class LocalSimulation implements PlayerSource {
   ) {
     this.sim = new Simulation(result, { now, heard });
     this.programs = programsOf(result);
+    this.agents = agentsOf(result);
     this.startYaw = this.sim.view.yaw;
     this.previous = this.sim.player.state;
   }
@@ -84,6 +87,7 @@ export class LocalSimulation implements PlayerSource {
     const view = this.sim.view;
     this.sim = new Simulation(result, { now: this.now, heard: this.heard, playerAt: { x, y, z } });
     this.programs = programsOf(result);
+    this.agents = agentsOf(result);
     this.sim.view = view;
     this.previous = this.sim.player.state;
     this.previousCharacters = new Map();
@@ -106,6 +110,8 @@ export class LocalSimulation implements PlayerSource {
         speech: c.speech,
         controlled: false,
         action: this.sim.agents.perceive(c.id).action?.kind ?? null,
+        // Without the host no agent runs (D-012).
+        agent: this.agents.get(c.id) ?? null,
         // Without the host no program runs (D-010).
         program: this.programs.has(c.id)
           ? { file: this.programs.get(c.id)!, state: 'stopped' as const }
@@ -131,4 +137,27 @@ export class LocalSimulation implements PlayerSource {
 
 function programsOf(result: ComposeResult): ReadonlyMap<string, string> {
   return new Map(result.characters.flatMap((c) => (c.program ? [[c.id, c.program] as const] : [])));
+}
+
+function agentsOf(
+  result: ComposeResult,
+): ReadonlyMap<string, NonNullable<CharacterSnapshot['agent']>> {
+  return new Map(
+    result.characters.flatMap((c) =>
+      c.agent
+        ? [
+            [
+              c.id,
+              {
+                mode: c.agent.mode,
+                brain: c.agent.cli ?? c.agent.provider ?? 'fake',
+                model: c.agent.model ?? null,
+                state: 'stopped' as const,
+                last_ms: null,
+              },
+            ] as const,
+          ]
+        : [],
+    ),
+  );
 }
