@@ -91,7 +91,8 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 
 ### DEBUG-001 — Overlay diagnostico
 - **Prima:** a `[manuale]` […] per il più vicino, id, nome, controllore (tipo e stato), azione in corso e, se ha un programma, il file e lo stato […].
-- **Dopo:** a `[manuale]` Come prima; se il personaggio più vicino ha un agente: modalità, CLI o fornitore, modello, stato (in attesa dell'LLM, in azione, fermo, in errore) e durata dell'ultima richiesta.
+- **Dopo:**
+- **a** `[manuale]` Come prima; se il personaggio più vicino ha un agente: modalità, CLI o fornitore, modello, stato (in attesa dell'LLM, in azione, fermo, in errore) e durata dell'ultima richiesta.
 - **Motivo:** la latenza dell'LLM è la prima cosa da guardare quando un agente sembra non rispondere.
 
 ## Requisiti RIMOSSI
