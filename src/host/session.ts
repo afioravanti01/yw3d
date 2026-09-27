@@ -419,6 +419,7 @@ export class HostSession {
     this.runtimes.set(id, runtime);
     this.attachController(id, runtime);
     this.terminal.line(`${PREFIX}  [${id}] agent started: ${describeAgent(agent)}`);
+    if (brain.warning) this.terminal.line(`${PREFIX}  [${id}] ${brain.warning}`);
     this.controllers.push({
       characterId: id,
       stop: () => {

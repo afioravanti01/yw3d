@@ -8,6 +8,8 @@ import type { ContextInput } from './context';
 export interface Brain {
   /** How the terminal and the overlay name it, e.g. `claude` or `anthropic api`. */
   readonly name: string;
+  /** Something the author should know about its configuration, said once at the start. */
+  readonly warning?: string;
   think(request: BrainRequest, signal: AbortSignal): Promise<unknown>;
 }
 

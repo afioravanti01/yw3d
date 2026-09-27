@@ -137,7 +137,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Sezione `agents` del file del mondo con `conversation_turns` (predefinito 12); battute contate in entrambi i sensi e azzerate quando il giocatore interviene; turni rimanenti nella richiesta, con l'invito a chiudere quando ne restano due; istruzioni: parlare con qualcuno senza tornare a riferire.
   - Fatto quando: test del runtime e dello schema verdi; un dialogo di 12 battute tra Marta e Anselmo dal vivo.
 
-- [ ] **T8.08** Cervelli Codex e opencode
+- [x] **T8.08** Cervelli Codex e opencode
   - Req: AGENT-001 · Dip: T8.07
   - `brains/codex.ts`, `brains/opencode.ts` secondo la tabella «Cervelli».
   - Fatto quando: test con CLI finte verdi; Codex provato dal vivo dall'utente.
@@ -182,6 +182,8 @@ Esiti di T8.01 (2026-09-27): opzioni lette dall'aiuto delle versioni installate 
 | opencode 2.0.18 | `opencode run --agent plan <messaggio>` | `-m provider/modello` | variante del modello `#…`, solo con un modello indicato (non provato) | nessuna: il JSON si estrae dal testo (arriva anche in un blocco di codice) | agente `plan`, senza strumenti di modifica | ✓ 22,6 s con l'agente predefinito, 3,5 s con `plan` (modello `longcat-2.5-preview-free`); una volta un'azione inesistente (`move`) |
 | Anthropic API | `POST /v1/messages` | `model` | da definire in T8.09 | strumento obbligato con lo schema | — | non provata: nessuna chiave nell'ambiente |
 | Compatibile OpenAI | `POST <indirizzo>/chat/completions` | `model` | `reasoning_effort` | `response_format` `json_schema`, o estrazione dal testo | — | non provata: nessuna chiave nell'ambiente |
+
+In T8.08, con il contesto vero della valle e la domanda «Cosa vedi? E poi accompagnami al laghetto.»: Codex (effort `low`) 10,2 s, risposta con nomi, direzioni, distanze e `walk_to player`; opencode (modello predefinito `longcat-2.5-preview-free`) 43,3 s, risposta valida ma lenta, vicina al tempo limite di 60 s.
 
 Osservazioni: le istruzioni devono elencare le azioni ammesse (opencode ha inventato `move`); con il modello predefinito di Claude Code una richiesta costa circa 5 centesimi, quindi la guida consiglierà un modello più economico per gli agenti. Nel `PATH` di questa macchina c'è anche una Codex 0.125.0 installata con npm (`/usr/local/bin/codex`), trovata prima della 0.157.1 in `~/.local/bin`: l'host usa la CLI del `PATH`, quindi va tolta o messa dopo.
 

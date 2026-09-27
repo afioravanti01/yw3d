@@ -1,7 +1,9 @@
 import type { AgentDecl } from '../../../core/yaml/worldFile';
 import { BrainError, type Brain } from '../brain';
 import { ClaudeBrain } from './claude';
+import { CodexBrain } from './codex';
 import { FakeBrain } from './fake';
+import { OpencodeBrain } from './opencode';
 
 /** The brain of an agent, from its configuration (plan F08 P2). */
 export function createBrain(agent: AgentDecl, env?: NodeJS.ProcessEnv): Brain {
@@ -10,7 +12,8 @@ export function createBrain(agent: AgentDecl, env?: NodeJS.ProcessEnv): Brain {
       return new FakeBrain();
     case 'headless':
       if (agent.cli === 'claude') return new ClaudeBrain(agent, env);
-      throw new BrainError(`the ${agent.cli} agents are not available yet`);
+      if (agent.cli === 'codex') return new CodexBrain(agent, env);
+      return new OpencodeBrain(agent, env);
     default:
       throw new BrainError(`the ${agent.mode} agents are not available yet`);
   }
