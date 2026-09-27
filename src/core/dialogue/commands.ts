@@ -19,7 +19,7 @@ export const HELP = [
   '**The console**',
   '- Write a message and press Enter: the characters within 16 blocks of you hear it.',
   '- Shift+Enter starts a new line of the same message; Markdown works (`**bold**`, `*italics*`, lists).',
-  '- `@name message`: to one character, wherever it is (id or name; Tab completes it).',
+  '- `@name message`: to one character within 16 blocks of you (id or name; Tab completes it).',
   '- Esc goes back to the game; the × at the top of the console reduces it.',
   '- `/world`: the characters and the player where they are now, the places and the structures.',
   '- `/help`: this help.',

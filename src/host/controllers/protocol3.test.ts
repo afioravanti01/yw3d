@@ -147,7 +147,7 @@ describe('controller protocol, version 3', () => {
     expect(voice.sent.at(-1)).toMatchObject({ type: 'error' });
   });
 
-  it('PROTO-002.b: sentences carry yes or no; a message with @ reaches a controller anywhere; say may have an addressee', async () => {
+  it('PROTO-002.b: sentences carry yes or no; a message with @ reaches only a controller nearby; say may have an addressee', async () => {
     const { s } = await session();
     const marta = client(s);
     marta.say({ type: 'control', character: 'marta' });
@@ -162,18 +162,24 @@ describe('controller protocol, version 3', () => {
       yes_no: 'yes',
       mentions: null,
     });
-    // Marta walks far away; a message with @ still reaches her.
-    marta.say({ type: 'walk_to', id: 'w', x: 60, z: 60 });
-    run(s, 30);
-    const far = s.agents!.stateOf('marta')!;
-    const p = s.agents!.stateOf('player')!;
-    expect(Math.hypot(far.x - p.x, far.z - p.z)).toBeGreaterThan(16);
     s.playerSays('@Marta torna al pozzo vecchio');
     expect(marta.of('heard').at(-1)).toMatchObject({
       to: 'marta',
       mentions: 'pozzo',
       yes_no: null,
     });
+    // Marta walks far away: a message with @ does not reach her any more (A7.5).
+    marta.say({ type: 'walk_to', id: 'w', x: 60, z: 60 });
+    run(s, 30);
+    const far = s.agents!.stateOf('marta')!;
+    const p = s.agents!.stateOf('player')!;
+    expect(Math.hypot(far.x - p.x, far.z - p.z)).toBeGreaterThan(16);
+    const heardBefore = marta.of('heard').length;
+    expect(s.playerSays('@Marta torna qui')).toEqual({
+      ok: false,
+      error: 'Personaggio non in prossimità',
+    });
+    expect(marta.of('heard')).toHaveLength(heardBefore);
     // A character speaks to another one, far away, and to the player.
     const lines: string[] = [];
     s.listen((line) => lines.push(`${line.from}→${line.to}: ${line.text}`));

@@ -71,13 +71,14 @@ describe('the console of the host', () => {
     session.attachController('lontana', { event: (_, e) => far.push(e), perception: () => {} });
     type('Buongiorno!');
     type('@marta come stai?');
-    type('@Lontana torna qui');
     expect(heard).toEqual([
       expect.objectContaining({ type: 'heard', from: 'player', text: 'Buongiorno!', to: null }),
       expect.objectContaining({ type: 'heard', from: 'player', text: 'come stai?', to: 'marta' }),
-      expect.objectContaining({ type: 'heard', text: 'torna qui', to: 'lontana' }),
     ]);
-    expect(far).toEqual([expect.objectContaining({ text: 'torna qui', to: 'lontana' })]);
+    // Lontana is 40 blocks away: only characters nearby can be spoken to (A7.5).
+    type('@Lontana torna qui');
+    expect(lines.at(-1)).toBe('yw3d  cannot say it: Personaggio non in prossimità');
+    expect(far).toEqual([]);
     type('@nessuno ciao');
     expect(lines.at(-1)).toBe(
       'yw3d  cannot say it: no character is called "nessuno"; the characters are: Tobia (tobia), Marta (marta), Lontana (lontana)',
@@ -90,7 +91,7 @@ describe('the console of the host', () => {
     expect(lines).toContain('yw3d  Characters');
     type('/vola');
     expect(lines.at(-1)).toBe('yw3d  unknown command "/vola": write /help');
-    expect(heard).toHaveLength(3);
+    expect(heard).toHaveLength(2);
   });
 
   it('DIALOG-004.c: the console only on an interactive terminal; a pending question takes the next line', async () => {

@@ -38,6 +38,9 @@ export interface SpokenLine {
   readonly time: number;
 }
 
+/** The answer when the addressee of the player is not within 16 blocks (A7.5). */
+export const NOT_NEARBY = 'Personaggio non in prossimità';
+
 export type SayResult =
   { readonly ok: true; readonly line: SpokenLine } | { readonly ok: false; readonly error: string };
 
@@ -151,8 +154,8 @@ export class Simulation {
 
   /**
    * The player says a message (DIALOG-001.b–c, DIALOG-005.d): to the character named by `@` at
-   * the start, or given by the channel, or to nobody. The addressee gets it wherever it is; the
-   * other characters within 16 blocks of the player hear it too.
+   * the start, or given by the channel, or to nobody. The characters within 16 blocks of the
+   * player hear it; an addressee farther away does not, and the message is refused (A7.5).
    */
   playerSays(text: string, options: { readonly to?: string | null } = {}): SayResult {
     let body = text.trim();
@@ -174,8 +177,12 @@ export class Simulation {
     const hearers = this.agents.ids.flatMap((id) => {
       const s = this.agents.stateOf(id)!;
       const distance = Math.hypot(s.x - p.x, s.y - p.y, s.z - p.z);
-      return distance <= HEARING_DISTANCE || id === to ? [{ id, distance }] : [];
+      return distance <= HEARING_DISTANCE ? [{ id, distance }] : [];
     });
+    // Only a character near the player can be spoken to (A7.5).
+    if (to !== null && !hearers.some((h) => h.id === to)) {
+      return { ok: false, error: NOT_NEARBY };
+    }
     // The message is in the log before the replies it causes.
     this.playerSpeech = { text: body, until: this.time + sayDuration(body) };
     const line = this.spoken({ from: PLAYER_ID, to, text: body });

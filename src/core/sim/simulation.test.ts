@@ -40,7 +40,7 @@ function sink() {
 }
 
 describe('the shared simulation', () => {
-  it('DIALOG-001.b, DIALOG-002.a: without @ the characters within 16 blocks hear it; with @ the addressee gets it anywhere', () => {
+  it('DIALOG-001.b, DIALOG-002.a: without @ the characters within 16 blocks hear it; with @ only a character within 16 blocks, else «Personaggio non in prossimità»', () => {
     const lines: SpokenLine[] = [];
     const sim = simulation({ heard: (line) => lines.push(line) });
     sim.step();
@@ -59,19 +59,21 @@ describe('the shared simulation', () => {
     ]);
     expect(lontano.events).toEqual([]);
     expect(sim.playerSaying).toBe('Buongiorno a tutti!');
-    // With @: the addressee, 85 blocks away, and the characters near the player.
-    sim.playerSays('@lontano vieni qui!');
-    expect(lontano.events).toEqual([
-      expect.objectContaining({ type: 'heard', from: 'player', text: 'vieni qui!', to: 'lontano' }),
-    ]);
-    expect((lontano.events[0] as { distance: number }).distance).toBeGreaterThan(80);
-    expect(marta.events.at(-1)).toMatchObject({ text: 'vieni qui!', to: 'lontano' });
+    // With @: only a character near the player; Lontano, 85 blocks away, is refused (A7.5).
+    expect(sim.playerSays('@lontano vieni qui!')).toEqual({
+      ok: false,
+      error: 'Personaggio non in prossimità',
+    });
+    expect(lontano.events).toEqual([]);
+    sim.playerSays('@marta vieni qui!');
+    expect(marta.events.at(-1)).toMatchObject({ text: 'vieni qui!', to: 'marta' });
+    expect(sim.playerSays('ciao', { to: 'lontano' })).toMatchObject({ ok: false });
     // Every message of the world reaches the log, also far from the player.
     sim.agents.request('lontano', { kind: 'say', id: 's1', text: 'Arrivo!' });
     sim.step();
     expect(lines.map((l) => [l.fromName, l.toName, l.text])).toEqual([
       ['Ada', null, 'Buongiorno a tutti!'],
-      ['Ada', 'Lontano', 'vieni qui!'],
+      ['Ada', 'Marta', 'vieni qui!'],
       ['Lontano', null, 'Arrivo!'],
     ]);
     // 1 to 500 characters.
