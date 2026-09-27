@@ -141,6 +141,9 @@ export interface CharacterView {
   readonly speech: string | null;
 }
 
+/** How fast a character steps off the edge of a step, as a fraction of walking (CHAR-001.e). */
+const EDGE_STEP = 0.15;
+
 export class AgentWorld {
   /** Simulated seconds since the start. */
   time = 0;
@@ -214,7 +217,10 @@ export class AgentWorld {
    */
   step(): void {
     for (const agent of this.agents.values()) {
-      agent.character.entity.intent = this.intentOf(agent);
+      const intent = this.intentOf(agent);
+      // A walk_to places the character itself; otherwise, standing still, it may step off an edge.
+      const walking = agent.action?.request.kind === 'walk_to';
+      agent.character.entity.intent = intent === IDLE && !walking ? this.offTheEdge(agent) : intent;
     }
     this.physics.step();
     this.time += STEP_SECONDS;
@@ -433,6 +439,34 @@ export class AgentWorld {
       return this.walk(agent, running.follower.update(state, this.time));
     }
     return IDLE;
+  }
+
+  /**
+   * A character standing still only on the edge of a higher step (its box is wider than a
+   * column) steps away from it, slowly, until it comes down on its own column (CHAR-001.e).
+   */
+  private offTheEdge(agent: Agent): Intent {
+    const { entity } = agent.character;
+    const state = entity.state;
+    if (!state.onGround || state.submerged > 0) return IDLE;
+    const below = Math.round(state.y) - 1;
+    const cx = Math.floor(state.x);
+    const cz = Math.floor(state.z);
+    if (this.physics.isSolid(cx, below, cz)) return IDLE;
+    const half = entity.size.width / 2;
+    let dx = 0;
+    let dz = 0;
+    for (let x = Math.floor(state.x - half); x <= Math.floor(state.x + half - 1e-7); x++) {
+      for (let z = Math.floor(state.z - half); z <= Math.floor(state.z + half - 1e-7); z++) {
+        if (this.physics.isSolid(x, below, z)) {
+          dx += cx - x;
+          dz += cz - z;
+        }
+      }
+    }
+    const length = Math.hypot(dx, dz);
+    if (length === 0) return IDLE;
+    return { ...IDLE, moveX: (dx / length) * EDGE_STEP, moveZ: (dz / length) * EDGE_STEP };
   }
 
   /** Faces the direction of the movement. */

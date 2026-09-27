@@ -31,10 +31,12 @@ function setup(
   player?: [number, number],
   navigator?: Navigator,
   goals?: ReadonlyMap<string, Goal>,
+  build?: (world: World) => void,
 ) {
   const world = new World({ x: 128, y: 32, z: 128 });
   for (let z = 0; z < 128; z++)
     for (let x = 0; x < 128; x++) for (let y = 0; y < 10; y++) world.setBlock(x, y, z, STONE);
+  build?.(world);
   const physics = new PhysicsWorld(world, registry);
   const finder = new Pathfinder(new NavGrid(world, registry.solid));
   const characters = spawnCharacters(physics, starts);
@@ -215,5 +217,38 @@ describe('perception and events', () => {
     far.agents.step();
     expect(far.agents.interact()).toBeUndefined();
     expect(far.events).toEqual([]);
+  });
+});
+
+describe('standing', () => {
+  it('CHAR-001.e: a character standing only on the edge of a higher step comes down on its own column', () => {
+    const { run, state } = setup(
+      [start('a', 20.5, 20.5), start('b', 40.5, 40.5)],
+      undefined,
+      undefined,
+      undefined,
+      (world) => {
+        // A step one block high west of a (column 19), and one at the north-east corner of b.
+        for (let z = 0; z < 128; z++) world.setBlock(19, 10, z, STONE);
+        world.setBlock(41, 10, 39, STONE);
+      },
+    );
+    run(0.05);
+    // At the start both rest on the edge of the step, one block up.
+    expect(state('a').y).toBe(11);
+    expect(state('b').y).toBe(11);
+    run(2);
+    expect(state('a').y).toBe(10);
+    expect(state('a').x).toBeGreaterThan(20.5);
+    expect(state('a').x).toBeLessThan(20.75);
+    expect(state('a').z).toBeCloseTo(20.5, 6);
+    expect(state('b').y).toBe(10);
+    expect(state('b').x).toBeLessThan(40.5);
+    expect(state('b').z).toBeGreaterThan(40.5);
+    expect(Math.hypot(state('b').x - 40.5, state('b').z - 40.5)).toBeLessThan(0.3);
+    // Then it stays where it is.
+    const x = state('a').x;
+    run(1);
+    expect(state('a').x).toBe(x);
   });
 });

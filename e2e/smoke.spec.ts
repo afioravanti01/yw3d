@@ -347,7 +347,9 @@ test('YAML-009.c: the title of the page is the name of the world', async ({ page
   await expect(page).toHaveTitle('La valle');
 });
 
-test('CHAR-001.d: without the host the characters stand where they start', async ({ page }) => {
+test('CHAR-001.d, CHAR-001.e: without the host the characters stand where they start, off the edge of a step', async ({
+  page,
+}) => {
   await open(page, '?world=test-characters');
   await page.waitForTimeout(500);
   const characters = await page.evaluate(() =>
@@ -357,10 +359,16 @@ test('CHAR-001.d: without the host the characters stand where they start', async
       }
     ).__yw3d.characters(),
   );
-  expect(characters.map((c) => [c.id, c.x, c.z, c.speech])).toEqual([
-    ['anna', 60.5, 60.5, null],
-    ['bruno', 70.5, 64.5, null],
+  expect(characters.map((c) => [c.id, c.speech])).toEqual([
+    ['anna', null],
+    ['bruno', null],
   ]);
+  // Bruno starts on the edge of a step: he steps off it by a tenth of a block (A9.5).
+  const starts = { anna: [60.5, 60.5], bruno: [70.5, 64.5] } as Record<string, [number, number]>;
+  for (const c of characters) {
+    const [x, z] = starts[c.id]!;
+    expect(Math.hypot(c.x - x, c.z - z)).toBeLessThan(0.25);
+  }
 });
 
 test('YAML-006.a: the default world loads without parameters, another one with ?world=', async ({

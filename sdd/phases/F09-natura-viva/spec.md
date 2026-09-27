@@ -120,6 +120,12 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **b** `[manuale]` Il frame rate medio è di almeno 60 fps durante 30 s di volo a quota media sopra il mondo, con il ciclo del giorno, il vento sulle foglie e l'acqua animata, a qualunque ora.
 - **Motivo:** ombre che si muovono e animazioni hanno un costo.
 
+### CHAR-001 — Personaggi nel file del mondo (emendamento A9.5)
+- **Prima:** criteri a–d; nessuno dice dove si ferma un personaggio accanto a un gradino.
+- **Dopo:** a–d invariati; si aggiunge:
+- **e** `[unit]` Un personaggio fermo non resta appoggiato solo al bordo di un gradino: se sotto il suo centro non c'è appoggio, si scosta di quel poco che basta per scendere sulla propria colonna. Vale alla partenza e ogni volta che si ferma; il giocatore resta libero di stare sui bordi.
+- **Motivo:** largo 1,2 blocchi, un personaggio al centro di una colonna sporge di un decimo di blocco su quelle vicine; accanto a un gradino più alto restava sospeso su quella striscia, con i piedi in aria.
+
 ## Requisiti RIMOSSI
 Nessuno.
 
@@ -141,3 +147,4 @@ Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 | A9.2 | 2026-09-27 | TIME-003.a, Q5 | Le ombre non si muovono con continuità: la direzione della luce cambia a scatti, ogni decimo del giorno (6 minuti con il giorno di un'ora); i colori della luce e del cielo restano continui | Nella prova d'uso le ombre aggiornate ogni 2 s «scattano», quelle aggiornate a ogni frame creano «un continuo movimento che rende la scena strana» | Utente (proposta diretta nella prova d'uso di T9.05) |
 | A9.3 | 2026-09-27 | RENDER-009.a | Rimosso: niente vento sulle foglie | Nella prova il movimento non si vedeva; l'utente: «non mi interessa questo movimento delle foglie e potrebbe appesantire molto la scena» | Utente (richiesta diretta) |
 | A9.4 | 2026-09-27 | RENDER-009.b, RENDER-007 | Rimosso: niente acqua animata; RENDER-009 resta senza criteri | L'utente: «salta l'acqua» | Utente (richiesta diretta) |
+| A9.5 | 2026-09-27 | CHAR-001.e (nuovo) | Un personaggio fermo appoggiato solo al bordo di un gradino si scosta e scende sulla propria colonna | L'utente: Anselmo e Nina «non si poggiano sul suolo ma sono accanto a uno scalino in aria» | Utente («si approvo A9.5») |

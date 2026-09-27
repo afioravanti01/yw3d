@@ -129,6 +129,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Istruzioni da animale (P13); la scimmietta autonoma in `examples/agenti`; guida `docs/agenti.md`.
   - Fatto quando: test di CHAR-003.c verdi; dal vivo la scimmietta si sposta da sola a ogni intervallo.
 
+- [x] **T9.14+** Personaggi che non restano sul bordo di un gradino
+  - Req: CHAR-001 · Dip: T9.13
+  - In `AgentWorld`, un personaggio senza azioni, a terra e senza appoggio sotto il centro riceve un'intenzione lieve lontano dal gradino, finché non scende (A9.5).
+  - Fatto quando: test di CHAR-001.e verde.
+
 - [ ] **T9.10** Test end-to-end
   - Req: TIME-001, TIME-002, CHAR-003 · Dip: T9.04, T9.06, T9.07, T9.08, T9.13
   - Suite completa nei due progetti.

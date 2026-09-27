@@ -152,7 +152,7 @@ characters:
     description: >-
       Contadina degli orti di ponente. Coltiva zucchine, pomodori e fagioli, conosce le stagioni
       della semina e del raccolto, e porta la verdura in piazza il sabato. Allegra e chiacchierona.
-    at: [174, 104]
+    at: [176, 104]
     appearance: { shirt: '#6f7f3a', hair: '#b07a3a' }
     agent: { mode: fake }
   # The wise man of the village: few words, full of meaning. Ask him anything: «@Anselmo cosa
@@ -162,7 +162,7 @@ characters:
     description: >-
       Il saggio del villaggio. Vecchio, lento nei gesti e nelle parole, ha visto passare molte
       stagioni. Tutti vanno da lui quando non sanno che strada prendere.
-    at: [170, 98]
+    at: [170, 99]
     appearance: { shirt: '#5a4a6e', trousers: '#3b3346', hair: '#e8e4dc', skin: '#d9a47a' }
     agent:
       mode: headless

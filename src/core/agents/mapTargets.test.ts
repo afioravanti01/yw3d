@@ -53,7 +53,11 @@ function setup(change?: (world: World) => void) {
   };
   const state = (id: string) => characters.find((c) => c.start.id === id)!.entity.state;
   const outcome = (id: string) => events.find(([, e]) => 'id' in e && e.id === id)?.[1];
-  return { result, world, agents, events, run, state, outcome, finder };
+  /** Runs until the action ends: standing still, a character may then step off an edge (A9.5). */
+  const runUntil = (id: string, seconds: number) => {
+    for (let i = 0; i < Math.round(seconds * 60) && !outcome(id); i++) agents.step();
+  };
+  return { result, world, agents, events, run, runUntil, state, outcome, finder };
 }
 
 /** Arrival within 1 block of a corner of the column: at most 1 + √2 / 2 from its center. */
@@ -63,9 +67,9 @@ const columnsOf = (goal: Goal | undefined) => (goal as Extract<Goal, { kind: 'co
 
 describe('elements of the map as destinations', () => {
   it('MAP-003.a, PROTO-001.b: walk_to and look_at take any id of the map; follow only who moves', () => {
-    const { agents, run, state, outcome } = setup();
+    const { agents, run, runUntil, state, outcome } = setup();
     agents.request('tobia', { kind: 'walk_to', id: 'w1', target: 'pozzo' });
-    run(20);
+    runUntil('w1', 20);
     expect(outcome('w1')).toEqual({ type: 'action_done', id: 'w1' });
     expect(Math.hypot(state('tobia').x - 30.5, state('tobia').z - 30.5)).toBeLessThanOrEqual(1);
     // look_at an extended element looks at the center of its footprint.
@@ -101,9 +105,9 @@ describe('elements of the map as destinations', () => {
   });
 
   it('MAP-003.b: towards a house the character arrives in front of the door, outside', () => {
-    const { agents, run, state, outcome, result } = setup();
+    const { agents, runUntil, state, outcome, result } = setup();
     agents.request('tobia', { kind: 'walk_to', id: 'w', target: 'capanno', speed: 3 });
-    run(40);
+    runUntil('w', 40);
     expect(outcome('w')).toEqual({ type: 'action_done', id: 'w' });
     const door = columnsOf(result.goals.get('capanno'));
     const s = state('tobia');
@@ -120,7 +124,7 @@ describe('elements of the map as destinations', () => {
   });
 
   it('MAP-003.b: towards a pond the character arrives on the shore, at the nearest place along the way', () => {
-    const { agents, run, state, outcome, result, finder } = setup();
+    const { agents, runUntil, state, outcome, result, finder } = setup();
     const shore = columnsOf(result.goals.get('laghetto'));
     for (const [id, start] of [
       ['tobia', 'west'],
@@ -136,7 +140,7 @@ describe('elements of the map as destinations', () => {
       );
       const region = result.goals.get('laghetto')!;
       expect(region.kind).toBe('columns');
-      run(40);
+      runUntil(`to-${start}`, 40);
       expect(outcome(`to-${start}`)).toEqual({ type: 'action_done', id: `to-${start}` });
       const s = state(id);
       expect(s.submerged).toBe(0);
