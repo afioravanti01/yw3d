@@ -59,6 +59,8 @@ export type AgentEvent =
       readonly to?: string | null;
       /** The element of the map it names, when it names exactly one (DIALOG-003). */
       readonly mentions?: string | null;
+      /** Whether it says yes or no (DIALOG-003.e). */
+      readonly yes_no?: 'yes' | 'no' | null;
     }
   | { readonly type: 'interacted'; readonly by: 'player' }
   | { readonly type: 'action_done'; readonly id: string }

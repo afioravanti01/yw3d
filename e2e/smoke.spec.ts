@@ -178,7 +178,9 @@ test('DIALOG-002.a: the log shows the sentences the player hears, with who speak
   await page.keyboard.press('Enter');
   await page.keyboard.type('@nessuno ciao');
   await page.keyboard.press('Enter');
-  await expect.poll(() => talk(page, 'chatLines')).toContain('there is no character "nessuno"');
+  await expect
+    .poll(() => talk(page, 'chatLines'))
+    .toContain('no character is called "nessuno"; the characters are: Anna (anna), Bruno (bruno)');
   await expect(page.locator('#chat li').first()).toBeVisible();
 });
 

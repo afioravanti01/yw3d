@@ -10,13 +10,14 @@ import {
 import { createDefaultRegistry } from '../blocks/builtin';
 import { spawnCharacters } from '../characters/characters';
 import type { ComposeResult } from '../compose/composeWorld';
-import { understandElement } from '../dialogue/understand';
+import { address } from '../dialogue/address';
+import { understandElement, understandYesNo } from '../dialogue/understand';
 import { PLAYER_ID } from '../map/worldMap';
 import { NavGrid } from '../nav/navGrid';
 import { Pathfinder } from '../nav/pathfinding';
 import { IDLE, type Intent } from '../physics/entity';
 import { PhysicsWorld, type EntityHandle } from '../physics/physicsWorld';
-import { EYE_HEIGHT, PLAYER_SIZE, spawnAtStart, viewDirection } from '../player/player';
+import { PLAYER_SIZE, spawnAtStart } from '../player/player';
 import type { World } from '../world/world';
 
 /**
@@ -37,18 +38,13 @@ export interface SpokenLine {
   readonly time: number;
 }
 
-/** A character is looked at within this angle from the center of the view (DIALOG-001.c). */
-export const LOOK_ANGLE = (10 * Math.PI) / 180;
-/** Height of the center of a character above its feet, blocks: the middle of its body. */
-const BODY_CENTER = PLAYER_SIZE.height / 2;
-
 export type SayResult =
   { readonly ok: true; readonly line: SpokenLine } | { readonly ok: false; readonly error: string };
 
 export interface SimulationOptions {
   /** Where the player is: kept across reloads (HOST-003.a); the start of the file otherwise. */
   readonly playerAt?: { readonly x: number; readonly y: number; readonly z: number };
-  /** The sentences the player hears, as they are said (DIALOG-002, DIALOG-004). */
+  /** Every message of the world, as it is said (DIALOG-002.a, DIALOG-004.a). */
   readonly heard?: (line: SpokenLine) => void;
   /** Clock for the duration of a step, e.g. `performance.now`. */
   readonly now?: () => number;
@@ -70,6 +66,8 @@ export class Simulation {
   private readonly sinks = new Map<string, AgentListener>();
   private readonly names: ReadonlyMap<string, string>;
   private readonly elements: readonly { id: string; name: string }[];
+  /** The characters, for the addressee of the player's messages (DIALOG-005.d). */
+  readonly characters: readonly { id: string; name: string }[];
 
   constructor(
     readonly result: ComposeResult & { readonly world: World },
@@ -89,6 +87,7 @@ export class Simulation {
     const map = result.map!;
     this.names = new Map(map.entries.map((e) => [e.id, e.name]));
     this.elements = map.entries.map((e) => ({ id: e.id, name: e.name }));
+    this.characters = result.characters.map((c) => ({ id: c.id, name: c.name }));
     const characters = spawnCharacters(this.physics, result.characters);
     const finder = new Pathfinder(new NavGrid(result.world, registry.solid));
     this.agents = new AgentWorld(
@@ -101,7 +100,7 @@ export class Simulation {
           this.sinks.get(id)?.event(id, this.enrich(event));
         },
         perception: (id, perception) => this.sinks.get(id)?.perception(id, this.named(perception)),
-        said: (id, text) => this.spoken({ from: id, to: null, text }, this.agents.stateOf(id)!),
+        said: (id, text) => this.spoken({ from: id, to: null, text }),
       },
       result.goals,
     );
@@ -151,83 +150,44 @@ export class Simulation {
   }
 
   /**
-   * The player says a sentence (DIALOG-001.b–c): to the character named by `@id` at the
-   * start, or given by the channel, or looked at; heard by the characters within 16 blocks.
+   * The player says a message (DIALOG-001.b–c, DIALOG-005.d): to the character named by `@` at
+   * the start, or given by the channel, or to nobody. The addressee gets it wherever it is; the
+   * other characters within 16 blocks of the player hear it too.
    */
-  playerSays(
-    text: string,
-    options: { readonly to?: string | null; readonly lookAt?: boolean } = {},
-  ): SayResult {
+  playerSays(text: string, options: { readonly to?: string | null } = {}): SayResult {
     let body = text.trim();
     let to = options.to ?? null;
-    const addressed = /^@([^\s]+)\s*(.*)$/s.exec(body);
-    if (addressed) {
-      to = addressed[1]!;
-      body = addressed[2]!.trim();
-    }
-    if (to !== null && !this.agents.ids.includes(to)) {
-      return { ok: false, error: `there is no character "${to}"` };
+    if (to !== null) {
+      if (!this.agents.ids.includes(to)) {
+        return { ok: false, error: `there is no character "${to}"` };
+      }
+    } else {
+      const addressed = address(body, this.characters);
+      if (!addressed.ok) return addressed;
+      to = addressed.to;
+      body = addressed.body;
     }
     if (body.length === 0 || body.length > MAX_SAY_LENGTH) {
-      return { ok: false, error: `a sentence has 1 to ${MAX_SAY_LENGTH} characters` };
+      return { ok: false, error: `a message has 1 to ${MAX_SAY_LENGTH} characters` };
     }
-    if (to === null && options.lookAt) to = this.lookedAt() ?? null;
     const p = this.player.state;
     const hearers = this.agents.ids.flatMap((id) => {
       const s = this.agents.stateOf(id)!;
       const distance = Math.hypot(s.x - p.x, s.y - p.y, s.z - p.z);
-      return distance <= HEARING_DISTANCE ? [{ id, distance }] : [];
+      return distance <= HEARING_DISTANCE || id === to ? [{ id, distance }] : [];
     });
-    // The sentence is in the log before the replies it causes.
+    // The message is in the log before the replies it causes.
     this.playerSpeech = { text: body, until: this.time + sayDuration(body) };
-    const line = this.spoken({ from: PLAYER_ID, to, text: body }, p);
-    const mentions = understandElement(body, this.elements) ?? null;
+    const line = this.spoken({ from: PLAYER_ID, to, text: body });
     for (const { id, distance } of hearers) {
-      const event: AgentEvent = {
-        type: 'heard',
-        from: PLAYER_ID,
-        text: body,
-        distance,
-        to,
-        mentions,
-      };
-      this.sinks.get(id)?.event(id, event);
+      const event: AgentEvent = { type: 'heard', from: PLAYER_ID, text: body, distance, to };
+      this.sinks.get(id)?.event(id, this.enrich(event));
     }
     return { ok: true, line };
   }
 
-  /**
-   * The character at the center of the view, within 10° and 16 blocks of the eyes, the nearest
-   * to the center when there are more (DIALOG-001.c).
-   */
-  lookedAt(): string | undefined {
-    const p = this.player.state;
-    const eye = [p.x, p.y + EYE_HEIGHT, p.z] as const;
-    const [dx, dy, dz] = viewDirection(this.view.yaw, this.view.pitch);
-    let best: string | undefined;
-    let bestAngle = LOOK_ANGLE;
-    for (const id of this.agents.ids) {
-      const s = this.agents.stateOf(id)!;
-      const vx = s.x - eye[0];
-      const vy = s.y + BODY_CENTER - eye[1];
-      const vz = s.z - eye[2];
-      const distance = Math.hypot(vx, vy, vz);
-      if (distance === 0 || distance > HEARING_DISTANCE) continue;
-      const cos = (vx * dx + vy * dy + vz * dz) / distance;
-      const angle = Math.acos(Math.max(-1, Math.min(1, cos)));
-      if (angle <= bestAngle) {
-        bestAngle = angle;
-        best = id;
-      }
-    }
-    return best;
-  }
-
-  /** A line of the conversation, passed on when the player hears it (DIALOG-002.a). */
-  private spoken(
-    said: { from: string; to: string | null; text: string },
-    at: { x: number; y: number; z: number },
-  ): SpokenLine {
+  /** A line of the conversation, passed on whoever says it and wherever (DIALOG-002.a). */
+  private spoken(said: { from: string; to: string | null; text: string }): SpokenLine {
     const line: SpokenLine = {
       from: said.from,
       fromName: this.names.get(said.from) ?? said.from,
@@ -236,20 +196,21 @@ export class Simulation {
       text: said.text,
       time: this.time,
     };
-    const p = this.player.state;
-    if (Math.hypot(at.x - p.x, at.y - p.y, at.z - p.z) <= HEARING_DISTANCE) {
-      this.options.heard?.(line);
-    }
+    this.options.heard?.(line);
     return line;
   }
 
-  /** Sentences carry the element they name, as in DIALOG-003 (PROTO-002.b). */
+  /**
+   * Sentences carry the element they name and whether they say yes or no, as in DIALOG-003
+   * (PROTO-002.b, DIALOG-003.e).
+   */
   private enrich(event: AgentEvent): AgentEvent {
-    if (event.type !== 'heard' || event.mentions !== undefined) return event;
+    if (event.type !== 'heard') return event;
     return {
       ...event,
       to: event.to ?? null,
       mentions: understandElement(event.text, this.elements) ?? null,
+      yes_no: understandYesNo(event.text) ?? null,
     };
   }
 

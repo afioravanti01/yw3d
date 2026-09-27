@@ -222,21 +222,21 @@ export class HostSession {
     return this.sim?.agents;
   }
 
-  /** A sentence the player hears: to the console and the views (DIALOG-002, DIALOG-004). */
+  /** A message of the world: to the console and the views (DIALOG-002.a, DIALOG-004.a). */
   private heard(line: SpokenLine): void {
     this.options.heard?.(line);
     for (const listener of this.listeners) listener(line);
     this.broadcast({ type: 'line', line });
   }
 
-  /** Hears what the player hears, until the returned function is called (PROTO-007). */
+  /** Hears every message of the world, until the returned function is called (PROTO-007). */
   listen(listener: (line: SpokenLine) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
   /** The player says a sentence (DIALOG-001.b–c), from a view, the console or a client. */
-  playerSays(text: string, options: { to?: string | null; lookAt?: boolean } = {}): SayResult {
+  playerSays(text: string, options: { to?: string | null } = {}): SayResult {
     if (!this.sim) return { ok: false, error: 'there is no world yet' };
     return this.sim.playerSays(text, options);
   }
@@ -427,7 +427,7 @@ export class HostSession {
     }
     // Only the driver speaks as the player (DIALOG-001.a), to whom it looks at or `@id`.
     if (message.type === 'say' && this.roleOf(view) === 'driver') {
-      const said = this.playerSays(message.text, { lookAt: true });
+      const said = this.playerSays(message.text);
       if (!said.ok) view.send({ type: 'say_error', error: said.error });
       return;
     }

@@ -136,7 +136,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - P2: `src/core/behaviors`, `behaviors.test.ts`, PERF-006, lettore di file esterni, `examples/paese`, e2e con comportamenti, `docs/comportamenti.md`; errore per `behaviors` e `behavior` con rimando a `docs/python.md`. Tobia e Nina restano fermi fino a T7.11.
   - Fatto quando: test di YAML-001.a e .f, CHAR-001.a e .c, MAP-001.c, MAP-002.d verdi; `check` ed `e2e` verdi; nessun riferimento ai comportamenti nel codice.
 
-- [ ] **T7.03** Messaggi e destinatari nel core
+- [x] **T7.03** Messaggi e destinatari nel core
   - Req: DIALOG-001, DIALOG-003, DIALOG-005, PROTO-002 · Dip: T7.02
   - `address.ts` (P3), `commands.ts` (P5), consegna nella `Simulation` (P4), `yes_no` nell'evento.
   - Fatto quando: test di DIALOG-001.b–c, DIALOG-003.e, DIALOG-005.d e .f, PROTO-002.b verdi.

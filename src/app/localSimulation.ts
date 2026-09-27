@@ -110,9 +110,9 @@ export class LocalSimulation implements PlayerSource {
     this.sim.interact();
   }
 
-  /** A sentence of the player, to the character looked at or named by `@id` (DIALOG-001). */
+  /** A message of the player, to the character named by `@` if any (DIALOG-001, DIALOG-005). */
   say(text: string): SayResult {
-    return this.sim.playerSays(text, { lookAt: true });
+    return this.sim.playerSays(text);
   }
 
   /** What the player is saying, for its speech bubble (DIALOG-001.d). */

@@ -72,7 +72,9 @@ describe('the console of the host', () => {
       expect.objectContaining({ type: 'heard', from: 'player', text: 'come stai?', to: 'marta' }),
     ]);
     type('@nessuno ciao');
-    expect(lines.at(-1)).toBe('yw3d  cannot say it: there is no character "nessuno"');
+    expect(lines.at(-1)).toBe(
+      'yw3d  cannot say it: no character is called "nessuno"; the characters are: Tobia (tobia), Marta (marta), Lontana (lontana)',
+    );
     expect(heard).toHaveLength(2);
   });
 

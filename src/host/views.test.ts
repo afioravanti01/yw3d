@@ -153,7 +153,7 @@ describe('host simulation and views', () => {
     driver.handle.receive({ type: 'say', text: '@nessuno ciao' });
     expect(driver.last('say_error')).toEqual({
       type: 'say_error',
-      error: 'there is no character "nessuno"',
+      error: 'no character is called "nessuno"; there are no characters in this world',
     });
     expect(spectator.last('say_error')).toBeUndefined();
   });

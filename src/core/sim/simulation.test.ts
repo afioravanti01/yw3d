@@ -40,7 +40,7 @@ function sink() {
 }
 
 describe('the shared simulation', () => {
-  it('DIALOG-001.b: a sentence of the player is heard by the characters within 16 blocks', () => {
+  it('DIALOG-001.b, DIALOG-002.a: without @ the characters within 16 blocks hear it; with @ the addressee gets it anywhere', () => {
     const lines: SpokenLine[] = [];
     const sim = simulation({ heard: (line) => lines.push(line) });
     sim.step();
@@ -48,8 +48,7 @@ describe('the shared simulation', () => {
     const lontano = sink();
     sim.attach('marta', marta.listener);
     sim.attach('lontano', lontano.listener);
-    const said = sim.playerSays('Buongiorno a tutti!');
-    expect(said).toMatchObject({ ok: true });
+    expect(sim.playerSays('Buongiorno a tutti!')).toMatchObject({ ok: true });
     expect(marta.events).toEqual([
       expect.objectContaining({
         type: 'heard',
@@ -59,17 +58,32 @@ describe('the shared simulation', () => {
       }),
     ]);
     expect(lontano.events).toEqual([]);
-    expect(lines.map((l) => [l.fromName, l.text])).toEqual([['Ada', 'Buongiorno a tutti!']]);
     expect(sim.playerSaying).toBe('Buongiorno a tutti!');
+    // With @: the addressee, 85 blocks away, and the characters near the player.
+    sim.playerSays('@lontano vieni qui!');
+    expect(lontano.events).toEqual([
+      expect.objectContaining({ type: 'heard', from: 'player', text: 'vieni qui!', to: 'lontano' }),
+    ]);
+    expect((lontano.events[0] as { distance: number }).distance).toBeGreaterThan(80);
+    expect(marta.events.at(-1)).toMatchObject({ text: 'vieni qui!', to: 'lontano' });
+    // Every message of the world reaches the log, also far from the player.
+    sim.agents.request('lontano', { kind: 'say', id: 's1', text: 'Arrivo!' });
+    sim.step();
+    expect(lines.map((l) => [l.fromName, l.toName, l.text])).toEqual([
+      ['Ada', null, 'Buongiorno a tutti!'],
+      ['Ada', 'Lontano', 'vieni qui!'],
+      ['Lontano', null, 'Arrivo!'],
+    ]);
     // 1 to 500 characters.
     expect(sim.playerSays('   ')).toEqual({
       ok: false,
-      error: 'a sentence has 1 to 500 characters',
+      error: 'a message has 1 to 500 characters',
     });
+    expect(sim.playerSays('@marta').ok).toBe(false);
     expect(sim.playerSays('x'.repeat(501)).ok).toBe(false);
   });
 
-  it('DIALOG-001.c: the addressee is @id, or the character looked at within 10°; an unknown @id is refused', () => {
+  it('DIALOG-001.c: the addressee is only the one of @, by id or name; looking at a character does not count', () => {
     const sim = simulation();
     sim.step();
     const marta = sink();
@@ -78,25 +92,45 @@ describe('the shared simulation', () => {
       ok: true,
       line: { to: 'marta', toName: 'Marta', text: 'ciao' },
     });
-    expect(marta.events.at(-1)).toMatchObject({ type: 'heard', to: 'marta', text: 'ciao' });
+    expect(sim.playerSays('@Màrta, come va?')).toMatchObject({
+      line: { to: 'marta', text: 'come va?' },
+    });
+    expect(marta.events.at(-1)).toMatchObject({ type: 'heard', to: 'marta', text: 'come va?' });
     expect(sim.playerSays('@nessuno ciao')).toEqual({
+      ok: false,
+      error:
+        'no character is called "nessuno"; the characters are: Tobia (tobia), Marta (marta), Lontano (lontano)',
+    });
+    expect(marta.events).toHaveLength(2);
+    // Looking straight at Marta says nothing about the addressee.
+    const p = sim.player.state;
+    const m = sim.agents.stateOf('marta')!;
+    sim.view = { yaw: Math.atan2(-(m.x - p.x), -(m.z - p.z)), pitch: 0 };
+    expect(sim.playerSays('eccoti')).toMatchObject({ line: { to: null } });
+    // A channel may give the addressee (a client of the player).
+    expect(sim.playerSays('ciao', { to: 'marta' })).toMatchObject({ line: { to: 'marta' } });
+    expect(sim.playerSays('ciao', { to: 'nessuno' })).toEqual({
       ok: false,
       error: 'there is no character "nessuno"',
     });
-    expect(marta.events).toHaveLength(1);
-    // Look at the middle of Marta's body, from the eyes of the player.
-    const p = sim.player.state;
-    const m = sim.agents.stateOf('marta')!;
-    const toward = Math.atan2(-(m.x - p.x), -(m.z - p.z));
-    const pitch = Math.atan2(m.y + 1.75 - (p.y + 3.2), Math.hypot(m.x - p.x, m.z - p.z));
-    sim.view = { yaw: toward, pitch };
-    expect(sim.lookedAt()).toBe('marta');
-    expect(sim.playerSays('eccoti', { lookAt: true })).toMatchObject({ line: { to: 'marta' } });
-    sim.view = { yaw: toward + (12 * Math.PI) / 180, pitch };
-    expect(sim.lookedAt()).toBeUndefined();
-    expect(sim.playerSays('eccoti', { lookAt: true })).toMatchObject({ line: { to: null } });
-    // A channel may give the addressee (the console, a client).
-    expect(sim.playerSays('ciao', { to: 'marta' })).toMatchObject({ line: { to: 'marta' } });
+  });
+
+  it('DIALOG-003.e: the event of a sentence says whether it is a yes or a no', () => {
+    const sim = simulation();
+    sim.step();
+    const marta = sink();
+    sim.attach('marta', marta.listener);
+    const yesNo = (text: string) => {
+      sim.playerSays(text);
+      return (marta.events.at(-1) as { yes_no: unknown }).yes_no;
+    };
+    expect(yesNo('@marta sì, certo')).toBe('yes');
+    expect(yesNo('@marta no grazie')).toBe('no');
+    expect(yesNo('@marta forse domani')).toBeNull();
+    // The sentences of the characters too.
+    sim.agents.request('tobia', { kind: 'say', id: 's1', text: 'Va bene!' });
+    sim.step();
+    expect(marta.events.at(-1)).toMatchObject({ from: 'tobia', yes_no: 'yes' });
   });
 
   it('PROTO-002.a, PROTO-002.b: perception names who is near; sentences carry addressee and the element named', () => {
@@ -114,6 +148,7 @@ describe('the shared simulation', () => {
       from: 'player',
       to: 'tobia',
       mentions: 'pozzo',
+      yes_no: null,
     });
     // The sentences of the characters too.
     sim.agents.request('tobia', { kind: 'say', id: 's1', text: 'Tutto bene al pozzo vecchio.' });
