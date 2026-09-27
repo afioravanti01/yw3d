@@ -53,6 +53,10 @@ export type AgentEvent =
       readonly from: string;
       readonly text: string;
       readonly distance: number;
+      /** To whom it was said, if to someone (DIALOG-001.c). */
+      readonly to?: string | null;
+      /** The element of the map it names, when it names exactly one (DIALOG-003). */
+      readonly mentions?: string | null;
     }
   | { readonly type: 'interacted'; readonly by: 'player' }
   | { readonly type: 'action_done'; readonly id: string }
@@ -242,6 +246,11 @@ export class AgentWorld {
       yaw: agent.yaw,
       speech: agent.speech?.text ?? null,
     }));
+  }
+
+  /** State of an entity: the player or a character. */
+  stateOf(id: string): EntityState | undefined {
+    return this.positionOf(id);
   }
 
   private positionOf(id: string): EntityState | undefined {

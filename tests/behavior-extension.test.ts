@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createDefaultBehaviors } from '../src/core/behaviors/builtin';
 import { defineCondition, defineEvent, defineInstruction } from '../src/core/behaviors/registry';
+import { behaviorHarness } from '../src/core/behaviors/testing';
 import { composeWorld } from '../src/core/compose/composeWorld';
 import { TERRAIN_GENERATOR_VERSION } from '../src/core/gen/terrain';
 import { createDefaultStructures } from '../src/core/structures/builtin';
@@ -115,5 +116,41 @@ reactions:
         }),
       ),
     ).toThrow('The behavior instruction "say" is already registered');
+  });
+
+  it('BEHAV-004.f: the new vocabulary runs like the predefined one', () => {
+    const h = behaviorHarness(
+      `characters:
+  - id: tobia
+    name: Tobia
+    at: [20, 20]
+    behavior:
+      memory: { counters: [volte] }
+      routine:
+        - greet: Ciao!
+          times: 2
+        - count: volte
+        - if: { even: volte }
+          then: [{ say: pari }]
+          else: [{ say: dispari }]
+      reactions:
+        - on: { reached: volte, value: 3 }
+          do: [{ say: tre volte }]
+`,
+      { behaviors: extendedBehaviors() },
+    );
+    h.run(20);
+    // The counter reaches 3 during a step; the event is seen at the next one, and interrupts
+    // «dispari», which starts again after the reaction.
+    expect(h.said('tobia').slice(0, 8)).toEqual([
+      'Ciao! Ciao!',
+      'dispari',
+      'Ciao! Ciao!',
+      'pari',
+      'Ciao! Ciao!',
+      'dispari',
+      'tre volte',
+      'dispari',
+    ]);
   });
 });

@@ -202,7 +202,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Sezione `behaviors`, `use` con parametri (P5), comportamenti in file esterni con il lettore (P14), percorsi fuori dalla cartella; `walk_to` con un elenco di mete (A6.1).
   - Fatto quando: test di BEHAV-001.a e BEHAV-006.a–b verdi.
 
-- [ ] **T6.07** Esecuzione dei comportamenti
+- [x] **T6.07** Esecuzione dei comportamenti
   - Req: BEHAV-002, BEHAV-003, BEHAV-004, BEHAV-006 · Dip: T6.03, T6.06
   - Runner (P6, P7, P8): routine, reazioni con priorità, ripresa, fallimenti, limite con avviso, stati, eventi, condizioni, memoria, caso, `follow` con durata.
   - Fatto quando: test di BEHAV-002.a–g, BEHAV-003.a–c, BEHAV-004.a e .c–e, BEHAV-006.c verdi.
