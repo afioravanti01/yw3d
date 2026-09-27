@@ -141,7 +141,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `address.ts` (P3), `commands.ts` (P5), consegna nella `Simulation` (P4), `yes_no` nell'evento.
   - Fatto quando: test di DIALOG-001.b–c, DIALOG-003.e, DIALOG-005.d e .f, PROTO-002.b verdi.
 
-- [ ] **T7.04** Console dei messaggi nelle viste
+- [x] **T7.04** Console dei messaggi nelle viste
   - Req: DIALOG-005, DIALOG-001, DIALOG-002, CHAR-001 · Dip: T7.03
   - `messageConsole.ts` (P14) al posto di `chat.ts`; tutti i messaggi dall'host alle viste; modalità solo browser senza comportamenti.
   - Fatto quando: e2e di DIALOG-005.a–c, DIALOG-001.a, DIALOG-002.a, CHAR-001.d verdi; console provata nel browser.

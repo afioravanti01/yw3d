@@ -167,11 +167,11 @@ test('DIALOG-001.a, DIALOG-002.a: through the host the driver speaks, spectators
   await open(spectator);
   const lines = (page: Page) =>
     page.evaluate(() =>
-      (globalThis as unknown as { __yw3d: { chatLines(): string[] } }).__yw3d.chatLines(),
+      (globalThis as unknown as { __yw3d: { consoleLines(): string[] } }).__yw3d.consoleLines(),
     );
   const isOpen = (page: Page) =>
     page.evaluate(() =>
-      (globalThis as unknown as { __yw3d: { chatOpen(): boolean } }).__yw3d.chatOpen(),
+      (globalThis as unknown as { __yw3d: { consoleOpen(): boolean } }).__yw3d.consoleOpen(),
     );
   await spectator.keyboard.press('Enter');
   expect(await isOpen(spectator)).toBe(false);

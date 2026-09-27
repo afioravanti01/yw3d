@@ -20,8 +20,9 @@ export interface TestHook {
   /** Characters as shown by this view (CHAR-001.d). */
   characters(): { id: string; x: number; y: number; z: number; speech: string | null }[];
   /** Lines of the conversation log (DIALOG-002.a) and whether the text box is open. */
-  chatLines(): string[];
-  chatOpen(): boolean;
+  consoleLines(): string[];
+  consoleOpen(): boolean;
+  consoleSuggestions(): string[];
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

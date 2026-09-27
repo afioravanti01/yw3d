@@ -139,45 +139,73 @@
         box-shadow: 0 2px 6px rgb(0 0 0 / 0.18);
         white-space: pre-wrap;
       }
-      #chat {
+      /* The message console (DIALOG-005, plan F07 P14): on the right, see-through; only the list
+         and the box take the mouse, the rest of the scene keeps it. */
+      #console {
         position: fixed;
-        left: 16px;
+        right: 16px;
         bottom: 16px;
-        width: min(560px, calc(100% - 32px));
+        width: min(420px, calc(100% - 32px));
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
         font:
           14px/1.4 system-ui,
           sans-serif;
         pointer-events: none;
       }
-      #chat ol {
-        margin: 0 0 6px;
-        padding: 0;
+      #console ol {
+        max-height: 60vh;
+        margin: 0;
+        padding: 0 2px 0 0;
+        overflow-y: auto;
         list-style: none;
+        pointer-events: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgb(232 240 242 / 0.4) transparent;
       }
-      #chat li {
+      #console ol:empty {
+        pointer-events: none;
+      }
+      #console li {
         width: fit-content;
         max-width: 100%;
-        margin-top: 3px;
+        margin: 3px 0 0 auto;
         padding: 3px 9px;
-        background: rgb(20 28 34 / 0.55);
+        box-sizing: border-box;
+        background: rgb(20 28 34 / 0.45);
         color: #f3f6f4;
         border-radius: 6px;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
-        transition: opacity 1.2s;
       }
-      #chat li.error {
+      #console li.error {
         color: #ffd0c4;
       }
-      #chat li.faded {
-        opacity: 0;
+      #console li.info {
+        color: #cfe3ff;
       }
-      #chat.open li {
-        opacity: 1;
+      #console ul {
+        margin: 6px 0 0;
+        padding: 3px;
+        list-style: none;
+        background: rgb(20 28 34 / 0.85);
+        border-radius: 6px;
+        pointer-events: auto;
       }
-      #chat input {
+      #console ul li {
+        margin: 0;
+        width: auto;
+        background: none;
+        cursor: pointer;
+      }
+      #console ul li.selected {
+        background: rgb(255 255 255 / 0.18);
+      }
+      #console input {
         box-sizing: border-box;
         width: 100%;
+        margin-top: 6px;
         padding: 7px 10px;
         border: 1px solid rgb(255 255 255 / 0.6);
         border-radius: 6px;
@@ -186,6 +214,40 @@
         font: inherit;
         pointer-events: auto;
         outline: none;
+      }
+      #console button {
+        align-self: flex-end;
+        pointer-events: auto;
+        cursor: pointer;
+        color: #e8f0f2;
+        font:
+          12px/1.2 ui-monospace,
+          'Cascadia Mono',
+          Menlo,
+          Consolas,
+          monospace;
+      }
+      #console .reduce {
+        margin-bottom: 3px;
+        padding: 0 7px 2px;
+        background: rgb(20 28 34 / 0.35);
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        opacity: 0.8;
+      }
+      #console .reduce:hover {
+        opacity: 1;
+      }
+      #console .reopen {
+        padding: 4px 10px;
+        background: rgb(20 28 34 / 0.28);
+        border: 1px solid rgb(232 240 242 / 0.35);
+        border-radius: 6px;
+      }
+      #console:not(.collapsed) .reopen,
+      #console.collapsed > :not(.reopen) {
+        display: none;
       }
       [hidden] {
         display: none !important;
@@ -196,16 +258,19 @@
     <canvas id="world"></canvas>
     <div id="loading">Generating the world…</div>
     <div id="bubbles"></div>
-    <div id="chat">
-      <ol aria-live="polite"></ol>
+    <div id="console">
+      <button type="button" class="reduce" title="Reduce the console">×</button>
+      <ol aria-live="polite" aria-label="Messages"></ol>
+      <ul hidden></ul>
       <input
         type="text"
-        maxlength="500"
+        maxlength="520"
         autocomplete="off"
-        aria-label="Parla"
-        placeholder="Scrivi… (@id per rivolgerti a qualcuno, Invio per dire, Esc per annullare)"
+        aria-label="Message"
+        placeholder="Write… (@name to someone, /help)"
         hidden
       />
+      <button type="button" class="reopen" title="Open the console">Messages</button>
     </div>
     <div id="notice" role="alert" hidden></div>
     <script type="module" src="/src/app/main.ts"></script>

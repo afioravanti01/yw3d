@@ -132,21 +132,26 @@ test('APP-003.a: without the host the app runs on its own with the worlds of the
   expect(await hookValue(page, 'status')).toBe('ready');
 });
 
-type Talk = { chatLines(): string[]; chatOpen(): boolean; player(): { x: number; z: number } };
+type Talk = {
+  consoleLines(): string[];
+  consoleOpen(): boolean;
+  consoleSuggestions(): string[];
+  player(): { x: number; z: number };
+};
 const talk = <K extends keyof Talk>(page: Page, key: K) =>
   page.evaluate((k) => (globalThis as unknown as { __yw3d: Talk }).__yw3d[k](), key) as Promise<
     ReturnType<Talk[K]>
   >;
 
-test('DIALOG-001.a: Enter opens a text box; while it is open keys do not move the player; Esc cancels', async ({
+test('DIALOG-005.c, DIALOG-001.a: Enter opens the box of the console; while it is open keys do not move the player; Esc closes it', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
   await page.waitForTimeout(500);
-  expect(await talk(page, 'chatOpen')).toBe(false);
+  expect(await talk(page, 'consoleOpen')).toBe(false);
   await page.keyboard.press('Enter');
-  expect(await talk(page, 'chatOpen')).toBe(true);
-  await expect(page.locator('#chat input')).toBeFocused();
+  expect(await talk(page, 'consoleOpen')).toBe(true);
+  await expect(page.locator('#console input')).toBeFocused();
   const before = await talk(page, 'player');
   await page.keyboard.down('KeyW');
   await page.waitForTimeout(700);
@@ -154,11 +159,11 @@ test('DIALOG-001.a: Enter opens a text box; while it is open keys do not move th
   await page.keyboard.type('dddd ssss');
   const after = await talk(page, 'player');
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.05);
-  await expect(page.locator('#chat input')).toHaveValue('wdddd ssss');
+  await expect(page.locator('#console input')).toHaveValue('wdddd ssss');
   await page.keyboard.press('Escape');
-  expect(await talk(page, 'chatOpen')).toBe(false);
+  expect(await talk(page, 'consoleOpen')).toBe(false);
   // Nothing was said; the keys move the player again.
-  expect((await talk(page, 'chatLines')).some((l) => l.startsWith('Tu'))).toBe(false);
+  expect((await talk(page, 'consoleLines')).some((l) => l.startsWith('Tu'))).toBe(false);
   await page.keyboard.down('KeyW');
   await page.waitForTimeout(700);
   await page.keyboard.up('KeyW');
@@ -166,22 +171,89 @@ test('DIALOG-001.a: Enter opens a text box; while it is open keys do not move th
   expect(Math.hypot(moved.x - after.x, moved.z - after.z)).toBeGreaterThan(0.5);
 });
 
-test('DIALOG-002.a: the log shows the sentences the player hears, with who speaks and to whom', async ({
+test('DIALOG-005.a, DIALOG-002.a: the console on the right shows every message, oldest first, with who speaks and to whom', async ({
+  page,
+}) => {
+  await open(page, '?world=test-dialogue');
+  await page.waitForTimeout(500);
+  const say = async (text: string) => {
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(text);
+    await page.keyboard.press('Enter');
+  };
+  await say('@anna ciao!');
+  await say('Buongiorno a tutti');
+  await say('@nessuno ciao');
+  await expect
+    .poll(() => talk(page, 'consoleLines'))
+    .toEqual([
+      'Tu → Anna: ciao!',
+      'Tu: Buongiorno a tutti',
+      'no character is called "nessuno"; the characters are: Anna (anna), Bruno (bruno)',
+    ]);
+  // On the right half of the view, newest at the bottom.
+  const box = (await page.locator('#console').boundingBox())!;
+  const width = page.viewportSize()!.width;
+  expect(box.x).toBeGreaterThan(width / 2);
+  const items = page.locator('#console ol li');
+  const first = (await items.first().boundingBox())!;
+  const last = (await items.last().boundingBox())!;
+  expect(last.y).toBeGreaterThan(first.y);
+});
+
+test('DIALOG-005.b: the console leaves the mouse to the scene, except on the messages and the box', async ({
+  page,
+}) => {
+  await open(page, '?world=test-dialogue');
+  await page.waitForTimeout(500);
+  const at = (x: number, y: number) =>
+    page.evaluate(
+      ([x, y]) => {
+        type Element = { id: string; tagName: string };
+        const page = globalThis as unknown as {
+          document: { elementFromPoint(x: number, y: number): Element | null };
+        };
+        const element = page.document.elementFromPoint(x!, y!);
+        return element?.id || element?.tagName;
+      },
+      [x, y],
+    );
+  // Without messages, the corner of the console is the scene.
+  const { width, height } = page.viewportSize()!;
+  expect(await at(width - 60, height - 40)).toBe('world');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Buongiorno a tutti');
+  await page.keyboard.press('Enter');
+  const line = (await page.locator('#console ol li').first().boundingBox())!;
+  expect(await at(line.x + line.width / 2, line.y + line.height / 2)).toBe('LI');
+  // Above the messages, still the scene.
+  expect(await at(line.x + line.width / 2, line.y - 30)).toBe('world');
+});
+
+test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help answers in the console', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
   await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
-  await page.keyboard.type('@anna ciao!');
+  await page.keyboard.type('@');
+  expect(await talk(page, 'consoleSuggestions')).toEqual(['anna', 'bruno']);
+  await page.keyboard.type('b');
+  expect(await talk(page, 'consoleSuggestions')).toEqual(['bruno']);
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#console input')).toHaveValue('@Bruno ');
+  expect(await talk(page, 'consoleSuggestions')).toEqual([]);
+  await page.keyboard.type('ciao');
   await page.keyboard.press('Enter');
-  await expect.poll(() => talk(page, 'chatLines')).toContain('Tu → Anna: ciao!');
+  await expect.poll(() => talk(page, 'consoleLines')).toContain('Tu → Bruno: ciao');
   await page.keyboard.press('Enter');
-  await page.keyboard.type('@nessuno ciao');
+  await page.keyboard.type('/help');
   await page.keyboard.press('Enter');
   await expect
-    .poll(() => talk(page, 'chatLines'))
-    .toContain('no character is called "nessuno"; the characters are: Anna (anna), Bruno (bruno)');
-  await expect(page.locator('#chat li').first()).toBeVisible();
+    .poll(() => talk(page, 'consoleLines'))
+    .toContainEqual(expect.stringContaining('/help: this help.'));
+  // Commands are not said in the world.
+  expect((await talk(page, 'consoleLines')).some((l) => l.includes('Tu: /help'))).toBe(false);
 });
 
 test('CHAR-002.d: names over the characters, the bubble above the name; the player named where its figure shows', async ({

@@ -21,7 +21,7 @@ import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
 import { describeLine } from '../core/dialogue/lines';
-import { Chat } from './chat';
+import { MessageConsole } from './messageConsole';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
 import { installTestHook, type TestHook } from './testHook';
@@ -94,9 +94,9 @@ async function main(): Promise<void> {
   let current: Loaded | undefined;
   let connection: HostConnection | undefined;
   const playerControls = new PlayerControls(canvas, (code) => {
-    // Enter opens the box to speak (DIALOG-001.a); while it is open, keys are for the text.
-    if (chat.isOpen) return;
-    if (code === 'Enter' || code === 'NumpadEnter') chat.open();
+    // Enter opens the box of the console (DIALOG-005.c); while it is open, keys are for the text.
+    if (messageConsole.isOpen) return;
+    if (code === 'Enter' || code === 'NumpadEnter') messageConsole.open();
     if (code === 'KeyV') playerView?.toggleThirdPerson();
     if (code === 'KeyC') playerView?.toggleFree(camera);
     // E: the nearest character within 3 m reacts through its controller (PROTO-002.c).
@@ -105,13 +105,13 @@ async function main(): Promise<void> {
       else local?.interact();
     }
   });
-  /** Says a sentence of the player, from this page or through the host (DIALOG-001.b). */
+  /** Says a message of the player, from this page or through the host (DIALOG-001.b). */
   const speak = (text: string) => {
     if (connection) return connection.say(text);
     const said = local?.say(text);
-    if (said && !said.ok) chat.add(said.error, 'error');
+    if (said && !said.ok) messageConsole.add(said.error, 'error');
   };
-  const chat = new Chat(required<HTMLElement>('#chat'), {
+  const messageConsole = new MessageConsole(required<HTMLElement>('#console'), {
     send: speak,
     toggled: (open) => {
       playerControls.enabled = !open;
@@ -154,8 +154,9 @@ async function main(): Promise<void> {
     }),
     player: () => playerView?.source.state() ?? null,
     characters: () => shownCharacters(),
-    chatLines: () => chat.lines(),
-    chatOpen: () => chat.isOpen,
+    consoleLines: () => messageConsole.lines(),
+    consoleOpen: () => messageConsole.isOpen,
+    consoleSuggestions: () => messageConsole.suggested(),
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
     setView: (x, y, z, yaw, pitch) => {
       if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
@@ -203,6 +204,7 @@ async function main(): Promise<void> {
 
     current?.chunks.dispose();
     current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
+    messageConsole.characters = result.characters.map((c) => ({ id: c.id, name: c.name }));
     if (!controls || !playerView) {
       controls = new FlyCamera(camera, canvas, result.world.size);
       playerView = new PlayerView(
@@ -280,7 +282,7 @@ async function main(): Promise<void> {
         composed,
         () => performance.now(),
         // In this page the reader is always the player (A6.2).
-        (line) => chat.add(describeLine(line, true)),
+        (line) => messageConsole.add(describeLine(line, true)),
       );
       playerControls.yaw = local.startYaw;
       return local;
@@ -340,7 +342,7 @@ async function main(): Promise<void> {
       {
         hello: (message) => {
           hook.connection = { role: message.role };
-          chat.canWrite = message.role === 'driver';
+          messageConsole.canWrite = message.role === 'driver';
           if (message.player) playerControls.yaw = message.player.yaw;
           if (message.world) void receiveWorld(message.world, message.diagnostics);
           else showMessages(toMessages(message.diagnostics), 'error');
@@ -348,12 +350,12 @@ async function main(): Promise<void> {
         world: (world, diagnostics) => void receiveWorld(world, diagnostics),
         diagnostics: (diagnostics) =>
           showMessages(toMessages(diagnostics), current ? 'ready' : 'error'),
-        line: (line) => chat.add(describeLine(line, connection!.role === 'driver')),
-        sayError: (error) => chat.add(error, 'error'),
+        line: (line) => messageConsole.add(describeLine(line, connection!.role === 'driver')),
+        sayError: (error) => messageConsole.add(error, 'error'),
         role: (role) => {
           hook.connection = { role };
-          chat.canWrite = role === 'driver';
-          if (role !== 'driver') chat.close();
+          messageConsole.canWrite = role === 'driver';
+          if (role !== 'driver') messageConsole.close();
           playerView?.setSpectator(role === 'spectator', camera);
         },
         closed: () =>
