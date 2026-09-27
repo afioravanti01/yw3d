@@ -99,7 +99,7 @@ Questa è la forma che la prova d'uso (T7.09) mette alla prova: nomi dei metodi 
 - **A7.1 — DIALOG-005.a, .c** (prova d'uso, richiesta dell'utente). La console è un blocco trasparente sempre presente: messaggi in alto, casella del giocatore sempre visibile in basso; Invio porta il cursore nella casella, Esc torna al gioco. Nel blocco prendono il mouse solo le righe dei messaggi (per scorrerle con la rotella) e la casella. Nelle viste che guardano la casella c'è ma è disattivata.
 - **A7.2 — DIALOG-005.f** (prova d'uso, richiesta dell'utente). Comando `/world`: giocatore e personaggi dove sono ora, luoghi, strutture e gruppi di strutture con la posizione in blocchi. È nel core (`commands.ts`), con un contesto che dà la mappa e le posizioni; browser e terminale dell'host lo usano allo stesso modo.
 - **A7.4 — DIALOG-005.a, .b, .f** (prova d'uso, richiesta dell'utente). Console alta quanto la finestra, messaggi come testo libero selezionabile con il Markdown, risposta dei comandi in un unico blocco. Il Markdown si analizza nel core (`markdown.ts`) in un albero; le viste ne costruiscono i nodi DOM (`markdownDom.ts`), il terminale ne stampa il testo. Le scorciatoie con Ctrl e Cmd non arrivano più ai tasti del gioco (Cmd+C non apre la camera libera). L'overlay diagnostico si ferma prima della console.
-- **A7.5 — DIALOG-001.b, DIALOG-005.e, PROTO-002.b** (prova d'uso, richiesta dell'utente). Il giocatore parla con `@` solo ai personaggi entro 16 blocchi; altrimenti «Personaggio non in prossimità». La regola sta nella `Simulation`, quindi vale per la console del browser, il terminale e i client del giocatore. `say` con `to` tra personaggi resta a qualunque distanza, in attesa della decisione dell'utente.
+- **A7.5 — DIALOG-001.b, DIALOG-005.e, PROTO-002.b** (prova d'uso, richiesta dell'utente). Il giocatore parla con `@` solo ai personaggi entro 16 blocchi; altrimenti «Personaggio non in prossimità». La regola sta nella `Simulation`, quindi vale per la console del browser, il terminale e i client del giocatore. Con A7.6 la stessa regola vale per `say` con `to` tra personaggi: oltre 16 blocchi l'azione fallisce.
 
 ## Strategia di test
 - **Unit (Vitest, Node).**
@@ -197,6 +197,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 - [x] **T7.18+** Messaggi del giocatore solo ai personaggi vicini (A7.5)
   - Req: DIALOG-001, DIALOG-004, PROTO-002 · Dip: T7.17+
   - Nato alla prova d'uso.
+  - Con A7.6 anche `say` con `to` tra personaggi richiede la vicinanza.
   - Fatto quando: test di DIALOG-001.b, DIALOG-004.b e PROTO-002.b verdi con la regola nuova.
 
 - [ ] **T7.10** Libreria: domande, altri gestori, errori

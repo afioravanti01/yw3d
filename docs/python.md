@@ -65,7 +65,7 @@ Ogni azione si **attende** con `await` e finisce quando il personaggio l'ha comp
 |---|---|
 | `await self.walk_to("laghetto1")` | cammina verso un elemento della mappa (il suo id), un'entità vicina o un punto `(x, z)` in blocchi; `speed=` in m/s |
 | `await self.look_at("player")` | si gira verso un elemento, un'entità o un punto |
-| `await self.say("Ciao!")` | dice una frase, sentita entro 16 blocchi; con `to="player"` o l'id di un personaggio la sente anche da lontano |
+| `await self.say("Ciao!")` | dice una frase, sentita entro 16 blocchi; con `to="player"` o l'id di un personaggio la rivolge a qualcuno, che dev'essere entro 16 blocchi, altrimenti fallisce |
 | `await self.follow("player", distance=4, seconds=20)` | segue un personaggio o il giocatore; senza `seconds` finché non fa altro |
 | `await self.wait(5)` | resta fermo per 5 secondi del mondo |
 | `await self.stop()` | si ferma |
@@ -82,6 +82,6 @@ Senza chiederlo, il personaggio sa:
 
 ## Messaggi
 
-`on_message(message)` riceve ogni frase che il personaggio sente: quelle dette entro 16 blocchi, anche rivolte a lui: il giocatore può scrivere con `@` solo ai personaggi vicini, mentre un altro personaggio con `say(…, to=…)` lo raggiunge ovunque sia. Un messaggio ha `sender` e `sender_name` (chi l'ha detto), `text`, `to_me`, `mentions` (l'elemento della mappa nominato, se uno solo) e `is_yes` / `is_no`.
+`on_message(message)` riceve ogni frase che il personaggio sente: quelle dette entro 16 blocchi, anche rivolte a lui: per parlare con qualcuno, giocatore o personaggio, bisogna stargli vicino. Un messaggio ha `sender` e `sender_name` (chi l'ha detto), `text`, `to_me`, `mentions` (l'elemento della mappa nominato, se uno solo) e `is_yes` / `is_no`.
 
 Le frasi di `say` compaiono nella console con il Markdown: `**grassetto**`, `*corsivo*`, `` `codice` ``, elenchi con `-`.

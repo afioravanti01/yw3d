@@ -42,7 +42,7 @@ export type ActionRequest =
       readonly kind: 'say';
       readonly id: string;
       readonly text: string;
-      /** To whom, a character or the player (plan F07 P6); heard by it wherever it is. */
+      /** To whom, a character or the player within 16 blocks (plan F07 P6, A7.6). */
       readonly to?: string;
     }
   | {
@@ -346,8 +346,12 @@ export class AgentWorld {
       }
       case 'say': {
         const to = request.to ?? null;
-        if (to !== null && !this.positionOf(to)) {
-          return this.fail(agent, `there is no character "${to}"`);
+        if (to !== null) {
+          const addressee = this.positionOf(to);
+          if (!addressee) return this.fail(agent, `there is no character "${to}"`);
+          // Only someone within 16 blocks can be spoken to (A7.6).
+          const d = Math.hypot(addressee.x - state.x, addressee.y - state.y, addressee.z - state.z);
+          if (d > HEARING_DISTANCE) return this.fail(agent, `"${to}" is not nearby`);
         }
         agent.speech = { text: request.text, until: this.time + sayDuration(request.text) };
         running.deadline = agent.speech.until;
@@ -356,7 +360,7 @@ export class AgentWorld {
           if (other === agent) continue;
           const o = other.character.entity.state;
           const distance = Math.hypot(o.x - state.x, o.y - state.y, o.z - state.z);
-          if (distance <= HEARING_DISTANCE || otherId === to) {
+          if (distance <= HEARING_DISTANCE) {
             this.listener.event(otherId, {
               type: 'heard',
               from: agent.character.start.id,

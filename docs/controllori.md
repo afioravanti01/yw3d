@@ -71,7 +71,7 @@ E subito, quando succedono, gli **eventi**:
 
 | Messaggio | Quando |
 |---|---|
-| `{ "type": "heard", "from": "player", "text": "…", "distance": 6, "to": "guardiano", "mentions": "laghetto1", "yes_no": null }` | qualcuno ha detto qualcosa entro 16 blocchi (il giocatore parla solo a chi è entro 16 blocchi), oppure un altro personaggio l'ha detto proprio a questo personaggio con `to`, da qualunque distanza; `to` è a chi l'ha detto (o `null`), `mentions` l'elemento della mappa che la frase nomina, se ne nomina uno solo (o `null`), `yes_no` è `"yes"` o `"no"` se la frase è un sì o un no (o `null`) |
+| `{ "type": "heard", "from": "player", "text": "…", "distance": 6, "to": "guardiano", "mentions": "laghetto1", "yes_no": null }` | qualcuno ha detto qualcosa entro 16 blocchi: un personaggio o il giocatore; `to` è a chi l'ha detto (o `null`), `mentions` l'elemento della mappa che la frase nomina, se ne nomina uno solo (o `null`), `yes_no` è `"yes"` o `"no"` se la frase è un sì o un no (o `null`) |
 | `{ "type": "interacted", "by": "player" }` | il giocatore, entro 3 m, ha premuto E |
 | `{ "type": "action_done", "id": "walk-3" }` | l'azione è finita |
 | `{ "type": "action_failed", "id": "walk-3", "reason": "…" }` | l'azione non è riuscita, con la causa |
@@ -87,7 +87,7 @@ Ogni azione ha un `id` scelto dal controllore, che ritorna nel suo esito. Un per
 |---|---|---|
 | `walk_to` | `x`, `z` oppure `target` (un id della mappa, o `player`); `speed` facoltativa, 0,5–7 m/s, predefinita 1,5 | all'arrivo, entro 1 blocco |
 | `look_at` | `x`, `z` oppure `target` (un id della mappa; un elemento esteso si guarda al centro) | subito |
-| `say` | `text`, 1–500 caratteri; `to` facoltativo, un personaggio o `player`, che la sente ovunque sia | dopo 1 s + 0,06 s per carattere |
+| `say` | `text`, 1–500 caratteri; `to` facoltativo, un personaggio o `player` entro 16 blocchi, altrimenti fallisce | dopo 1 s + 0,06 s per carattere |
 | `follow` | `target` (un personaggio o `player`); `distance` 1–32 blocchi, predefinita 3; `speed` | mai: finché non la sostituisci |
 | `wait` | `seconds`, 0–3600 | dopo i secondi indicati |
 | `stop` | — | subito, fermando l'azione in corso |

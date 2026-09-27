@@ -147,7 +147,7 @@ describe('controller protocol, version 3', () => {
     expect(voice.sent.at(-1)).toMatchObject({ type: 'error' });
   });
 
-  it('PROTO-002.b: sentences carry yes or no; a message with @ reaches only a controller nearby; say may have an addressee', async () => {
+  it('PROTO-002.b: sentences carry yes or no; a message with @ reaches only a controller nearby; say may have an addressee nearby', async () => {
     const { s } = await session();
     const marta = client(s);
     marta.say({ type: 'control', character: 'marta' });
@@ -180,21 +180,25 @@ describe('controller protocol, version 3', () => {
       error: 'Personaggio non in prossimità',
     });
     expect(marta.of('heard')).toHaveLength(heardBefore);
-    // A character speaks to another one, far away, and to the player.
+    // A character speaks to the player nearby; to Marta, far away, it cannot (A7.6).
     const lines: string[] = [];
     s.listen((line) => lines.push(`${line.from}→${line.to}: ${line.text}`));
     tobia.say({ type: 'say', id: 's1', text: 'Marta, ti aspetto!', to: 'marta' });
-    run(s, 0.1);
-    expect(marta.of('heard').at(-1)).toMatchObject({ from: 'tobia', to: 'marta' });
     tobia.say({ type: 'say', id: 's2', text: 'Dove vado?', to: 'player' });
     tobia.say({ type: 'say', id: 's3', text: 'Ehi', to: 'nessuno' });
     run(s, 0.1);
-    expect(lines).toEqual(['tobia→marta: Marta, ti aspetto!', 'tobia→player: Dove vado?']);
-    expect(tobia.of('action_failed').at(-1)).toEqual({
-      type: 'action_failed',
-      id: 's3',
-      reason: 'there is no character "nessuno"',
-    });
+    expect(lines).toEqual(['tobia→player: Dove vado?']);
+    expect(tobia.of('action_failed')).toEqual([
+      { type: 'action_failed', id: 's1', reason: '"marta" is not nearby' },
+      { type: 'action_failed', id: 's3', reason: 'there is no character "nessuno"' },
+    ]);
+    // Near Marta, it can.
+    marta.say({ type: 'walk_to', id: 'w2', target: 'tobia' });
+    run(s, 30);
+    tobia.say({ type: 'say', id: 's4', text: 'Marta, ti aspettavo!', to: 'marta' });
+    run(s, 0.1);
+    expect(marta.of('heard').at(-1)).toMatchObject({ from: 'tobia', to: 'marta' });
+    expect(lines.at(-1)).toBe('tobia→marta: Marta, ti aspettavo!');
   });
 
   it('PROTO-004.a, PROTO-004.b: a client takes a character from its program, which is paused and then resumed', async () => {
