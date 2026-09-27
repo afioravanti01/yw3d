@@ -19,6 +19,7 @@ Coordinate in **blocchi** (1 blocco = 0,5 m); x verso est, z verso sud, y verso 
 | `structures` | no | Strutture posate una per una. |
 | `scatter` | no | Strutture distribuite su un'area. |
 | `characters` | no | Personaggi (vedi sotto). |
+| `agents` | no | Impostazioni degli agenti LLM: `conversation_turns`, le battute di una conversazione tra agenti senza il giocatore (predefinito 12; vedi [docs/agenti.md](../docs/agenti.md)). |
 
 Ogni struttura, distribuzione, luogo e personaggio ha un **nome** (`name`, 1–60 caratteri, obbligatorio) e una **descrizione** (`description`, al più 1000 caratteri, facoltativa). Personaggi, luoghi, strutture e distribuzioni condividono gli **id**: lettere minuscole, cifre, `_` e `-`, al più 32 caratteri, mai ripetuti.
 
@@ -76,8 +77,9 @@ I luoghi non cambiano il mondo: danno un nome a un punto o a una zona.
 | `appearance` | no | Colori: `skin`, `hair`, `shirt`, `trousers`, come `'#a55f3a'`. |
 | `program` | no | Un programma Python della cartella del mondo, per esempio `characters/tobia.py` (vedi [docs/python.md](../docs/python.md)). |
 | `controller` | no | In alternativa a `program`: `{ command: … }`, un programma in qualunque linguaggio (vedi [docs/controllori.md](../docs/controllori.md)). |
+| `agent` | no | In alternativa a `program` e `controller`: un agente LLM guidato dall'host, per esempio `{ mode: headless, cli: claude, model: sonnet }` (vedi [docs/agenti.md](../docs/agenti.md)). |
 
-Senza programma né controllore il personaggio sta fermo. Le chiavi `behavior` e `behaviors` dei comportamenti in YAML non esistono più: sono un errore che rimanda ai programmi Python.
+Un personaggio ha al più uno tra `program`, `controller` e `agent`; senza nessuno sta fermo. Le chiavi `behavior` e `behaviors` dei comportamenti in YAML non esistono più: sono un errore che rimanda ai programmi Python.
 
 ## Esempio
 

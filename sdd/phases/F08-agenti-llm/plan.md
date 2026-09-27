@@ -157,7 +157,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `examples/agenti`: la pescatrice agente con Claude Code, e nei commenti le varianti per Codex, opencode, Anthropic, OpenAI, Ollama e `fake`.
   - Fatto quando: `yw3d examples/agenti` fa la demo della roadmap; con `mode: fake` parte senza CLI né chiavi.
 
-- [ ] **T8.12** Guida
+- [x] **T8.12** Guida
   - Req: AGENT-007 · Dip: T8.11
   - `docs/agenti.md`: configurazione, un esempio per modalità e CLI, cosa sa l'agente, iniziativa, limiti, costi, errori frequenti; README e `worlds/README.md`.
   - Fatto quando: la guida copre ogni campo di `agent`; l'esempio minimo sta sotto le 10 righe.
