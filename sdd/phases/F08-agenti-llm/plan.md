@@ -100,7 +100,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `context.ts` (P3): identità, posizione e luoghi, mappa, dintorni con direzioni, tempo, memoria, eventi.
   - Fatto quando: test di AGENT-002.a–b verdi.
 
-- [ ] **T8.04** Risposta strutturata ed esecuzione
+- [x] **T8.04** Risposta strutturata ed esecuzione
   - Req: AGENT-003 · Dip: T8.02
   - `reply.ts` (P4, P5): schema, validazione, parti scartate, estrazione del JSON; esecuzione in sequenza con l'`AgentWorld`.
   - Fatto quando: test di AGENT-003.a–b verdi.
