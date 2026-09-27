@@ -12,8 +12,8 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **d** `[unit]` Gli agenti passano dal consenso di PROTO-005: l'elenco mostra, per ogni agente, la CLI o il fornitore e il modello; gli agenti `fake` non lo chiedono. Una CLI che non si trova sulla macchina è segnalata con il personaggio (PROTO-005.b).
 
 ### AGENT-002 — Conoscenza del mondo
-*Introdotto in F08 · ultima modifica: F08.*
-- **a** `[unit]` Ogni richiesta all'LLM contiene: chi è il personaggio (nome, descrizione, persona, obiettivi); dove si trova (posizione e luoghi o strutture in cui è); la mappa del mondo con id, nomi, tipi, descrizioni e coordinate; le entità vicine con posizione, distanza e direzione; il tempo del mondo; la conversazione recente (AGENT-005); e ciò che ha fatto scattare la richiesta.
+*Introdotto in F08 · ultima modifica: F09.*
+- **a** `[unit]` Ogni richiesta all'LLM contiene: chi è il personaggio (nome, descrizione, persona, obiettivi); dove si trova (posizione e luoghi o strutture in cui è); la mappa del mondo con id, nomi, tipi, descrizioni e coordinate; le entità vicine con posizione, distanza e direzione; l'ora del mondo e la parte del giorno; la conversazione recente (AGENT-005); e ciò che ha fatto scattare la richiesta.
 - **b** `[unit]` I dintorni elencano gli elementi della mappa e i personaggi entro 32 blocchi (16 m), con distanza e direzione (nord, nord-est, …): abbastanza per rispondere a «Cosa vedi?».
 - **c** `[manuale]` A una domanda sul mondo l'agente risponde con ciò che il mondo contiene (posti, personaggi, dove si trovano); a una domanda d'altro tipo risponde con le sue conoscenze, restando nel personaggio.
 

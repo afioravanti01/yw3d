@@ -12,9 +12,9 @@
 | F06 | Comportamenti, mappa e dialogo | `done` (G3, 2026-09-27) | F05 |
 | F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
 | F08 | Agenti LLM | `done` (G3, 2026-09-27) | F07 |
-| F09 | Natura viva | `implementing` | F02 |
+| F09 | Natura viva: tempo e luce | `done` (G3, 2026-09-27) | F02 |
 
-La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09.
+La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09. F09 si è ristretta al tempo e alla luce: vento e acqua sono stati tolti durante la fase, particelle e audio sono tra le idee in attesa.
 
 ## F01 — Fondamenta e mondo voxel
 **Obiettivo:** un mondo a blocchi finito, generato in modo deterministico, con uno stile riconoscibilmente diverso da Minecraft, esplorabile con una camera libera. Fondamenta tecniche: separazione core/rendering, test headless, tracciabilità automatica.
@@ -107,11 +107,16 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 **Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
 **Aree:** AGENT (nuova); CHAR, PROTO, HOST, DEBUG, YAML (modificati).
 
-## F09 — Natura viva
-Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline, lucciole), audio ambientale.
+## F09 — Natura viva: tempo e luce
+**Obiettivo:** il mondo ha un'ora del giorno che scorre, con il sole che attraversa il cielo, una notte leggibile con la luna, le stelle e le finestre accese, e l'alba; agenti e programmi conoscono l'ora.
+- Orologio del mondo nel file (`time`), unico con l'host; `/time` per portare il mondo a un'ora.
+- Luce, cielo, nebbia e ombre che seguono l'ora; ombre che cambiano direzione ogni decimo del giorno (A9.2).
+- Ora e parte del giorno nella percezione, nella libreria Python e nel contesto degli agenti.
+- La scimmietta (`body: monkey`), primo animale, guidata da un agente autonomo (A9.1).
 
-**Note per la spec** (da F06, 2026-09-26): un orologio del mondo con l'ora del giorno, a disposizione dei programmi dei personaggi.
-**Aree:** RENDER, AUDIO, WORLD.
+Vento sulle foglie e acqua animata erano previsti e sono stati tolti durante la fase (A9.3, A9.4); particelle e audio ambientale restano tra le idee in attesa.
+**Demo:** porto il mondo alle 19:00 con `/time`, guardo il tramonto e la notte con le finestre accese; la scimmietta gira da sola per il borgo.
+**Aree:** TIME (nuova); RENDER, CHAR, YAML, PROTO, PY, AGENT, DIALOG, DEBUG, PERF (modificati).
 
 ## Idee in attesa (non pianificate)
 - Blocchi non cubici (rampe, cunei) per tetti e terreno più morbido.
@@ -123,6 +128,7 @@ Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline,
 - Apertura di una cartella del mondo direttamente dal browser, senza host (trascinamento o selettore di file).
 - Pubblicazione del comando `yw3d` su npm.
 - Generazione in un Web Worker e mondi più grandi.
+- Natura viva, seguito di F09: particelle (polline, lucciole) e audio ambientale.
 
 ## Anteprima del YAML (non normativa)
 

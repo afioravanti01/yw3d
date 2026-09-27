@@ -30,7 +30,7 @@ Verifica automatica: `npm run check` verde (222 test), `npm run e2e` verde (20 t
 | LOC src / test | righe prodotte nella fase (saldo di `git diff` da F04) | 2226 / 1334 (più 170 negli esempi) |
 | Doc/LOC | (righe spec + piano) / LOC src | 0,14 |
 | Sessioni e tempo | sessioni agente e giorni di calendario | 1 giorno (2026-09-26); sessioni non registrate |
-| Difetti post-chiusura | per origine spec / piano / codice | 0 / 0 / 0 (da aggiornare nelle fasi successive) |
+| Difetti post-chiusura | per origine spec / piano / codice | 1 / 0 / 0 (da aggiornare nelle fasi successive). Spec, trovato in F09 (A9.5): un personaggio fermo poteva restare appoggiato al bordo di un gradino, con i piedi in aria; nessun criterio diceva dove si ferma |
 
 ## Ipotesi
 - **H1 — Contesto.** Stabile: 678 righe (F04: 633) con 65 requisiti vivi; le spec vive toccate pesano meno di 200 righe.

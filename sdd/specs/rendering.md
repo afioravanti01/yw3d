@@ -18,13 +18,13 @@ Palette naturalistica calda e leggermente desaturata, con luce dorata da tardo p
 - **c** `[manuale]` Spigoli interni e piedi dei gradini sono visibilmente più scuri; nessuna cucitura evidente tra regioni del mondo.
 
 ### RENDER-003 — Luce e ombre
-*Introdotto in F01 · ultima modifica: F01.*
-- **a** `[manuale]` Una luce solare direzionale proietta sul terreno le ombre dei rilievi.
-- **b** `[manuale]` Una luce ambientale cielo/terra dà luminosità diverse a facce con orientamenti diversi; le facce in ombra non sono mai nere.
+*Introdotto in F01 · ultima modifica: F09.*
+- **a** `[manuale]` Il sole si muove secondo l'ora: sorge a est, è alto a mezzogiorno, tramonta a ovest; le ombre di rilievi, alberi e case lo seguono. Di notte la luce viene dalla luna.
+- **b** `[manuale]` Una luce ambientale cielo/terra, che cambia con l'ora, dà luminosità diverse a facce con orientamenti diversi; le facce in ombra non sono mai nere, nemmeno di notte.
 
 ### RENDER-004 — Cielo e nebbia
-*Introdotto in F01 · ultima modifica: F01.*
-- **a** `[manuale]` Il cielo è un gradiente verticale: chiaro all'orizzonte, più saturo allo zenit.
+*Introdotto in F01 · ultima modifica: F09.*
+- **a** `[manuale]` Il cielo è un gradiente verticale, chiaro all'orizzonte e più saturo allo zenit, con colori che seguono l'ora: azzurro di giorno, caldi all'alba e al tramonto, blu scuro con le stelle di notte. Si vedono il sole e, di notte, la luna.
 - **b** `[manuale]` La nebbia aumenta con la distanza e ha il colore dell'orizzonte: il terreno lontano sfuma nel cielo senza uno stacco netto.
 
 ### RENDER-005 — Aggiornamento incrementale
@@ -43,3 +43,8 @@ Palette naturalistica calda e leggermente desaturata, con luce dorata da tardo p
 - **a** `[unit]` Le facce tra due blocchi d'acqua non si generano; le facce tra acqua e un blocco opaco nemmeno.
 - **b** `[manuale]` L'acqua è semitrasparente: si vede il fondale vicino alla riva, meno dove è profonda. Il colore è in armonia con la palette di RENDER-001.
 - **c** `[manuale]` Nessun artefatto evidente tra acqua e terreno (facce che tremolano, buchi, ordine di disegno sbagliato) guardando da sopra e di lato.
+
+### RENDER-008 — Notte leggibile
+*Introdotto in F09 · ultima modifica: F09.*
+- **a** `[manuale]` Di notte il mondo si vede: una luce lunare fredda e debole, il cielo blu scuro con le stelle, le forme riconoscibili a qualche decina di metri.
+- **b** `[manuale]` Di notte le finestre delle case sono illuminate di una luce calda, visibile da lontano; di giorno no.

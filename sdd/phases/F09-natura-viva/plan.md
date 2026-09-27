@@ -145,7 +145,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Fatto quando: `npm run e2e` verde.
   - Esito: 32 test nei due progetti; aggiunto il mondo della scimmietta, con il nome sopra la testa e uno screenshot (`e2e/screenshots/monkey.png`) per la checklist di CHAR-003.b.
 
-- [ ] **T9.11** Verifica di accettazione e chiusura della fase
+- [x] **T9.11** Verifica di accettazione e chiusura della fase
   - Req: PERF-001, e tutti gli altri · Dip: T9.09, T9.10
   - `check`, `e2e`, `sdd:trace -- F09`; checklist con le misure a parte; spec vive (nuova `time.md`); `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

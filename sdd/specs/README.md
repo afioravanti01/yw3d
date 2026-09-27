@@ -20,12 +20,13 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | PLAYER | [`player.md`](player.md) | giocatore: misure, controlli, visuali | F03 |
 | CLI | [`cli.md`](cli.md) | comando `yw3d`, cartella del mondo | F04 |
 | HOST | [`host.md`](host.md) | host headless, viste collegate, ricaricamento | F04 |
-| CHAR | [`characters.md`](characters.md) | personaggi, figure animate, fumetti | F05 |
+| CHAR | [`characters.md`](characters.md) | personaggi, figure animate, fumetti, animali | F05 |
 | NAV | [`navigation.md`](navigation.md) | percorsi dei personaggi | F05 |
 | PROTO | [`protocol.md`](protocol.md) | protocollo dei controllori | F05 |
 | MAP | [`map.md`](map.md) | identificatori, mappa del mondo, mete | F06 |
 | DIALOG | [`dialogue.md`](dialogue.md) | il giocatore parla con i personaggi: console dei messaggi, comprensione | F06 |
 | PY | [`python.md`](python.md) | libreria Python, programmi nella cartella del mondo, esempi e guida | F07 |
 | AGENT | [`agents.md`](agents.md) | agenti LLM guidati dall'host: configurazione, conoscenza del mondo, risposte, iniziativa, conversazioni, limiti | F08 |
+| TIME | [`time.md`](time.md) | ora del mondo, `/time`, il giorno che passa | F09 |
 
-*Aggiornate alla chiusura di F08 (2026-09-27). Il linguaggio dei comportamenti (BEHAV, F06) è stato rimosso in F07 (D-010).*
+*Aggiornate alla chiusura di F09 (2026-09-27). Il linguaggio dei comportamenti (BEHAV, F06) è stato rimosso in F07 (D-010).*

@@ -14,8 +14,8 @@ Lo stesso modello su tutti i canali, in JSON; nomi di campi e azioni in `snake_c
 - **e** `[unit]` Alla ricarica del mondo il controllore riceve la mappa nuova.
 
 ### PROTO-002 — Percezione
-*Introdotto in F05 · ultima modifica: F07 (emendamenti A7.5, A7.6).*
-- **a** `[unit]` Il controllore riceve la percezione del personaggio 4 volte al secondo: posizione, orientamento, se è a terra o in acqua, azione in corso, entità entro 32 blocchi (id, nome, tipo, posizione, distanza).
+*Introdotto in F05 · ultima modifica: F09.*
+- **a** `[unit]` Il controllore riceve la percezione del personaggio 4 volte al secondo: posizione, orientamento, se è a terra o in acqua, azione in corso, entità entro 32 blocchi (id, nome, tipo, posizione, distanza), ora del mondo e parte del giorno.
 - **b** `[unit]` Il controllore riceve subito gli eventi: frasi dette entro 16 blocchi, dai personaggi o dal giocatore, rivolte o no al suo personaggio (chi, cosa, destinatario, elemento della mappa nominato e sì o no secondo DIALOG-003), interazione del giocatore, esito delle azioni. Una frase si rivolge a qualcuno (`@` del giocatore, `say` con destinatario) solo se è entro 16 blocchi: altrimenti non parte, o l'azione fallisce con la causa.
 - **c** `[unit]` Con il giocatore entro 3 m, il tasto E invia al personaggio più vicino un evento di interazione (Q6).
 

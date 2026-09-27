@@ -41,7 +41,7 @@ Verifica automatica: `npm run check` verde, `npm run e2e` verde (30 test, con un
 | LOC src / test | saldo di `git diff` da F07 | 1796 / 1470 |
 | Doc/LOC | (righe spec + piano) / LOC src | 0,18 |
 | Sessioni e tempo | sessioni agente e giorni di calendario | 1 giorno (2026-09-27), una sessione |
-| Difetti post-chiusura | per origine spec / piano / codice | 0 / 0 / 0 (da aggiornare nelle fasi successive) |
+| Difetti post-chiusura | per origine spec / piano / codice | 0 / 0 / 1 (da aggiornare nelle fasi successive). Codice, trovato in F09 (T9.15+): una CLI fermata per tempo limite lasciava vivi i processi che aveva lanciato, e la richiesta finiva solo con loro |
 
 ## Ipotesi
 - **H1 — Contesto.** Scende ancora: 749 righe, la fase più piccola in documenti dopo F04.

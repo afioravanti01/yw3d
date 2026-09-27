@@ -24,10 +24,11 @@ Raccolte in ogni `retro.md`; definizioni nel [template](templates/retro.md).
 | F02 | 17/4/0 | 45/7/11 | 16 / 2 | 2 | 3 | 63/63 | 697 | 2388/1362 | 0,17 | 0/0/0 |
 | F03 | 11/3/0 | 26/1/11 | 13 / 2 | 3 | 3 | 38/38 | 595 | 853/689 | 0,35 | 0/0/0 |
 | F04 | 7/1/0 | 11/7/6 | 10 / 0 | 1 | 3 | 24/24 | 633 | 1325/610 | 0,19 | 0/0/0 |
-| F05 | 11/3/0 | 30/1/5 | 14 / 1 | 1 | 3 | 36/36 | 678 | 2226/1334 | 0,14 | 0/0/0 |
+| F05 | 11/3/0 | 30/1/5 | 14 / 1 | 1 | 3 | 36/36 | 678 | 2226/1334 | 0,14 | 1/0/0 |
 | F06 | 18/9/0 | 69/6/5 | 17 / 4 | 4 | 5 | 80/80 | 979 | 4264/2998 | 0,13 | 0/0/0 |
 | F07 | 6/13/8 | 29/6/6 | 14 / 5 | 7 | 1 | 41/41 | 894 | −884/−40 (+2028/+1642) | 0,21 | 0/0/0 |
-| F08 | 7/7/0 | 21/0/5 | 14 / 3 | 6 | 0 | 26/26 | 749 | 1796/1470 | 0,18 | 0/0/0 |
+| F08 | 7/7/0 | 21/0/5 | 14 / 3 | 6 | 0 | 26/26 | 749 | 1796/1470 | 0,18 | 0/0/1 |
+| F09 | 5/10/1 | 12/1/10 | 13 / 2 | 6 | 5 | 23/23 | 826 | 979/527 | 0,33 | 0/0/0 |
 
 *Legenda:* A/M/R = aggiunti/modificati/rimossi; u/e/m = unit/e2e/manuale; s/p/c = origine del difetto: spec/piano/codice.
 
@@ -50,3 +51,4 @@ Note brevi e datate su ciò che si osserva del processo, anche quando non rientr
 - **2026-09-27** F07: console dei messaggi e personaggi in Python, dalla spec alla chiusura in una giornata. Le proposte della retro di F06 hanno funzionato: lo strumento di commit ha fermato due commit rossi, e la prova d'uso a metà fase ha raccolto sette cambiamenti (forma della console, `/world`, Markdown, parlare solo da vicino, domande tra personaggi) prima di esempi e guida. Nessun cambiamento ha toccato la libreria Python, che era il rischio maggiore. La fase ha ridotto il codice (−884 righe di sorgente): sostituire un linguaggio con una libreria piccola in un linguaggio vero è stato un buon affare. Rovesciata una regola di D-010 (messaggi a qualunque distanza, D-011): le regole d'interazione vanno provate, non solo decise.
 - **2026-09-27** F08: agenti LLM nell'host, dichiarati nel file del mondo. La prima versione di D-012 li voleva programmi Python: l'utente l'ha corretta prima della spec (l'agente deve funzionare senza Python). La verifica delle CLI come primo task ha evitato sorprese; il cervello finto ha reso provabile ogni regola senza costi. La prova d'uso ha mostrato comportamenti che solo un LLM vero produce (rifiuti «per carattere», piani di un passo, interruzioni) e ha portato sei emendamenti, tutti richieste dell'utente: risposte lunghe, `/describe` con i dati tecnici, commissioni per passi, conversazioni tra agenti. L'utente ha ricordato che yw3d è una simulazione, non un gioco: da osservare, con i dati tecnici in vista.
 - **2026-09-27** Chiusura di F08: per la prima volta le proposte della retrospettiva non sono state adottate. Ogni retro, da F06 in poi, aveva aggiunto regole; l'utente ha chiesto di non irrigidire un processo che funziona. Da qui il processo resta stabile, e una regola nuova entra solo per un problema osservato, non per prevenirne uno possibile.
+- **2026-09-27** F09: il tempo e la luce, dalla spec alla chiusura in una giornata. La prova d'uso subito dopo il ciclo di luce ha deciso il ritmo delle ombre e la rinuncia all'acqua; il vento, scritto per farlo vedere, è stato tolto lo stesso. Sei emendamenti, nessuno da ambiguità: la spec è diventata il registro delle scelte fatte guardando il mondo. Due difetti di fasi chiuse sono venuti fuori da soli: uno di F08, nascosto dai tempi di macOS e fermato dallo strumento di commit su Linux; uno di F05, visto solo guardando i personaggi fermi accanto a un gradino. Alla verifica la spec diceva ancora cose tolte dagli emendamenti: `sdd:trace` le ha trovate e un emendamento di allineamento (A9.6) le ha corrette, senza regole nuove.

@@ -11,11 +11,11 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **c** `[unit]` La libreria parla il protocollo dei controllori (PROTO-001, PROTO-002) al posto del programma: il programma non legge né scrive JSON.
 
 ### PY-002 — Struttura di un programma
-*Introdotto in F07 · ultima modifica: F07 (emendamento A7.7).*
+*Introdotto in F07 · ultima modifica: F09.*
 - **a** `[unit]` Un personaggio è una classe che estende quella della libreria, con una **routine** che si ripete e **gestori** per i messaggi che riceve e per gli eventi; un programma avvia la classe con una sola istruzione.
 - **b** `[unit]` Le azioni di PROTO-001.b (`walk_to`, `look_at`, `say`, `follow`, `wait`, `stop`) si chiamano come funzioni da attendere, con le mete della mappa (MAP-003); terminano quando l'azione è completata. Un'azione fallita solleva un'eccezione con la causa; un'azione sostituita non solleva errori.
 - **c** `[unit]` Quando arriva un messaggio, il suo gestore interrompe la routine; finito il gestore, la routine riprende dall'azione interrotta.
-- **d** `[unit]` Il programma legge dalla libreria, senza chiederli: posizione e stato del personaggio, entità vicine (PROTO-002.a), la mappa del mondo con id, nomi e descrizioni (MAP-002).
+- **d** `[unit]` Il programma legge dalla libreria, senza chiederli: posizione e stato del personaggio, entità vicine (PROTO-002.a), la mappa del mondo con id, nomi e descrizioni (MAP-002), l'ora del mondo e la parte del giorno.
 - **e** `[unit]` Un programma può fare una domanda al giocatore o a un altro personaggio e attenderne la risposta con un tempo limite: la risposta arriva come messaggio, con l'elemento della mappa nominato e il sì o no capiti secondo DIALOG-003; senza risposta entro il tempo limite la domanda restituisce nulla.
 
 ### PY-003 — Programmi nella cartella del mondo
