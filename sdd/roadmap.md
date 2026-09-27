@@ -96,16 +96,16 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 **Aree:** DIALOG, CHAR, PROTO, YAML (modificati), PY (nuova); BEHAV (rimossa).
 
 ## F08 — Agenti LLM
-**Obiettivo:** personaggi guidati da agenti LLM, configurati nel file del mondo o scritti in Python, che conoscono il mondo e parlano con il giocatore (D-012).
-- Agente pronto nella libreria Python: si estende in Python o si dichiara nel `world.yaml` (`agent:`), in modalità `headless` (Claude Code, Codex, opencode; modello ed effort facoltativi) o `api` (Anthropic, compatibile OpenAI; chiave in una variabile d'ambiente).
-- "Cervello e corpo": l'LLM riceve il contesto del mondo e risponde in forma strutturata (cosa dire, a chi, quali azioni); la libreria esegue con le azioni di F07, nel rispetto della fisica (P3).
+**Obiettivo:** personaggi guidati da agenti LLM configurati solo nel file del mondo, senza Python, che conoscono il mondo e parlano con il giocatore (D-012).
+- Agente nell'host, dichiarato nel `world.yaml` (`agent:`), in modalità `headless` (Claude Code, Codex, opencode; modello ed effort facoltativi) o `api` (Anthropic, compatibile OpenAI; chiave in una variabile d'ambiente).
+- "Cervello e corpo": l'LLM riceve il contesto del mondo e risponde in forma strutturata (cosa dire, a chi, quali azioni); l'host la esegue con le azioni dei personaggi, nel rispetto della fisica (P3).
 - Conoscenza del mondo: mappa con coordinate, personaggi, dintorni («Cosa vedi?»); prima il mondo, poi le conoscenze generali.
 - Iniziativa configurabile (solo reattivo o anche autonomo), memoria per personaggio, tempo limite e ripiego, limiti di frequenza.
 
 **Note per la spec:** se un agente può scrivere o modificare il programma Python del suo personaggio; una modalità a turni per esperimenti riproducibili; un server MCP per agenti esterni (fuori da F08, D-012).
 
 **Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
-**Aree:** AGENT (nuova); CHAR, PROTO, HOST, DEBUG, PY (modificati).
+**Aree:** AGENT (nuova); CHAR, PROTO, HOST, DEBUG, YAML (modificati).
 
 ## F09 — Natura viva
 Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline, lucciole), audio ambientale.

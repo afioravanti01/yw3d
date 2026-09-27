@@ -3,7 +3,7 @@
 > Principi non negoziabili del progetto. Ogni spec e ogni piano devono rispettarli.
 > Si modifica solo con una decisione esplicita registrata in [decisions.md](decisions.md).
 
-Versione: 1.4 — 2026-09-27 (D-012: agenti LLM come programmi Python, senza MCP in F08)
+Versione: 1.4 — 2026-09-27 (D-012: agenti LLM nell'host, configurati nel file del mondo, senza MCP in F08)
 
 ## Visione
 
@@ -60,7 +60,7 @@ Un personaggio può essere guidato da qualunque programma che parli il protocoll
 | Formato del mondo | YAML (da F02) |
 | Host | Processo Node headless, avviato con `yw3d <cartella del mondo>` (da F04) |
 | Protocollo dei controllori | Un modello di messaggi su due canali: JSON a righe su stdio, WebSocket (da F05); un server MCP resta possibile più avanti (D-012) |
-| Agenti LLM | Programmi Python della libreria `yw3d` che usano le CLI della macchina in modalità headless (Claude Code, Codex, opencode) o le API di Anthropic e compatibili con OpenAI (da F08; D-012) |
+| Agenti LLM | Nell'host, configurati nel file del mondo: CLI della macchina in modalità headless (Claude Code, Codex, opencode) o API di Anthropic e compatibili con OpenAI (da F08; D-012) |
 
 Motivazioni in [decisions.md](decisions.md) (D-001, D-008, D-009).
 
