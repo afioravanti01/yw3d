@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | **draft** |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-27 |
 | Piano | plan.md (dopo G1) |
 
@@ -34,14 +34,14 @@ Un personaggio si affida a un agente LLM scrivendo poche righe nel `world.yaml`,
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### AGENT-001 — Agenti nel file del mondo
-- **a** `[unit]` Un personaggio dichiara `agent:` in alternativa a `program` e `controller`, non insieme a loro. L'agente ha una modalità: `headless`, con la CLI da usare (`claude`, `codex`, `opencode`), oppure `api`, con il fornitore (`anthropic`, `openai`), un indirizzo facoltativo per i servizi compatibili con OpenAI e il nome della variabile d'ambiente con la chiave. Facoltativi: modello, effort, una persona (testo libero che si aggiunge alla descrizione del personaggio), obiettivi, iniziativa (AGENT-004). Gli errori seguono YAML-002.
-- **b** `[unit]` In modalità `headless`, senza modello o effort l'host non li indica alla CLI, che usa quelli già configurati; con modello o effort li passa alla CLI nel modo che la CLI prevede. Se una CLI non gestisce l'effort, il terminale lo segnala e l'agente funziona senza.
-- **c** `[unit]` In modalità `api` il modello è obbligatorio. La chiave si legge dalla variabile d'ambiente indicata, o da quella predefinita del fornitore; se manca, il terminale lo segnala con il personaggio, che sta fermo. La chiave non compare mai nei file, nel terminale, nei messaggi alle viste.
+- **a** `[unit]` Un personaggio dichiara `agent:` in alternativa a `program` e `controller`, non insieme a loro. L'agente ha una modalità: `headless`, con la CLI da usare (`claude`, `codex`, `opencode`), oppure `api`, con il fornitore (`anthropic`, `openai`), un indirizzo facoltativo per i servizi compatibili con OpenAI e il nome della variabile d'ambiente con la chiave, oppure `fake`, con risposte fisse e senza LLM, per le prove (Q7). Facoltativi: modello, effort (`low`, `medium`, `high`; Q6), una persona (testo libero che si aggiunge alla descrizione del personaggio), obiettivi, iniziativa (AGENT-004). Gli errori seguono YAML-002.
+- **b** `[unit]` In modalità `headless`, senza modello o effort l'host non li indica alla CLI, che usa quelli già configurati; con modello o effort li passa alla CLI nel modo che la CLI prevede. Se una CLI o un fornitore non gestisce l'effort, il terminale lo segnala e l'agente funziona senza (Q6).
+- **c** `[unit]` In modalità `api` il modello è obbligatorio. La chiave si legge dalla variabile d'ambiente indicata, o da quella predefinita del fornitore (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`; Q8); se manca, il terminale lo segnala con il personaggio, che sta fermo. La chiave non compare mai nei file, nel terminale, nei messaggi alle viste.
 - **d** `[unit]` Gli agenti passano dal consenso di PROTO-005: l'elenco mostra, per ogni agente, il comando della CLI o il fornitore e il modello. Una CLI che non si trova sulla macchina è segnalata con il personaggio (PROTO-005.b).
 
 ### AGENT-002 — Conoscenza del mondo
 - **a** `[unit]` Ogni richiesta all'LLM contiene: chi è il personaggio (nome, descrizione, persona, obiettivi); dove si trova (posizione e luoghi o strutture in cui è); la mappa del mondo con id, nomi, tipi, descrizioni e coordinate; le entità vicine con posizione, distanza e direzione; il tempo del mondo; la conversazione recente (AGENT-005); e ciò che ha fatto scattare la richiesta.
-- **b** `[unit]` I dintorni elencano gli elementi della mappa e i personaggi entro un raggio (Q2), con distanza e direzione (nord, nord-est, …): abbastanza per rispondere a «Cosa vedi?».
+- **b** `[unit]` I dintorni elencano gli elementi della mappa e i personaggi entro 32 blocchi (16 m; Q2), con distanza e direzione (nord, nord-est, …): abbastanza per rispondere a «Cosa vedi?».
 - **c** `[manuale]` A una domanda sul mondo l'agente risponde con ciò che il mondo contiene (posti, personaggi, dove si trovano); a una domanda d'altro tipo risponde con le sue conoscenze, restando nel personaggio.
 
 ### AGENT-003 — Risposta e azioni
@@ -50,18 +50,18 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **c** `[unit]` Una nuova richiesta che scatta mentre l'agente esegue le azioni precedenti (per esempio un nuovo messaggio) ottiene una nuova risposta, che sostituisce le azioni rimaste.
 
 ### AGENT-004 — Iniziativa
-- **a** `[unit]` Con l'iniziativa `reactive` (predefinita) l'agente interroga l'LLM solo quando serve: un messaggio rivolto a lui, il giocatore che si avvicina o preme E (Q1). Nel resto del tempo sta al suo posto.
+- **a** `[unit]` Con l'iniziativa `reactive` (predefinita) l'agente interroga l'LLM solo quando serve (Q1): un messaggio rivolto a lui; il giocatore che si avvicina, solo se prima era lontano da un po'; il tasto E. Le frasi dette vicino ma non rivolte a lui non fanno partire richieste. Nel resto del tempo sta al suo posto.
 - **b** `[unit]` Con l'iniziativa autonoma e un intervallo, l'agente interroga l'LLM anche da solo, a quell'intervallo, quando non ha azioni in corso, perché decida cosa fare secondo i suoi obiettivi.
-- **c** `[unit]` Tra agenti: un agente risponde a un altro personaggio solo se gli si rivolge; una conversazione tra due agenti senza il giocatore si ferma dopo un numero massimo di scambi (Q5).
+- **c** `[unit]` Tra agenti: un agente risponde a un altro personaggio solo se gli si rivolge; una conversazione tra due agenti senza il giocatore si ferma dopo 4 scambi di fila (Q5), finché non succede altro.
 
 ### AGENT-005 — Memoria
-- **a** `[unit]` L'agente ricorda gli ultimi scambi e le ultime azioni della sessione, e li riceve a ogni richiesta (AGENT-002.a). Alla ricarica del mondo la memoria riparte da zero (Q3).
+- **a** `[unit]` L'agente ricorda gli ultimi scambi e le ultime azioni della sessione, e li riceve a ogni richiesta (AGENT-002.a). Alla ricarica del mondo o al riavvio dell'host la memoria riparte da zero (Q3).
 
 ### AGENT-006 — Limiti e ripiego
 - **a** `[unit]` Il mondo non aspetta mai un agente: le richieste all'LLM non rallentano il passo di simulazione né le altre viste.
 - **b** `[unit]` Ogni agente fa una richiesta alla volta; ciò che succede nel frattempo confluisce nella richiesta successiva.
-- **c** `[unit]` Una richiesta che supera il tempo limite (Q4), o fallisce, si abbandona: il personaggio dice una frase di ripiego (configurabile, o nessuna) e il terminale riporta la causa.
-- **d** `[unit]` Ogni agente fa al più un numero massimo di richieste al minuto (Q4); oltre, le richieste aspettano.
+- **c** `[unit]` Una richiesta che supera il tempo limite (60 s in `headless`, 30 s in `api`; Q4), o fallisce, si abbandona: il personaggio tace, o dice la frase di ripiego se configurata, e il terminale riporta la causa.
+- **d** `[unit]` Ogni agente fa al più 6 richieste al minuto (Q4); oltre, le richieste aspettano.
 
 ### AGENT-007 — Esempi e guida
 - **a** `[manuale]` Una cartella d'esempio ha una pescatrice agente: le chiedo dove si pesca meglio, mi risponde e mi accompagna al laghetto; le chiedo «Cosa vedi?» e descrive i dintorni.
@@ -97,19 +97,19 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Domande aperte
-Da chiudere con l'utente prima di G1. Per ognuna c'è una proposta.
+## Domande risolte
+Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 
-| # | Domanda | Proposta |
-|---|---|---|
-| Q1 | Cosa fa scattare una richiesta in modalità `reactive` | Un messaggio rivolto all'agente, il giocatore che si avvicina (solo la prima volta dopo un po' che era lontano) e il tasto E. Le frasi dette vicino ma non rivolte a lui no, per non spendere a ogni chiacchiera |
-| Q2 | Raggio dei dintorni per «Cosa vedi?» | 32 blocchi (16 m), come la percezione; oltre, l'agente sa comunque dove stanno le cose dalla mappa |
-| Q3 | Memoria tra una sessione e l'altra | Solo nella sessione: alla ricarica o al riavvio riparte da zero. Una memoria salvata nella cartella del mondo in una fase successiva |
-| Q4 | Tempo limite, frequenza, ripiego | Tempo limite 60 s in `headless` (le CLI partono lente) e 30 s in `api`; al più 6 richieste al minuto per agente; frase di ripiego «…» (un attimo di silenzio) salvo diversa indicazione |
-| Q5 | Conversazioni tra agenti | Al più 4 scambi di fila tra agenti senza il giocatore; poi tacciono finché non succede altro |
-| Q6 | Valori dell'effort | `low`, `medium`, `high`, tradotti per ogni CLI e fornitore; dove non esiste, ignorato con un avviso |
-| Q7 | Un agente di prova senza LLM | Sì: una modalità `fake` con risposte fisse, per i test e per provare un mondo senza chiavi né CLI |
-| Q8 | Chiavi d'ambiente predefinite | `ANTHROPIC_API_KEY` e `OPENAI_API_KEY`; `api_key_env` per sceglierne un'altra (per esempio per OpenRouter) |
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Cosa fa scattare una richiesta in modalità `reactive` | Messaggio rivolto all'agente; giocatore che si avvicina dopo essere stato lontano; tasto E. Non le frasi dette vicino | AGENT-004.a |
+| Q2 | Raggio dei dintorni | 32 blocchi (16 m), come la percezione | AGENT-002.b |
+| Q3 | Memoria tra sessioni | Solo la sessione corrente | AGENT-005.a |
+| Q4 | Tempo limite, frequenza, ripiego | 60 s in `headless`, 30 s in `api`; 6 richieste al minuto; silenzio salvo frase configurata | AGENT-006.c–d |
+| Q5 | Conversazioni tra agenti | Al più 4 scambi di fila senza il giocatore | AGENT-004.c |
+| Q6 | Valori dell'effort | `low`, `medium`, `high`; ignorato con avviso dove non esiste | AGENT-001.a–b |
+| Q7 | Agente di prova senza LLM | Modalità `fake` con risposte fisse | AGENT-001.a |
+| Q8 | Chiavi d'ambiente predefinite | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`; `api_key_env` per altre | AGENT-001.c |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
