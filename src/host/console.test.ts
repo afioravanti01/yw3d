@@ -51,31 +51,43 @@ async function consoleOf() {
 }
 
 describe('the console of the host', () => {
-  it('DIALOG-004.a: the terminal shows what the player hears, with names; the player reads «Tu»', async () => {
+  it('DIALOG-004.a: the terminal shows every message of the world, also far from the player; the player reads «Tu»', async () => {
     const { session, lines, type, run } = await consoleOf();
     session.agents!.request('tobia', { kind: 'say', id: 's1', text: 'Dove devo andare?' });
+    // Lontana is 40 blocks away from the player: its message is in the terminal too.
+    session.agents!.request('lontana', { kind: 'say', id: 's2', text: 'Sono al bosco.' });
     run(0.1);
     type('@tobia al laghetto');
-    run(0.1);
     expect(lines).toContain('yw3d  Tobia: Dove devo andare?');
+    expect(lines).toContain('yw3d  Lontana: Sono al bosco.');
     expect(lines).toContain('yw3d  Tu → Tobia: al laghetto');
   });
 
-  it('DIALOG-004.b: a line typed in the terminal is said by the player, to the character of @id', async () => {
+  it('DIALOG-004.b: a typed line is a message of the player, to the character of @id or @name, or a command', async () => {
     const { session, lines, type } = await consoleOf();
     const heard: AgentEvent[] = [];
+    const far: AgentEvent[] = [];
     session.attachController('marta', { event: (_, e) => heard.push(e), perception: () => {} });
+    session.attachController('lontana', { event: (_, e) => far.push(e), perception: () => {} });
     type('Buongiorno!');
     type('@marta come stai?');
+    type('@Lontana torna qui');
     expect(heard).toEqual([
       expect.objectContaining({ type: 'heard', from: 'player', text: 'Buongiorno!', to: null }),
       expect.objectContaining({ type: 'heard', from: 'player', text: 'come stai?', to: 'marta' }),
+      expect.objectContaining({ type: 'heard', text: 'torna qui', to: 'lontana' }),
     ]);
+    expect(far).toEqual([expect.objectContaining({ text: 'torna qui', to: 'lontana' })]);
     type('@nessuno ciao');
     expect(lines.at(-1)).toBe(
       'yw3d  cannot say it: no character is called "nessuno"; the characters are: Tobia (tobia), Marta (marta), Lontana (lontana)',
     );
-    expect(heard).toHaveLength(2);
+    // Commands are answered in the terminal and not said in the world.
+    type('/help');
+    expect(lines).toContain('yw3d  /help: this help.');
+    type('/vola');
+    expect(lines.at(-1)).toBe('yw3d  unknown command "/vola": write /help');
+    expect(heard).toHaveLength(3);
   });
 
   it('DIALOG-004.c: the console only on an interactive terminal; a pending question takes the next line', async () => {

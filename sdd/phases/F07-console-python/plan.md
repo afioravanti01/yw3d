@@ -146,7 +146,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `messageConsole.ts` (P14) al posto di `chat.ts`; tutti i messaggi dall'host alle viste; modalità solo browser senza comportamenti.
   - Fatto quando: e2e di DIALOG-005.a–c, DIALOG-001.a, DIALOG-002.a, CHAR-001.d verdi; console provata nel browser.
 
-- [ ] **T7.05** Console dell'host
+- [x] **T7.05** Console dell'host
   - Req: DIALOG-004 · Dip: T7.03
   - Tutti i messaggi, `@nome`, `/help` nel terminale.
   - Fatto quando: test di DIALOG-004.a–b verdi.

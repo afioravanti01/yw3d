@@ -1,4 +1,5 @@
 import { createInterface } from 'node:readline';
+import { isCommand, runCommand } from '../core/dialogue/commands';
 import { describeLine } from '../core/dialogue/lines';
 import type { HostSession } from './session';
 import { PREFIX, type Terminal } from './terminal';
@@ -45,16 +46,23 @@ export function terminalInput(
 }
 
 /**
- * The console of the host (DIALOG-004): it prints what the player hears, and a typed line is
- * a sentence of the player, to the character named by `@id` (DIALOG-001.b–c).
+ * The console of the host (DIALOG-004): it prints every message of the world, as the console
+ * of the views does; a typed line is a message of the player, to the character named by `@`
+ * (id or name), or a command that starts with `/` (DIALOG-005.d, DIALOG-005.f).
  */
 export function startConsole(session: HostSession, input: LineInput, terminal: Terminal): void {
   session.listen((line) => terminal.line(`${PREFIX}  ${describeLine(line, true)}`));
   terminal.line(
-    `${PREFIX}  write here to speak as the player; @id at the start says it to someone`,
+    `${PREFIX}  write here to speak as the player; @name to one character; /help for more`,
   );
   input.onLine((text) => {
     if (text.trim() === '') return;
+    if (isCommand(text)) {
+      const result = runCommand(text);
+      if (result.ok) for (const line of result.lines) terminal.line(`${PREFIX}  ${line}`);
+      else terminal.line(`${PREFIX}  ${result.error}`);
+      return;
+    }
     const said = session.playerSays(text);
     if (!said.ok) terminal.line(`${PREFIX}  cannot say it: ${said.error}`);
   });
