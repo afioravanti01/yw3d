@@ -3,11 +3,11 @@
 > Principi non negoziabili del progetto. Ogni spec e ogni piano devono rispettarli.
 > Si modifica solo con una decisione esplicita registrata in [decisions.md](decisions.md).
 
-Versione: 1.2 — 2026-09-26 (D-009: solo riferimenti alle fasi; v1.1: D-008, host headless e controllori esterni)
+Versione: 1.3 — 2026-09-27 (D-010: personaggi programmati in Python, console dei messaggi)
 
 ## Visione
 
-yw3d è un mondo 3D a blocchi immerso nella natura e interamente **programmabile**: lo stato iniziale del mondo (terreno, strutture, personaggi) è descritto in un file YAML, e nuovi tipi di strutture e comportamenti si aggiungono via codice. Il mondo è il contenitore di personaggi animati guidati da programmi scritti dall'utente in qualunque linguaggio e da agenti LLM (claude, codex, opencode, ollama o altri), con cui il giocatore può interagire. Il mondo gira in un host headless avviato da riga di comando a partire da una cartella con il YAML e gli script; il browser è una vista collegata, e per i mondi senza controllori esterni può funzionare da solo. Tutto ciò che si muove rispetta la fisica del mondo.
+yw3d è un mondo 3D a blocchi immerso nella natura e interamente **programmabile**: lo stato iniziale del mondo (terreno, strutture, personaggi) è descritto in un file YAML, e nuovi tipi di strutture si aggiungono via codice. Il mondo è il contenitore di personaggi animati guidati da programmi scritti dall'utente, in Python come linguaggio di riferimento o in qualunque altro linguaggio, e da agenti LLM (claude, codex, opencode, ollama o altri), con cui il giocatore interagisce da una console dei messaggi. Il mondo gira in un host headless avviato da riga di comando a partire da una cartella con il YAML e gli script; il browser è una vista collegata, e per i mondi senza controllori esterni può funzionare da solo. Tutto ciò che si muove rispetta la fisica del mondo.
 
 Non è un clone di Minecraft: grafica senza texture pixel-art, voxel più piccoli, un mondo finito e "scritto" invece che infinito e casuale, strutture con un carattere proprio.
 
@@ -17,7 +17,7 @@ Non è un clone di Minecraft: grafica senza texture pixel-art, voxel più piccol
 Nessun codice di prodotto senza spec e piano approvati per la fase corrente (vedi [process.md](process.md)). Il codice che contraddice la spec è un difetto, anche se "funziona meglio".
 
 ### P2 — Il core è puro, deterministico e testabile senza browser
-`src/core` contiene lo stato e la logica del mondo: blocchi, generazione, fisica, personaggi, comportamenti. Non importa Three.js e non usa il DOM. Con gli stessi input (YAML, seed, sequenza di comandi) produce gli stessi risultati. Il rendering è una vista: legge il core e non lo modifica.
+`src/core` contiene lo stato e la logica del mondo: blocchi, generazione, fisica, personaggi, navigazione, dialogo. Non importa Three.js e non usa il DOM. Con gli stessi input (YAML, seed, sequenza di comandi) produce gli stessi risultati. Il rendering è una vista: legge il core e non lo modifica.
 
 ### P3 — La fisica è l'unica autorità sul movimento
 Giocatore, personaggi scriptati e personaggi AI esprimono **intenzioni** (vai là, salta, guarda); solo il sistema fisico e di movimento cambia le posizioni. Nessuno, nemmeno un modello AI, può teletrasportare un'entità o farle attraversare un blocco solido. Unica eccezione: lo spawn iniziale dichiarato nel YAML.
@@ -26,7 +26,7 @@ Giocatore, personaggi scriptati e personaggi AI esprimono **intenzioni** (vai l�
 Stesso YAML e stesso codice registrato producono lo stesso mondo iniziale. Il YAML è validato: un errore produce un messaggio che indica file, percorso del campo e causa, mai un crash o un errore silenzioso.
 
 ### P5 — Estendibilità tramite registri tipizzati
-Tipi di blocco, strutture e comportamenti si aggiungono registrandoli tramite API tipizzate. Aggiungere un tipo non richiede di modificare il core.
+Tipi di blocco e strutture si aggiungono registrandoli tramite API tipizzate; i personaggi si programmano con programmi esterni che parlano il protocollo (P10). Aggiungere un tipo non richiede di modificare il core.
 
 ### P6 — Identità visiva propria
 - Nessuna texture bitmap sui blocchi: colore per vertice da una palette naturale, con variazioni deterministiche.
@@ -59,8 +59,8 @@ Un personaggio può essere guidato da qualunque programma che parli il protocoll
 | Test end-to-end | Playwright (Chromium) |
 | Formato del mondo | YAML (da F02) |
 | Host | Processo Node headless, avviato con `yw3d <cartella del mondo>` (da F04) |
-| Protocollo dei controllori | Un modello di messaggi su tre canali: JSON a righe su stdio, WebSocket, server MCP (da F05–F07) |
-| Agenti LLM | CLI disponibili sulla macchina dell'utente, in modalità headless, collegate via MCP (da F07; D-008, D-009) |
+| Protocollo dei controllori | Un modello di messaggi su tre canali: JSON a righe su stdio, WebSocket, server MCP (da F05–F08) |
+| Agenti LLM | CLI disponibili sulla macchina dell'utente, in modalità headless, collegate via MCP (da F08; D-008, D-010) |
 
 Motivazioni in [decisions.md](decisions.md) (D-001, D-008, D-009).
 

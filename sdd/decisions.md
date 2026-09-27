@@ -107,3 +107,27 @@ Data: 2026-09-26 · Stato: accettata (discussione con l'utente dopo la chiusura 
 - Lo schema del file del mondo passa alla versione 2; i file in versione 1 vanno aggiornati.
 - Il core cresce di un interprete. Il confine del vocabolario chiuso va difeso spec dopo spec: un DSL tende a diventare un linguaggio di programmazione scritto male.
 - In F07 l'agente LLM userà mappa, mete e dialogo di F06; resta da decidere se un agente può anche scrivere o modificare il comportamento del suo personaggio.
+
+## D-010 — Personaggi programmati in Python e console dei messaggi
+Data: 2026-09-27 · Stato: accettata (dopo l'uso di F06 da parte dell'utente) · Supera il punto 1 di D-009 e ne aggiorna la roadmap
+
+**Contesto.** Usando il mondo di F06 l'utente ha trovato due problemi. Il linguaggio dei comportamenti in YAML è scomodo da scrivere e poco leggibile: un personaggio con qualche reazione diventa una lunga struttura annidata difficile da seguire. Il dialogo è scomodo: bisogna avvicinarsi, puntare il personaggio e premere Invio, e i messaggi si perdono se non si guarda nel punto giusto.
+
+**Decisione.**
+1. **Il linguaggio dei comportamenti si rimuove** del tutto: interprete, libreria, guida, esempi e requisiti. Del punto 1 di D-009 resta l'idea di fondo, programmare i personaggi dalla cartella del mondo; i punti 2–4 (controllori esterni, nomi e mappa, dialogo) restano validi.
+2. **Python è il linguaggio di riferimento** per programmare i personaggi. Una libreria Python `yw3d`, solo con la libreria standard, fa da template: un programma è una classe con una routine e dei gestori di eventi e messaggi, le azioni si attendono (`await self.walk_to("laghetto1")`), mappa e percezione sono a disposizione. Il corpo del programma deve leggersi come la descrizione del personaggio.
+3. **I programmi stanno nella cartella del mondo e girano come processi dell'host**, con il protocollo dei controllori (P10) e il consenso ricordato per cartella (PROTO-005). Gli altri linguaggi restano possibili tramite il protocollo.
+4. **Console dei messaggi.** Ogni vista ha sulla destra una console trasparente con tutti i messaggi del mondo. `@nome testo` scrive a un personaggio a qualunque distanza; senza `@` la frase è detta ad alta voce, e la sente chi è entro 16 blocchi. La console è il punto da cui si gestisce l'interazione e in futuro ospiterà i comandi di programmazione. Avvicinarsi e puntare un personaggio non serve più.
+5. **Roadmap.** Questi punti formano la nuova F07; gli agenti LLM passano a F08 e la natura viva a F09. Nella costituzione cambiano visione, P2, P5 e i riferimenti alle fasi (v1.3).
+
+**Alternative.**
+- *Tenere il linguaggio e aggiungere Python*: due modi di fare la stessa cosa, e il più scomodo da mantenere.
+- *JavaScript come linguaggio di riferimento*: stesso motore del progetto, ma l'utente preferisce Python per leggibilità e diffusione.
+- *Python nel browser (Pyodide)*: i personaggi vivrebbero anche senza host, ma con un runtime di circa 10 MB, più lento, e una fase molto più complessa.
+- *Console con i soli messaggi uditi*: coerente con lo spazio del mondo, ma i messaggi continuerebbero a perdersi.
+
+**Conseguenze.**
+- Senza host i personaggi tornano fermi, come in F05 (CHAR-001.d); il vantaggio della modalità solo browser di D-009 si perde.
+- I personaggi guidati da un programma reagiscono in tempo reale: una sessione non si rigioca identica. Il core resta deterministico per mondo, fisica e navigazione.
+- Il core perde l'interprete (circa 2500 righe e 1200 di test); gli esempi si riscrivono in Python.
+- F06 si chiude com'è stata consegnata; la sua retro registra che il linguaggio, provato, non ha funzionato: è il primo requisito scoperto sbagliato usando il sistema.

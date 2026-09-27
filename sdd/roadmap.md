@@ -10,10 +10,11 @@
 | F04 | Host e riga di comando | `done` (G3, 2026-09-26) | F03 |
 | F05 | Personaggi e protocollo dei controllori | `done` (G3, 2026-09-26) | F04 |
 | F06 | Comportamenti, mappa e dialogo | `implementing` | F05 |
-| F07 | Agenti LLM | planned | F06 |
-| F08 | Natura viva | planned | F02 |
+| F07 | Console dei messaggi e personaggi in Python | planned | F06 |
+| F08 | Agenti LLM | planned | F07 |
+| F09 | Natura viva | planned | F02 |
 
-La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM, che passano a F07; la natura viva passa a F08.
+La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09.
 
 ## F01 — Fondamenta e mondo voxel
 **Obiettivo:** un mondo a blocchi finito, generato in modo deterministico, con uno stile riconoscibilmente diverso da Minecraft, esplorabile con una camera libera. Fondamenta tecniche: separazione core/rendering, test headless, tracciabilità automatica.
@@ -84,7 +85,17 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 **Demo:** un personaggio mi chiede «Dove devo andare?», scrivo «laghetto1» e lui va sulla sponda del laghetto.
 **Aree:** BEHAV, MAP, DIALOG (nuove); YAML, CHAR, PROTO, STRUCT, HOST, DEBUG (modificati).
 
-## F07 — Agenti LLM
+## F07 — Console dei messaggi e personaggi in Python
+**Obiettivo:** il giocatore interagisce con i personaggi da una console dei messaggi, e gli autori programmano i personaggi in Python con una libreria che fa da template (D-010).
+- Console trasparente sulla destra di ogni vista con tutti i messaggi del mondo; `@nome testo` scrive a un personaggio a qualunque distanza, senza `@` si parla ad alta voce entro 16 blocchi. Punto unico dell'interazione, predisposto per i comandi di programmazione.
+- Libreria Python `yw3d` (solo libreria standard): una classe per personaggio con routine e gestori di messaggi ed eventi, azioni da attendere, mappa e percezione. Template leggibile e documentato.
+- Programmi Python nella cartella del mondo, lanciati dall'host con il consenso ricordato per cartella.
+- Rimozione del linguaggio dei comportamenti in YAML (requisiti BEHAV, guida, esempi); esempi rifatti in Python.
+
+**Demo:** scrivo `@tobia dove vai?` dalla console senza cercarlo nel mondo; Tobia, programmato in Python in poche righe leggibili, mi risponde e va dove gli dico.
+**Aree:** DIALOG, CHAR, PROTO, YAML (modificati), PY (nuova); BEHAV (rimossa).
+
+## F08 — Agenti LLM
 **Obiettivo:** personaggi guidati da agenti LLM tramite le CLI disponibili sulla macchina dell'utente.
 - Server MCP dell'host: le azioni di F05 come strumenti, mappa (F06) e percezione come risorse o come risposte agli strumenti.
 - Controllori `agent` nel YAML: quale CLI usare (claude, codex, opencode, ollama…), persona, obiettivi, luogo di riferimento; avvio headless e verifica della configurazione.
@@ -92,23 +103,23 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 - Dialogo libero con il giocatore, sul dialogo di F06; memoria per personaggio.
 - Budget di costo e latenza, limiti di frequenza, ripiego se l'agente non risponde. Valutazione di una modalità a turni per esperimenti riproducibili (D-008).
 
-**Note per la spec** (da D-009, 2026-09-26): decidere se un agente può scrivere o modificare il comportamento del suo personaggio (F06), oltre a guidarlo con le azioni.
+**Note per la spec** (da D-009, aggiornata con D-010): decidere se un agente può scrivere o modificare il programma Python del suo personaggio, oltre a guidarlo con le azioni.
 
 **Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
 **Aree:** AGENT, MCP (nuove); PROTO, DIALOG (modificati).
 
-## F08 — Natura viva
+## F09 — Natura viva
 Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline, lucciole), audio ambientale.
 
-**Note per la spec** (da F06, 2026-09-26): un orologio del mondo con l'ora del giorno, usabile nelle condizioni dei comportamenti.
-**Aree:** RENDER, AUDIO, WORLD, BEHAV.
+**Note per la spec** (da F06, 2026-09-26): un orologio del mondo con l'ora del giorno, a disposizione dei programmi dei personaggi.
+**Aree:** RENDER, AUDIO, WORLD.
 
 ## Idee in attesa (non pianificate)
 - Blocchi non cubici (rampe, cunei) per tetti e terreno più morbido.
 - Modifica dei blocchi in gioco e salvataggio dello stato.
 - Altre strutture: ponti, recinti, mulini, sentieri.
-- Personaggi AI che conversano tra loro; domande tra personaggi nel linguaggio dei comportamenti.
-- Estensioni del linguaggio dei comportamenti dichiarate nella cartella del mondo.
+- Personaggi che conversano tra loro.
+- Comandi di programmazione nella console dei messaggi (D-010).
 - Interazione senza browser (D-008): console di comandi dell'host oltre al dialogo di F06, mappa testuale nel terminale, screenshot su richiesta, riproduzione delle sessioni registrate.
 - Apertura di una cartella del mondo direttamente dal browser, senza host (trascinamento o selettore di file).
 - Pubblicazione del comando `yw3d` su npm.
@@ -116,7 +127,7 @@ Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline,
 
 ## Anteprima del YAML (non normativa)
 
-Solo per dare un'idea della direzione. Terreno, strutture e personaggi con controllori sono definiti nelle spec vive ([world-file.md](specs/world-file.md), [characters.md](specs/characters.md)); nomi, luoghi e comportamenti li definisce la spec di F06, gli agenti quella di F07.
+Solo per dare un'idea della direzione. Terreno, strutture e personaggi con controllori sono definiti nelle spec vive ([world-file.md](specs/world-file.md), [characters.md](specs/characters.md)); nomi e luoghi la spec di F06; i programmi Python li definirà la spec di F07, gli agenti quella di F08.
 
 ```yaml
 version: 2
@@ -151,12 +162,7 @@ characters:
     name: Tobia
     description: Garzone del fabbro, sempre in cerca di commissioni.
     at: [150, 70]
-    behavior:                           # declarative behavior (F06)
-      routine:
-        - ask: Dove devo andare?
-          expect: place
-          then:
-            - walk_to: answer
+    program: characters/tobia.py        # F07: Python with the yw3d library
   - id: guardiano
     name: Il guardiano
     at: [160, 70]
@@ -166,7 +172,7 @@ characters:
     name: Marta
     at: [196, 118]
     controller:
-      agent: claude                     # F07: or codex, opencode, ollama…
+      agent: claude                     # F08: or codex, opencode, ollama…
       persona: >
         Anziana pescatrice del villaggio, conosce ogni albero della valle
         e diffida dei forestieri finché non le si parla del laghetto.
