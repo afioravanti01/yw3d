@@ -98,4 +98,24 @@ describe('what an agent knows of the world', () => {
       'answer fully and precisely, up to about 300 words',
     );
   });
+
+  it('CHAR-003.c: the agent of an animal never speaks a human language, only makes sounds, and moves about', () => {
+    const input = {
+      map,
+      self,
+      nearby,
+      time: 0,
+      memory: [],
+      triggers: [{ kind: 'autonomous' as const }],
+    };
+    const text = buildContext({
+      ...input,
+      identity: { id: 'bimba', name: 'Bimba', description: 'Una scimmietta.', body: 'monkey' },
+    });
+    expect(text).toContain('You are Bimba, an animal of yw3d, a world of blocks: a monkey.');
+    expect(text).toContain('You never speak a human language');
+    expect(text).toContain('Never stand still for long.');
+    expect(text).not.toContain('Answer in the language of whoever speaks to you');
+    expect(text).toContain('Nothing in particular: decide what to do now');
+  });
 });

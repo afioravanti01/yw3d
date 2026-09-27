@@ -77,6 +77,7 @@ I luoghi non cambiano il mondo: danno un nome a un punto o a una zona.
 | `appearance` | no | Colori: `skin`, `hair`, `shirt`, `trousers`, come `'#a55f3a'`. |
 | `program` | no | Un programma Python della cartella del mondo, per esempio `characters/tobia.py` (vedi [docs/python.md](../docs/python.md)). |
 | `controller` | no | In alternativa a `program`: `{ command: … }`, un programma in qualunque linguaggio (vedi [docs/controllori.md](../docs/controllori.md)). |
+| `body` | no | `human` (predefinito) o `monkey`: una scimmietta, alta circa 0,7 m, con una figura sua (vedi [docs/agenti.md](../docs/agenti.md#animali)). |
 | `agent` | no | In alternativa a `program` e `controller`: un agente LLM guidato dall'host, per esempio `{ mode: headless, cli: claude, model: sonnet }` (vedi [docs/agenti.md](../docs/agenti.md)). |
 
 Un personaggio ha al più uno tra `program`, `controller` e `agent`; senza nessuno sta fermo. Le chiavi `behavior` e `behaviors` dei comportamenti in YAML non esistono più: sono un errore che rimanda ai programmi Python.

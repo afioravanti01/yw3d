@@ -19,6 +19,8 @@ export interface AgentIdentity {
   readonly goals?: readonly string[];
   /** Short answers for the bubble, or long ones for the console (A8.1). */
   readonly answers?: 'short' | 'long';
+  /** A person, or an animal (CHAR-003.c). */
+  readonly body?: string;
 }
 
 export interface Point {
@@ -209,6 +211,29 @@ function describeTrigger(t: AgentTrigger): string {
 
 /** The fixed instructions of every request (plan F08 P3). */
 function instructions(identity: AgentIdentity): string {
+  const animal = identity.body !== undefined && identity.body !== 'human';
+  const common = [
+    `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
+    'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',
+    'Plans in steps: set "continue": true when your actions are one step of a longer plan and you must decide again once they are done (you will be asked); set it to false when you are done.',
+  ];
+  const reply =
+    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …], "continue": false}.';
+  if (animal) {
+    // An animal: no human language, it moves about (CHAR-003.c, plan F09 P13).
+    return [
+      `You are ${identity.name}, an animal of yw3d, a world of blocks: a ${identity.body}.`,
+      identity.description ?? '',
+      identity.persona ?? '',
+      identity.goals?.length ? `Your goals: ${identity.goals.join('; ')}.` : '',
+      `You never speak a human language. In "say" you may only make a short sound of your kind (for a monkey: "Uh uh!", "Iiih!", "Ah-ah-ah!"), or say nothing. You understand people only a little: if called, you may come, follow or run away, as a ${identity.body} would.`,
+      'When nothing in particular happens, move: walk_to somewhere interesting of your surroundings or of the world (a tree, a person, the water, a house), a different place each time, sometimes looking at things or waiting a moment. Never stand still for long.',
+      ...common,
+      reply,
+    ]
+      .filter((line) => line !== '')
+      .join('\n');
+  }
   return [
     `You are ${identity.name}, a character of yw3d, a world of blocks.`,
     identity.description ?? '',
@@ -217,15 +242,14 @@ function instructions(identity: AgentIdentity): string {
     'Stay in character. Answer in the language of whoever speaks to you.',
     'The player can ask you to do things: do them, unless they are impossible in this world. Your character colors how you speak, never whether you help: grumble if it fits you, but go. "Vai da Anselmo", "portami al laghetto", "seguimi" are requests to you.',
     'When someone speaks to you, answer them: say.to = their id.',
-    'Plans in steps: set "continue": true when your actions are one step of a longer plan and you must decide again once they are done (you will be asked); set it to false when you are done.',
     'Conversations: when the player asks you to talk with someone, or to ask them something, walk_to them with "continue": true; once there, speak to them (say.to = their id) and carry on the conversation as your character would, answering what they say. The player reads every message in the console: do not go back to report to the player, unless the player asks you to.',
     'First use what the world state below says: places, characters, where things are. When asked what you see, or where something is, name the places and the characters of your surroundings with their names, their direction and roughly their distance in meters. When a question is not about this world, answer with your own knowledge, as your character would.',
-    `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
-    'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',
-    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …], "continue": false}. ' +
-      (identity.answers === 'long'
+    ...common,
+    `${reply} ${
+      identity.answers === 'long'
         ? `When a question asks for it, answer fully and precisely, up to about 300 words (at most ${LONG_SAY_LENGTH} characters); otherwise keep it short. Markdown is allowed.`
-        : 'Keep what you say short: one to three sentences; Markdown is allowed.'),
+        : 'Keep what you say short: one to three sentences; Markdown is allowed.'
+    }`,
   ]
     .filter((line) => line !== '')
     .join('\n');

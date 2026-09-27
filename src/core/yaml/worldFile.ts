@@ -159,6 +159,10 @@ const playerSchema = object({
 export const BEHAVIORS_REMOVED =
   'behaviors in YAML were replaced by Python programs: see docs/python.md';
 
+/** Bodies of the characters (CHAR-003.a). */
+export const BODIES = ['human', 'monkey'] as const;
+export type Body = (typeof BODIES)[number];
+
 /** Brains an agent can use (AGENT-001.a, plan F08 P2). */
 export const AGENT_CLIS = ['claude', 'codex', 'opencode'] as const;
 export const AGENT_PROVIDERS = ['anthropic', 'openai'] as const;
@@ -224,6 +228,8 @@ const characterSchema = object(
     yaw: number({ min: -360, max: 360, default: 0 }),
     appearance: optional(appearanceSchema),
     program: optional(str()),
+    /** The body: a person, or an animal (CHAR-003, A9.1). */
+    body: oneOf(BODIES, { default: 'human' }),
     agent: optional(agentSchema),
     behavior: optional(unknownValue()),
     controller: optional(object({ command: str() })),

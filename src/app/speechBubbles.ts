@@ -15,6 +15,8 @@ export interface Labelled {
   readonly y: number;
   readonly z: number;
   readonly speech: string | null;
+  /** Height of the label above the feet, blocks; above a person's head when absent. */
+  readonly above?: number;
 }
 
 /**
@@ -37,7 +39,7 @@ export class SpeechBubbles {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     for (const f of figures) {
-      this.point.set(f.x, f.y + ABOVE, f.z);
+      this.point.set(f.x, f.y + (f.above ?? ABOVE), f.z);
       const distance = this.point.distanceTo(camera.position);
       this.point.project(camera);
       if (this.point.z > 1 || distance > LABEL_DISTANCE) continue;

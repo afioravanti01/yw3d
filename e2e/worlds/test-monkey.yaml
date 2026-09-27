@@ -1,0 +1,13 @@
+# End-to-end test world with a monkey (CHAR-003).
+version: 2
+name: Bosco della scimmietta
+terrain:
+  seed: 7
+  generator: 1
+  size: [128, 96, 128]
+player:
+  at: [64, 60]
+  yaw: 180
+characters:
+  - { id: bimba, name: Bimba, at: [64, 64], body: monkey, agent: { mode: fake } }
+  - { id: anna, name: Anna, at: [67, 64] }

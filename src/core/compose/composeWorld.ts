@@ -19,6 +19,7 @@ import {
   loadWorldFile,
   DEFAULT_CONVERSATION_TURNS,
   type AgentDecl,
+  type Body,
   type PlaceDecl,
 } from '../yaml/worldFile';
 import { insideFolder } from '../yaml/paths';
@@ -58,6 +59,8 @@ export interface CharacterStart {
   readonly program: string | undefined;
   /** Its LLM agent, if any (AGENT-001). */
   readonly agent?: AgentDecl;
+  /** A person or an animal (CHAR-003.a); a person when absent. */
+  readonly body?: Body;
 }
 
 export interface PlacedStructure {
@@ -362,6 +365,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       command: c.controller?.command,
       program: c.program === undefined ? undefined : insideFolder(c.program),
       agent: c.agent,
+      body: c.body,
     })),
     placements: placements.map((p) => ({
       type: p.type.name,

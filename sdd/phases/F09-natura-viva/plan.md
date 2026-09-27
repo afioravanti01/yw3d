@@ -117,12 +117,12 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `self.clock` e `self.part_of_day` nella libreria; ora nel contesto degli agenti; guide `docs/python.md`, `docs/agenti.md`, `docs/controllori.md`, `worlds/README.md`.
   - Fatto quando: test di PY-002.d e AGENT-002.a verdi; un agente dice l'ora giusta dal vivo.
 
-- [ ] **T9.12** Corpo della scimmietta
+- [x] **T9.12** Corpo della scimmietta
   - Req: CHAR-003, CHAR-001 · Dip: T9.05
   - Campo `body`; entità più piccola; figura e pose della scimmietta (P12).
   - Fatto quando: test di CHAR-003.a e delle pose verdi; la scimmietta si vede camminare nel browser.
 
-- [ ] **T9.13** Agente animale e scimmietta nell'esempio
+- [x] **T9.13** Agente animale e scimmietta nell'esempio
   - Req: CHAR-003 · Dip: T9.12
   - Istruzioni da animale (P13); la scimmietta autonoma in `examples/agenti`; guida `docs/agenti.md`.
   - Fatto quando: test di CHAR-003.c verdi; dal vivo la scimmietta si sposta da sola a ogni intervallo.
@@ -154,3 +154,4 @@ Task in ordine, fermandosi alla prova d'uso di T9.05. Commit a fine task con `np
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T9.12, T9.13 | Fatti prima di chiudere la prova d'uso di T9.05 | Richiesta dell'utente durante la prova: la scimmietta nel mondo degli agenti | Nessuno |

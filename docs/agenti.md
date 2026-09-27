@@ -92,6 +92,21 @@ Le richieste del giocatore si eseguono: il carattere colora il modo di parlare, 
 - **`reactive`** (predefinita): l'agente pensa quando gli si rivolge un messaggio, quando preme E il giocatore vicino, e quando il giocatore arriva dopo essere stato lontano almeno un minuto. Le frasi dette intorno, ma non a lui, non lo fanno pensare.
 - **`autonomous`**: in più, ogni `every` secondi, se non sta facendo niente, decide da solo cosa fare secondo i suoi `goals`.
 
+## Animali
+
+Un personaggio può avere il corpo di una scimmietta: `body: monkey`. È alta circa 0,7 m, ha una figura sua (pelo marrone, muso chiaro, coda) e si guida come ogni personaggio. Con un agente, riceve istruzioni da animale: non parla, al più fa versi («*Uh uh!*»), e con l'iniziativa autonoma si sposta da sola.
+
+```yaml
+- id: bimba
+  name: Bimba
+  description: Una scimmietta curiosa e dispettosa che vive tra le querce del borgo.
+  at: [176, 96]
+  body: monkey
+  agent: { mode: headless, cli: claude, model: haiku, initiative: autonomous, every: 20 }
+```
+
+Ogni `every` secondi decide dove andare: sono circa 180 richieste all'ora con 20 s, quindi conviene un modello economico.
+
 ## Conversazioni tra agenti
 
 Gli agenti si parlano: `@Marta parla con Anselmo di come si sceglie il momento giusto per pescare`. Una conversazione tra agenti senza il giocatore dura al più 12 battute in tutto; gli agenti sanno quante ne restano e la chiudono con naturalezza. Se intervieni, il conto riparte. Il limite si cambia nel mondo:

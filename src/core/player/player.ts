@@ -5,6 +5,8 @@ import { metersToBlocks } from '../world/units';
 
 /** The player: 0.6 m wide, 1.75 m tall, eyes at 1.6 m (PLAYER-001.a). */
 export const PLAYER_SIZE: BoxSize = { width: metersToBlocks(0.6), height: metersToBlocks(1.75) };
+/** A monkey, about 0.7 m tall (CHAR-003.a, plan F09 P12). */
+export const MONKEY_SIZE: BoxSize = { width: metersToBlocks(0.4), height: metersToBlocks(0.7) };
 export const EYE_HEIGHT = metersToBlocks(1.6);
 
 /**

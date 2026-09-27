@@ -444,7 +444,15 @@ async function main(): Promise<void> {
     // Names over the figures (A6.4); the player's name and bubble where its figure shows:
     // third person, free camera, spectators.
     const names = new Map(current.result.characters.map((c) => [c.id, c.name]));
-    const labelled: Labelled[] = characters.map((c) => ({ ...c, name: names.get(c.id) ?? c.id }));
+    const monkeys = new Set(
+      current.result.characters.filter((c) => c.body === 'monkey').map((c) => c.id),
+    );
+    const labelled: Labelled[] = characters.map((c) => ({
+      ...c,
+      name: names.get(c.id) ?? c.id,
+      // Just above the head of a monkey (CHAR-003.b).
+      ...(monkeys.has(c.id) ? { above: 1.8 } : {}),
+    }));
     if (playerView.mode !== 'first') {
       const speech = connection
         ? (connection.latest()?.speech ?? null)

@@ -410,6 +410,7 @@ export class HostSession {
         persona: agent.persona,
         goals: agent.goals,
         answers: agent.answers,
+        body: character.body,
       },
       agent,
       brain,

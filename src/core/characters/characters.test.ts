@@ -40,6 +40,7 @@ describe('characters', () => {
         yaw: -Math.PI / 2,
         appearance: expect.objectContaining({ shirt: 0x3a5f8e }),
         command: 'python guardiano.py',
+        body: 'human',
       },
       expect.objectContaining({
         id: 'marta',
