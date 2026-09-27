@@ -13,7 +13,12 @@ import { basinOf, buildStructure, type StructureRegistry } from '../structures/r
 import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
-import { DEFAULT_PLAYER_NAME, loadWorldFile, type PlaceDecl } from '../yaml/worldFile';
+import {
+  DEFAULT_PLAYER_NAME,
+  loadWorldFile,
+  type AgentDecl,
+  type PlaceDecl,
+} from '../yaml/worldFile';
 import { insideFolder } from '../yaml/paths';
 import { areaInsideWorld } from './areas';
 import { buildWorldMap, checkIds, type Goal, type WorldMap } from '../map/worldMap';
@@ -49,6 +54,8 @@ export interface CharacterStart {
   readonly command: string | undefined;
   /** Its Python program, relative to the world folder, if any (PY-003.a). */
   readonly program: string | undefined;
+  /** Its LLM agent, if any (AGENT-001). */
+  readonly agent?: AgentDecl;
 }
 
 export interface PlacedStructure {
@@ -343,6 +350,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       appearance: resolveAppearance(c.appearance, seed, c.id),
       command: c.controller?.command,
       program: c.program === undefined ? undefined : insideFolder(c.program),
+      agent: c.agent,
     })),
     placements: placements.map((p) => ({
       type: p.type.name,

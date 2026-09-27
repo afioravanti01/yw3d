@@ -116,7 +116,7 @@ describe('Python programs of the world folder', () => {
       {
         line: 9,
         path: 'characters[0].controller',
-        message: 'a character has either a program or a controller, not both',
+        message: 'a character has one of program, controller or agent, not more',
       },
     ]);
     expect(programCommand('python3', 'personaggi/il garzone.py')).toBe(

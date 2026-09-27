@@ -90,7 +90,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Nessun codice di prodotto. Per Claude Code e Codex (con l'utente, che esegue i comandi dove il sandbox non arriva): opzioni per modello, effort, risposta strutturata, strumenti disattivati, una chiamata vera con un contesto di prova. Per opencode le opzioni documentate. Per le API il parametro dell'effort. Esiti nella tabella «Cervelli» di questo piano.
   - Fatto quando: la tabella dice, per ogni cervello, come si passano modello, effort e schema, e la chiamata di prova ha risposto.
 
-- [ ] **T8.02** Agenti nel file del mondo e consenso
+- [x] **T8.02** Agenti nel file del mondo e consenso
   - Req: AGENT-001, CHAR-001, PROTO-005, HOST-001 · Dip: T8.01
   - Schema `agent` (P4 della spec, Q6–Q8), esclusivo con `program` e `controller`; configurazione nel risultato della composizione; agenti nell'elenco e nell'impronta del consenso (P12); righe del terminale.
   - Fatto quando: test di AGENT-001.a e .d, CHAR-001.a e .c, PROTO-005.a verdi.

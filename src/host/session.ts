@@ -23,6 +23,8 @@ import {
 import { checkPrograms, type CommandConsent } from './consent';
 import { startStdioController, type RunningController } from './controllers/stdio';
 import { checkPython, defaultPython, programCommand, programEnv, type PythonCheck } from './python';
+import { checkAgent, describeAgent } from './agents/config';
+import type { AgentDecl } from '../core/yaml/worldFile';
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
 import { structureFiles, type WorldFolder } from './worldFolder';
@@ -50,6 +52,8 @@ export interface SessionOptions {
   readonly consent?: CommandConsent;
   /** The Python interpreter of the programs (`--python`); `python3` by default (F07 Q2). */
   readonly python?: string;
+  /** The environment of the agents (PATH of the CLIs, keys); the host's own by default. */
+  readonly env?: NodeJS.ProcessEnv;
   /** Checks the interpreter; replaced in tests. */
   readonly checkPython?: (python: string) => PythonCheck;
   /** The sentences the player hears (DIALOG-004.a): the console of the host. */
@@ -105,6 +109,10 @@ export class HostSession {
   /** Physics, player, characters and dialogue (plan F06 P1); undefined before the first world. */
   sim: Simulation | undefined;
   private controllers: RunningController[] = [];
+  /** The agents declared by the world now running (AGENT-001). */
+  private agentsToStart: { readonly id: string; readonly agent: AgentDecl }[] = [];
+  /** Called when an agent may start; the runtime of the agents comes with T8.05. */
+  agentStarted: ((id: string, agent: AgentDecl) => void) | undefined;
   /** State of the program of each character that has one (DEBUG-001.a, plan F07 P15). */
   private readonly programs = new Map<string, ProgramStatus>();
   private python: PythonCheck | undefined;
@@ -241,7 +249,13 @@ export class HostSession {
         `${PREFIX}  characters: ${world.result.characters
           .map(
             (c) =>
-              `${c.id} (${c.program ? `program ${c.program}` : (c.command ?? 'no controller')})`,
+              `${c.id} (${
+                c.agent
+                  ? describeAgent(c.agent)
+                  : c.program
+                    ? `program ${c.program}`
+                    : (c.command ?? 'no controller')
+              })`,
           )
           .join(', ')}`,
       );
@@ -281,17 +295,26 @@ export class HostSession {
     this.controllers = [];
     this.programs.clear();
     const python = this.options.python ?? defaultPython();
+    this.agentsToStart = [];
     const declared = world.result.characters.flatMap((c) => {
+      if (c.agent) {
+        this.agentsToStart.push({ id: c.id, agent: c.agent });
+        // A fake agent runs no program and uses no network: nothing to allow (plan F08 P12).
+        if (c.agent.mode === 'fake') return [];
+        return [{ id: c.id, command: describeAgent(c.agent), program: false, agent: true }];
+      }
       if (c.program) {
         this.programs.set(c.id, { file: c.program, state: 'stopped' });
         return [{ id: c.id, command: programCommand(python, c.program), program: true }];
       }
       return c.command ? [{ id: c.id, command: c.command, program: false }] : [];
     });
-    if (declared.length === 0) return;
-    if (!(await (this.options.consent ?? (async () => false))(declared))) return;
+    const allowed =
+      declared.length === 0 || (await (this.options.consent ?? (async () => false))(declared));
     // The world may have changed while the user was answering.
     if (this.world !== world) return;
+    this.startAgents(allowed);
+    if (!allowed || declared.every((c) => 'agent' in c)) return;
     const programs = declared.filter((c) => c.program);
     if (programs.length > 0) {
       this.python ??= (this.options.checkPython ?? checkPython)(python);
@@ -304,7 +327,7 @@ export class HostSession {
     const runnable = [
       ...(this.python?.ok ? programs : []),
       ...checkPrograms(
-        declared.filter((c) => !c.program),
+        declared.filter((c) => !c.program && !('agent' in c)),
         this.folder.root,
         this.terminal,
       ).map((c) => ({ ...c, program: false })),
@@ -332,6 +355,22 @@ export class HostSession {
             : {},
         ),
       );
+    }
+  }
+
+  /**
+   * Starts the agents of the world (AGENT-001): the fake ones always, the others with the consent
+   * and when their CLI or key is there.
+   */
+  private startAgents(allowed: boolean): void {
+    for (const { id, agent } of this.agentsToStart) {
+      if (agent.mode !== 'fake' && !allowed) continue;
+      const check = checkAgent(agent, this.folder.root, this.options.env);
+      if (!check.ok) {
+        this.terminal.line(`${PREFIX}  [${id}] cannot start the agent: ${check.error}`);
+        continue;
+      }
+      this.agentStarted?.(id, agent);
     }
   }
 

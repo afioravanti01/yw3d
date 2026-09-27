@@ -158,9 +158,60 @@ const playerSchema = object({
 export const BEHAVIORS_REMOVED =
   'behaviors in YAML were replaced by Python programs: see docs/python.md';
 
+/** Brains an agent can use (AGENT-001.a, plan F08 P2). */
+export const AGENT_CLIS = ['claude', 'codex', 'opencode'] as const;
+export const AGENT_PROVIDERS = ['anthropic', 'openai'] as const;
+export const AGENT_EFFORTS = ['low', 'medium', 'high'] as const;
+
 /**
- * A character (CHAR-001.a), driven by a Python program of the world folder (PY-003.a) or by a
- * command (PROTO-003), not both; without either it stands still.
+ * An LLM agent that drives a character from the host (AGENT-001, D-012): `headless` with a CLI
+ * of the machine, `api` with a provider and a key in the environment, or `fake` without an LLM.
+ */
+const agentSchema = object(
+  {
+    mode: oneOf(['headless', 'api', 'fake']),
+    cli: optional(oneOf(AGENT_CLIS)),
+    provider: optional(oneOf(AGENT_PROVIDERS)),
+    base_url: optional(pattern(/^https?:\/\/\S+$/, 'an http or https address')),
+    api_key_env: optional(
+      pattern(/^[A-Za-z_][A-Za-z0-9_]*$/, 'the name of an environment variable'),
+    ),
+    model: optional(text({ min: 1, max: 200 })),
+    effort: optional(oneOf(AGENT_EFFORTS)),
+    persona: optional(text({ max: 2000 })),
+    goals: optional(list(text({ min: 1, max: 500 }))),
+    initiative: oneOf(['reactive', 'autonomous'], { default: 'reactive' }),
+    every: number({ min: 10, max: 3600, default: 60 }),
+    fallback: optional(text({ min: 1, max: 500 })),
+  },
+  (agent, path, issues) => {
+    const refuse = (field: string, message: string) =>
+      issues.push({ path: [...path, field], message });
+    const only = (field: keyof typeof agent, mode: string) => {
+      if (agent[field] !== undefined && agent.mode !== mode) {
+        refuse(field, `"${field}" is for mode ${mode} only`);
+      }
+    };
+    if (agent.mode === 'headless' && agent.cli === undefined) {
+      refuse('cli', `mode headless needs a cli: one of ${AGENT_CLIS.join(', ')}`);
+    }
+    if (agent.mode === 'api') {
+      if (agent.provider === undefined) {
+        refuse('provider', `mode api needs a provider: one of ${AGENT_PROVIDERS.join(', ')}`);
+      }
+      if (agent.model === undefined) refuse('model', 'mode api needs a model');
+      if (agent.base_url !== undefined && agent.provider !== 'openai') {
+        refuse('base_url', '"base_url" is for the provider openai (and compatible services)');
+      }
+    }
+    only('cli', 'headless');
+    for (const field of ['provider', 'base_url', 'api_key_env'] as const) only(field, 'api');
+  },
+);
+
+/**
+ * A character (CHAR-001.a), driven by a Python program of the world folder (PY-003.a), by a
+ * command (PROTO-003) or by an LLM agent (AGENT-001): one of them; without any it stands still.
  */
 const characterSchema = object(
   {
@@ -171,6 +222,7 @@ const characterSchema = object(
     yaw: number({ min: -360, max: 360, default: 0 }),
     appearance: optional(appearanceSchema),
     program: optional(str()),
+    agent: optional(agentSchema),
     behavior: optional(unknownValue()),
     controller: optional(object({ command: str() })),
   },
@@ -178,10 +230,13 @@ const characterSchema = object(
     if (character.behavior !== undefined) {
       issues.push({ path: [...path, 'behavior'], message: BEHAVIORS_REMOVED });
     }
-    if (character.program !== undefined && character.controller !== undefined) {
+    const drivers = (['program', 'controller', 'agent'] as const).filter(
+      (field) => character[field] !== undefined,
+    );
+    if (drivers.length > 1) {
       issues.push({
-        path: [...path, 'controller'],
-        message: 'a character has either a program or a controller, not both',
+        path: [...path, drivers[1]!],
+        message: 'a character has one of program, controller or agent, not more',
       });
     }
     if (character.program !== undefined) {
@@ -226,6 +281,7 @@ export type StructureDecl = Infer<typeof structureSchema>;
 export type ScatterDecl = Infer<typeof scatterSchema>;
 export type PlayerDecl = Infer<typeof playerSchema>;
 export type CharacterDecl = Infer<typeof characterSchema>;
+export type AgentDecl = Infer<typeof agentSchema>;
 export type AppearanceDecl = Infer<typeof appearanceSchema>;
 export type AreaDecl = Infer<typeof areaSchema>;
 export type PlaceDecl = Infer<typeof placeSchema>;
