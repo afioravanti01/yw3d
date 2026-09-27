@@ -21,6 +21,7 @@ import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
 import { MessageConsole } from './messageConsole';
+import { daylight } from '../render/daylight';
 import { characterDetails } from '../protocol/details';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
@@ -157,6 +158,9 @@ async function main(): Promise<void> {
     consoleLines: () => messageConsole.lines(),
     consoleOpen: () => messageConsole.isOpen,
     consoleSuggestions: () => messageConsole.suggested(),
+    clock: () => clockNow() ?? null,
+    skyColor: () =>
+      current ? `#${(current.scene.scene.background as THREE.Color).getHexString()}` : null,
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
     setView: (x, y, z, yaw, pitch) => {
       if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
@@ -407,6 +411,10 @@ async function main(): Promise<void> {
 
   const overlay = new DebugOverlay();
   const fpsMeter = new FpsMeter();
+  /** Shadows are drawn again this often, milliseconds (Q5). */
+  const SHADOW_EVERY_MS = 2000;
+  let lastShadowAt = 0;
+  let lastShadowMinutes: number | undefined;
   const timer = new THREE.Timer();
   timer.connect(document);
   renderer.setAnimationLoop((time) => {
@@ -418,6 +426,18 @@ async function main(): Promise<void> {
     characterViews.update(characters, dt);
     if (current.chunks.update() > 0) {
       renderer.shadowMap.needsUpdate = true;
+    }
+    // The light of the hour (plan F09 P4–P7): shadows follow the sun every 2 s, or at once
+    // when the hour jumps (/time).
+    const minutes = clockNow();
+    if (minutes !== undefined) {
+      current.scene.setDaylight(daylight(minutes));
+      const jumped = lastShadowMinutes === undefined || Math.abs(minutes - lastShadowMinutes) > 5;
+      if (jumped || time - lastShadowAt > SHADOW_EVERY_MS) {
+        renderer.shadowMap.needsUpdate = true;
+        lastShadowAt = time;
+        lastShadowMinutes = minutes;
+      }
     }
     current.scene.update(camera);
     renderer.render(current.scene.scene, camera);

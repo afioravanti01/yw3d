@@ -23,6 +23,10 @@ export interface TestHook {
   consoleLines(): string[];
   consoleOpen(): boolean;
   consoleSuggestions(): string[];
+  /** The hour of the world, minutes after midnight (TIME-001). */
+  clock(): number | null;
+  /** The color of the sky at the horizon, `#rrggbb` (RENDER-004). */
+  skyColor(): string | null;
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

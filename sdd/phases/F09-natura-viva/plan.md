@@ -82,7 +82,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Orologio della `Simulation` con scostamento (P2); ora nello stato alle viste (P3); ora senza host; `/time` nel core, nel terminale e dalla vista che guida; ora nella percezione (P11).
   - Fatto quando: test di TIME-001.b, TIME-002.a, PROTO-002.a verdi.
 
-- [ ] **T9.03** Ciclo di luce nella scena
+- [x] **T9.03** Ciclo di luce nella scena
   - Req: RENDER-003, RENDER-004, RENDER-008 · Dip: T9.02
   - `daylight.ts` (P4, P5); cielo con sole, luna e stelle (P6); ombre ogni 2 s (P7).
   - Fatto quando: test di `daylight.ts` verdi; il giorno si vede passare nel browser.

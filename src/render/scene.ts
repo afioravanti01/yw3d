@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { metersToBlocks } from '../core/world/units';
 import type { WorldSize } from '../core/world/world';
+import type { Daylight } from './daylight';
 
 /** Warm natural palette (spec Q4), sRGB. */
 export const SKY_HORIZON = 0xdce8ec;
@@ -23,6 +24,8 @@ export interface WorldScene {
   readonly sun: THREE.DirectionalLight;
   /** Keeps the sky centered on the camera. Call once per frame. */
   update(camera: THREE.Camera): void;
+  /** The light of the moment (RENDER-003, RENDER-004, plan F09 P4–P6). */
+  setDaylight(light: Daylight): void;
 }
 
 /** Renderer settings the scene relies on: static shadows (plan P7). */
@@ -40,7 +43,8 @@ export function createWorldScene(size: WorldSize): WorldScene {
   scene.background = horizon;
   scene.fog = new THREE.Fog(horizon, metersToBlocks(FOG_NEAR_M), metersToBlocks(FOG_FAR_M));
 
-  scene.add(new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.6));
+  const ambient = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.6);
+  scene.add(ambient);
 
   const center = new THREE.Vector3(size.x / 2, size.y / 3, size.z / 2);
   const sun = new THREE.DirectionalLight(SUN_COLOR, 2.0);
@@ -63,12 +67,33 @@ export function createWorldScene(size: WorldSize): WorldScene {
 
   const sky = createSky();
   scene.add(sky);
+  const uniforms = (sky.material as THREE.ShaderMaterial).uniforms;
+  const fog = scene.fog as THREE.Fog;
 
   return {
     scene,
     sun,
     update(camera) {
       sky.position.copy(camera.position);
+    },
+    setDaylight(light) {
+      const srgb = (target: THREE.Color, [r, g, b]: readonly [number, number, number]) =>
+        target.setRGB(r, g, b, THREE.SRGBColorSpace);
+      srgb(horizon, light.horizon);
+      fog.color.copy(horizon);
+      srgb(uniforms.horizon!.value as THREE.Color, light.horizon);
+      srgb(uniforms.zenith!.value as THREE.Color, light.zenith);
+      (uniforms.sunDirection!.value as THREE.Vector3).set(...light.sun);
+      (uniforms.moonDirection!.value as THREE.Vector3).set(...light.moon);
+      uniforms.stars!.value = light.stars;
+      srgb(ambient.color, light.ambient.sky);
+      srgb(ambient.groundColor, light.ambient.ground);
+      ambient.intensity = light.ambient.intensity;
+      srgb(sun.color, light.light.color);
+      sun.intensity = light.light.intensity;
+      sun.position
+        .copy(center)
+        .addScaledVector(new THREE.Vector3(...light.light.towards), reach * 2);
     },
   };
 }
@@ -79,6 +104,9 @@ function createSky(): THREE.Mesh {
     uniforms: {
       horizon: { value: new THREE.Color(SKY_HORIZON) },
       zenith: { value: new THREE.Color(SKY_ZENITH) },
+      sunDirection: { value: new THREE.Vector3(-0.66, 0.55, 0.5).normalize() },
+      moonDirection: { value: new THREE.Vector3(0, -1, 0) },
+      stars: { value: 0 },
     },
     vertexShader: /* glsl */ `
       varying vec3 vDirection;
@@ -91,10 +119,29 @@ function createSky(): THREE.Mesh {
     fragmentShader: /* glsl */ `
       uniform vec3 horizon;
       uniform vec3 zenith;
+      uniform vec3 sunDirection;
+      uniform vec3 moonDirection;
+      uniform float stars;
       varying vec3 vDirection;
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + 0.1);
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+      }
       void main() {
-        float t = pow(clamp(vDirection.y, 0.0, 1.0), 0.55);
-        gl_FragColor = vec4(mix(horizon, zenith, t), 1.0);
+        vec3 d = normalize(vDirection);
+        float t = pow(clamp(d.y, 0.0, 1.0), 0.55);
+        vec3 color = mix(horizon, zenith, t);
+        // Stars: fixed points on the sky, only above the horizon and at night.
+        vec3 cell = floor(d * 420.0);
+        float star = step(0.9975, hash(cell)) * smoothstep(0.0, 0.15, d.y) * stars;
+        color += vec3(star * 0.9);
+        // The sun: a disc with a warm glow; the moon: a pale disc.
+        float toSun = dot(d, normalize(sunDirection));
+        color += vec3(1.0, 0.85, 0.6) * (smoothstep(0.9990, 0.9994, toSun) * 1.5 + pow(max(toSun, 0.0), 64.0) * 0.35);
+        float toMoon = dot(d, normalize(moonDirection));
+        color += vec3(0.85, 0.9, 1.0) * smoothstep(0.9993, 0.9996, toMoon) * 0.9;
+        gl_FragColor = vec4(color, 1.0);
         #include <colorspace_fragment>
       }
     `,
