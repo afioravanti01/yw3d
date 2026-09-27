@@ -107,6 +107,11 @@
         position: absolute;
         left: 0;
         top: 0;
+        /* Each label on its own compositing layer: moving it every frame over the WebGL canvas
+           must not repaint the page, which left trails behind the names (T6.21+). */
+        will-change: transform;
+        backface-visibility: hidden;
+        contain: layout paint;
         display: flex;
         flex-direction: column;
         align-items: center;

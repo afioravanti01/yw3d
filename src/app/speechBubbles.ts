@@ -60,7 +60,8 @@ export class SpeechBubbles {
       }
       const x = ((this.point.x + 1) / 2) * width;
       const y = ((1 - this.point.y) / 2) * height;
-      label.root.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
+      // translate3d keeps the label on the GPU layer; whole pixels avoid blurry text.
+      label.root.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0) translate(-50%, -100%)`;
     }
     for (const [id, label] of this.labels) {
       if (!seen.has(id)) {
