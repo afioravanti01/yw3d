@@ -5,7 +5,7 @@
 | Stato | **approved** (G1, 2026-09-27) |
 | Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-27 |
-| Piano | plan.md (dopo G1) |
+| Piano | [plan.md](plan.md) |
 
 ## Obiettivo
 Un personaggio si affida a un agente LLM scrivendo poche righe nel `world.yaml`, senza Python né altri programmi. L'host chiama l'LLM, con una CLI già installata sulla macchina (Claude Code, Codex, opencode) o con una chiave API (Anthropic, compatibile OpenAI). Gli dà tutto ciò che il personaggio sa del mondo ed esegue la sua risposta con le azioni dei personaggi. Il giocatore gli parla dalla console come a ogni altro personaggio.
