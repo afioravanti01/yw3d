@@ -5,12 +5,13 @@ Spec viva: formato, validazione e caricamento dei file YAML del mondo. Descrive 
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### YAML-001 — File del mondo
-*Introdotto in F02 · ultima modifica: F06.*
-- **a** `[unit]` Un file del mondo dichiara la versione dello schema (`version: 2`), nome e descrizione del mondo (YAML-009), il terreno (`terrain`) e, facoltativi, il giocatore (`player`), le strutture (`structures`), le distribuzioni (`scatter`), i luoghi (`places`), i personaggi (`characters`) e la libreria dei comportamenti (`behaviors`). Una versione dello schema non gestita è un errore.
+*Introdotto in F02 · ultima modifica: F07.*
+- **a** `[unit]` Un file del mondo dichiara la versione dello schema (`version: 2`), nome e descrizione del mondo (YAML-009), il terreno (`terrain`) e, facoltativi, il giocatore (`player`), le strutture (`structures`), le distribuzioni (`scatter`), i luoghi (`places`) e i personaggi (`characters`). Una versione dello schema non gestita è un errore.
 - **b** `[unit]` Un campo sconosciuto è un errore (così un refuso non passa inosservato).
 - **c** `[unit]` Lo stesso file e lo stesso codice registrato producono un mondo identico (stesso hash) in esecuzioni ripetute (P4).
 - **d** `[e2e]` Il mondo di un file generato nel browser ha lo stesso hash di quello generato in Node.
 - **e** `[unit]` Un file in versione 1 produce un errore che indica cosa aggiungere per passare alla versione 2.
+- **f** `[unit]` Un file che usa ancora `behaviors` o `behavior` produce un errore che spiega che i comportamenti in YAML sono stati sostituiti dai programmi Python e rimanda alla guida.
 
 ### YAML-002 — Validazione ed errori
 *Introdotto in F02 · ultima modifica: F02.*

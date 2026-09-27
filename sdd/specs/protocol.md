@@ -14,9 +14,9 @@ Lo stesso modello su tutti i canali, in JSON; nomi di campi e azioni in `snake_c
 - **e** `[unit]` Alla ricarica del mondo il controllore riceve la mappa nuova.
 
 ### PROTO-002 — Percezione
-*Introdotto in F05 · ultima modifica: F06.*
+*Introdotto in F05 · ultima modifica: F07 (emendamenti A7.5, A7.6).*
 - **a** `[unit]` Il controllore riceve la percezione del personaggio 4 volte al secondo: posizione, orientamento, se è a terra o in acqua, azione in corso, entità entro 32 blocchi (id, nome, tipo, posizione, distanza).
-- **b** `[unit]` Il controllore riceve subito gli eventi: frasi dette entro 16 blocchi, anche dal giocatore (chi, cosa, destinatario, elemento della mappa nominato secondo DIALOG-003), interazione del giocatore, esito delle azioni.
+- **b** `[unit]` Il controllore riceve subito gli eventi: frasi dette entro 16 blocchi, dai personaggi o dal giocatore, rivolte o no al suo personaggio (chi, cosa, destinatario, elemento della mappa nominato e sì o no secondo DIALOG-003), interazione del giocatore, esito delle azioni. Una frase si rivolge a qualcuno (`@` del giocatore, `say` con destinatario) solo se è entro 16 blocchi: altrimenti non parte, o l'azione fallisce con la causa.
 - **c** `[unit]` Con il giocatore entro 3 m, il tasto E invia al personaggio più vicino un evento di interazione (Q6).
 
 ### PROTO-003 — Controllori lanciati dal file del mondo
@@ -27,9 +27,9 @@ Lo stesso modello su tutti i canali, in JSON; nomi di campi e azioni in `snake_c
 - **d** `[manuale]` Gli esempi del progetto, un controllore in Python e uno in JavaScript, guidano i loro personaggi come descritto nei loro commenti.
 
 ### PROTO-004 — Client esterni via WebSocket
-*Introdotto in F05 · ultima modifica: F06.*
-- **a** `[unit]` Un client collegato al WebSocket dell'host può chiedere di guidare un personaggio che non ha già un controllore attivo, anche se ha un comportamento: il comportamento si sospende finché il client lo guida (Q2). Da quel momento il client parla il protocollo di PROTO-001 e PROTO-002.
-- **b** `[unit]` Alla chiusura del client il personaggio si ferma, o riprende il suo comportamento da dov'era: stesso stato, istruzione interrotta che ricomincia (BEHAV-002.c), memoria intatta (Q2). Poi può essere guidato da un altro client.
+*Introdotto in F05 · ultima modifica: F07.*
+- **a** `[unit]` Un client collegato al WebSocket dell'host può chiedere di guidare un personaggio che non ha già un controllore attivo, anche se ha un programma: il programma riceve un evento che lo avvisa e le sue azioni sono ignorate finché il client lo guida. Da quel momento il client parla il protocollo di PROTO-001 e PROTO-002.
+- **b** `[unit]` Alla chiusura del client il personaggio si ferma, oppure torna al suo programma, che riceve un evento che lo avvisa. Poi può essere guidato da un altro client.
 
 ### PROTO-005 — Consenso e verifica dei comandi
 *Introdotto in F05 · ultima modifica: F05.*

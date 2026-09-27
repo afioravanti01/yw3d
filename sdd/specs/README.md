@@ -23,10 +23,9 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | CHAR | [`characters.md`](characters.md) | personaggi, figure animate, fumetti | F05 |
 | NAV | [`navigation.md`](navigation.md) | percorsi dei personaggi | F05 |
 | PROTO | [`protocol.md`](protocol.md) | protocollo dei controllori | F05 |
-| BEHAV | [`behaviors.md`](behaviors.md) | linguaggio dei comportamenti in YAML (da rimuovere in F07, D-010) | F06 |
 | MAP | [`map.md`](map.md) | identificatori, mappa del mondo, mete | F06 |
-| DIALOG | [`dialogue.md`](dialogue.md) | il giocatore parla con i personaggi | F06 |
-| PY | — | libreria Python per programmare i personaggi | F07 (prevista) |
+| DIALOG | [`dialogue.md`](dialogue.md) | il giocatore parla con i personaggi: console dei messaggi, comprensione | F06 |
+| PY | [`python.md`](python.md) | libreria Python, programmi nella cartella del mondo, esempi e guida | F07 |
 | AGENT, MCP | — | agenti LLM, server MCP | F08 (prevista) |
 
-*Aggiornate alla chiusura di F06 (2026-09-27).*
+*Aggiornate alla chiusura di F07 (2026-09-27). Il linguaggio dei comportamenti (BEHAV, F06) è stato rimosso in F07 (D-010).*

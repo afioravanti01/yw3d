@@ -228,7 +228,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Nato alla verifica: le frasi dei personaggi contengono Markdown.
   - Fatto quando: e2e di CHAR-002.c–d verde.
 
-- [ ] **T7.14** Verifica di accettazione e chiusura della fase
+- [x] **T7.14** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T7.11, T7.12, T7.13
   - `check`, `e2e`, `sdd:trace -- F07`; checklist dei criteri `[manuale]`; spec vive (nuova `python.md`, rimossa `behaviors.md`); `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

@@ -10,7 +10,7 @@
 | F04 | Host e riga di comando | `done` (G3, 2026-09-26) | F03 |
 | F05 | Personaggi e protocollo dei controllori | `done` (G3, 2026-09-26) | F04 |
 | F06 | Comportamenti, mappa e dialogo | `done` (G3, 2026-09-27) | F05 |
-| F07 | Console dei messaggi e personaggi in Python | `implementing` | F06 |
+| F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
 | F08 | Agenti LLM | planned | F07 |
 | F09 | Natura viva | planned | F02 |
 
@@ -87,7 +87,7 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 
 ## F07 — Console dei messaggi e personaggi in Python
 **Obiettivo:** il giocatore interagisce con i personaggi da una console dei messaggi, e gli autori programmano i personaggi in Python con una libreria che fa da template (D-010).
-- Console trasparente sulla destra di ogni vista con tutti i messaggi del mondo; `@nome testo` scrive a un personaggio a qualunque distanza, senza `@` si parla ad alta voce entro 16 blocchi. Punto unico dell'interazione, predisposto per i comandi di programmazione.
+- Console trasparente sulla destra di ogni vista con tutti i messaggi del mondo; `@nome testo` scrive a un personaggio vicino (D-011: a qualunque distanza in D-010), senza `@` si parla ad alta voce entro 16 blocchi. Punto unico dell'interazione, con i primi comandi (`/help`, `/world`).
 - Libreria Python `yw3d` (solo libreria standard): una classe per personaggio con routine e gestori di messaggi ed eventi, azioni da attendere, mappa e percezione. Template leggibile e documentato.
 - Programmi Python nella cartella del mondo, lanciati dall'host con il consenso ricordato per cartella.
 - Rimozione del linguaggio dei comportamenti in YAML (requisiti BEHAV, guida, esempi); esempi rifatti in Python.

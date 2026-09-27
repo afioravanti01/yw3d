@@ -131,3 +131,14 @@ Data: 2026-09-27 · Stato: accettata (dopo l'uso di F06 da parte dell'utente) ·
 - I personaggi guidati da un programma reagiscono in tempo reale: una sessione non si rigioca identica. Il core resta deterministico per mondo, fisica e navigazione.
 - Il core perde l'interprete (circa 2500 righe e 1200 di test); gli esempi si riscrivono in Python.
 - F06 si chiude com'è stata consegnata; la sua retro registra che il linguaggio, provato, non ha funzionato: è il primo requisito scoperto sbagliato usando il sistema.
+
+## D-011 — Si parla solo con chi è vicino
+Data: 2026-09-27 · Stato: accettata (alla prova d'uso di F07) · Supera la parte di D-010 punto 4 sui messaggi «a qualunque distanza»
+
+**Contesto.** D-010 prevedeva che `@nome testo` raggiungesse un personaggio ovunque fosse. Usando la console, l'utente ha preferito che si parli solo con chi è vicino, e che i personaggi possano andare l'uno dall'altro a chiedere e riferire: un mondo in cui le distanze contano, anche per gli agenti LLM di F08.
+
+**Decisione.** Un messaggio rivolto a qualcuno (`@nome` del giocatore, `say` con destinatario di un personaggio) arriva solo se il destinatario è entro 16 blocchi; altrimenti non parte («Personaggio non in prossimità») o l'azione fallisce. La console mostra comunque **tutti** i messaggi del mondo, e `/world` dice dove si trovano i personaggi. Un personaggio può fare domande anche a un altro personaggio (`ask`) e riferire la risposta (emendamenti A7.5–A7.7 di F07).
+
+**Alternative.** *Messaggi a qualunque distanza* (D-010): comodo, ma toglie senso allo spazio e alle commissioni tra personaggi.
+
+**Conseguenze.** Per parlare con un personaggio lontano bisogna raggiungerlo, o mandarci qualcuno. Gli agenti di F08 dovranno muoversi per parlarsi.
