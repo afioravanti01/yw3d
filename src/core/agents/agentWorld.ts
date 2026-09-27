@@ -65,6 +65,8 @@ export type AgentEvent =
 
 export interface PerceivedEntity {
   readonly id: string;
+  /** Name from the map, added by the simulation (PROTO-002.a). */
+  readonly name?: string;
   readonly kind: 'player' | 'character';
   readonly x: number;
   readonly y: number;
@@ -109,6 +111,8 @@ interface Agent {
 export interface AgentListener {
   event(characterId: string, event: AgentEvent): void;
   perception(characterId: string, perception: Perception): void;
+  /** A character starts saying something: for the conversation log (DIALOG-002). */
+  said?(characterId: string, text: string): void;
 }
 
 /** What views need to draw a character (plan F05 P15). */
@@ -333,6 +337,7 @@ export class AgentWorld {
       case 'say':
         agent.speech = { text: request.text, until: this.time + sayDuration(request.text) };
         running.deadline = agent.speech.until;
+        this.listener.said?.(agent.character.start.id, request.text);
         for (const [otherId, other] of this.agents) {
           if (other === agent) continue;
           const o = other.character.entity.state;

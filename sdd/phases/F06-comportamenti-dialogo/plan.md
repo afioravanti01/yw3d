@@ -212,7 +212,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `ask` con attese, rami e tempo limite; la risposta come meta; le risposte non fanno scattare reazioni; riferimenti nelle reazioni alle frasi; nomi nei testi (Q9).
   - Fatto quando: test di BEHAV-004.b e BEHAV-005.a–e verdi.
 
-- [ ] **T6.09** Simulazione condivisa e dialogo nel core
+- [x] **T6.09** Simulazione condivisa e dialogo nel core
   - Req: BEHAV-001, DIALOG-001, PROTO-002, PERF-006 · Dip: T6.08
   - `Simulation` (P1); frasi del giocatore con destinatario e registro (P12); frasi sentite con destinatario ed elemento nominato; nomi nella percezione; misura con 20 personaggi.
   - Fatto quando: test di BEHAV-001.d–e, DIALOG-001.b–c, PROTO-002.a–b, PERF-006.a verdi.
@@ -284,3 +284,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 |---|---|---|---|
 | T6.03 | Verso un'area il personaggio si ferma su un posto che sta tutto dentro l'area (le 4 colonne che occupa), verso una struttura su un posto che tocca le sue colonne d'arrivo | Con il solo «tocca» il personaggio poteva fermarsi sul bordo, fuori dall'area, e un secondo `walk_to` non risultava «già dentro» (MAP-003.c) | Nessuno |
 | T6.04 | Le misure di tempo di una ricerca del percorso presero per un momento la migliore di più ripetizioni invece della media; con T6.19+ sono tornate alla media, misurata da sola | Con la suite cresciuta, la media superava i 50 ms solo per il carico degli altri test in parallelo (54 ms; 14 ms da sola, uguale al codice di F05). Il commit di T6.04 è partito con questo test rosso: la catena di comandi controllava l'esito di `grep`, non di `npm run check`; corretto con un commit esplicito, e da lì i commit passano da uno script che si ferma se il check fallisce | Nessuno |
+| T6.09 | BEHAV-001.e (niente programmi né consenso per i comportamenti) si verifica in T6.10, nell'host, dove esiste il consenso; la `Simulation` ferma il personaggio quando un client lo prende, oltre a sospenderne il comportamento | Nel core non c'è niente da consentire; senza fermarlo, il personaggio continuava l'azione del comportamento finché il client non chiedeva altro | Nessuno |
