@@ -103,14 +103,16 @@ scatter:
     density: 0.15
     minDistance: 22
 
-# Characters: the guard and the fisherwoman are driven by a program of this folder; Tobia and
-# Nina stand still until they get their Python program (phase F07).
+# Characters: Tobia is a Python program with the yw3d library (docs/python.md); the guard and
+# the fisherwoman are driven by a program of this folder; Nina stands still until she gets her
+# Python program (phase F07).
 characters:
   - id: tobia
     name: Tobia
     description: Il garzone del fabbro, sempre in cerca di commissioni.
     at: [154, 70]
     appearance: { shirt: '#8e4a3a', hair: '#3b2a1c' }
+    program: characters/tobia.py
   - id: nina
     name: Nina
     description: Contadina degli orti di ponente.
