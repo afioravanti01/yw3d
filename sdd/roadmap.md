@@ -12,7 +12,7 @@
 | F06 | Comportamenti, mappa e dialogo | `done` (G3, 2026-09-27) | F05 |
 | F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
 | F08 | Agenti LLM | `done` (G3, 2026-09-27) | F07 |
-| F09 | Natura viva | `specifying` | F02 |
+| F09 | Natura viva | `planning` | F02 |
 
 La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09.
 
