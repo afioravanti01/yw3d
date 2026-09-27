@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline';
 import { isCommand, runCommand } from '../core/dialogue/commands';
 import { describeLine } from '../core/dialogue/lines';
+import { markdownToText } from '../core/dialogue/markdown';
 import type { HostSession } from './session';
 import { PREFIX, type Terminal } from './terminal';
 
@@ -63,8 +64,9 @@ export function startConsole(session: HostSession, input: LineInput, terminal: T
         text,
         map && { map, position: (id) => session.agents?.stateOf(id) },
       );
-      if (result.ok) for (const line of result.lines) terminal.line(`${PREFIX}  ${line}`);
-      else terminal.line(`${PREFIX}  ${result.error}`);
+      if (result.ok) {
+        for (const line of markdownToText(result.text)) terminal.line(`${PREFIX}  ${line}`);
+      } else terminal.line(`${PREFIX}  ${result.error}`);
       return;
     }
     const said = session.playerSays(text);

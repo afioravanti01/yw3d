@@ -64,6 +64,8 @@ export class PlayerControls {
     window.addEventListener(
       'keydown',
       (e) => {
+        // Ctrl and Cmd shortcuts are the browser's, e.g. copying the text of the console.
+        if (e.ctrlKey || e.metaKey) return;
         if (CAPTURED.has(e.code)) e.preventDefault();
         if (!e.repeat) onKey(e.code);
         this.keys.add(e.code);

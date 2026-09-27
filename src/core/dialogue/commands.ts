@@ -3,11 +3,10 @@ import type { MapEntry, MapShape, WorldMap } from '../map/worldMap';
 /**
  * Commands of the message console (DIALOG-005.f, plan F07 P5, A7.2): a line that starts with
  * `/` is for the console, not said in the world. F07 has `/help` and `/world`; the programming
- * commands of later phases go here.
+ * commands of later phases go here. The answer of a command is one block of Markdown (A7.4).
  */
 export type CommandResult =
-  | { readonly ok: true; readonly lines: readonly string[] }
-  | { readonly ok: false; readonly error: string };
+  { readonly ok: true; readonly text: string } | { readonly ok: false; readonly error: string };
 
 /** What the commands may read of the world now running. */
 export interface CommandContext {
@@ -16,13 +15,14 @@ export interface CommandContext {
   position(id: string): { readonly x: number; readonly z: number } | undefined;
 }
 
-export const HELP_LINES: readonly string[] = [
-  'Write a message and press Enter: the characters within 16 blocks of you hear it.',
-  '@name message: to one character, wherever it is (id or name; Tab completes it).',
-  'Esc goes back to the game; the × at the top of the console reduces it.',
-  '/world: the characters and the player where they are now, the places and the structures.',
-  '/help: this help.',
-];
+export const HELP = [
+  '**The console**',
+  '- Write a message and press Enter: the characters within 16 blocks of you hear it.',
+  '- `@name message`: to one character, wherever it is (id or name; Tab completes it).',
+  '- Esc goes back to the game; the × at the top of the console reduces it.',
+  '- `/world`: the characters and the player where they are now, the places and the structures.',
+  '- `/help`: this help.',
+].join('\n');
 
 export function isCommand(text: string): boolean {
   return text.trimStart().startsWith('/');
@@ -30,10 +30,10 @@ export function isCommand(text: string): boolean {
 
 export function runCommand(text: string, context?: CommandContext): CommandResult {
   const [name = ''] = text.trim().slice(1).split(/\s+/, 1);
-  if (name === 'help') return { ok: true, lines: HELP_LINES };
+  if (name === 'help') return { ok: true, text: HELP };
   if (name === 'world') {
     if (!context) return { ok: false, error: 'there is no world yet' };
-    return { ok: true, lines: describeWorld(context) };
+    return { ok: true, text: describeWorld(context) };
   }
   return { ok: false, error: `unknown command "/${name}": write /help` };
 }
@@ -52,19 +52,21 @@ function where(shape: MapShape): string {
   }
 }
 
-/** Every element of the map, grouped by kind; who moves is where it is now (A7.2). */
-function describeWorld({ map, position }: CommandContext): string[] {
+/** Every element of the map, grouped by kind, as one block; who moves is where it is now. */
+function describeWorld({ map, position }: CommandContext): string {
   const of = (kind: MapEntry['kind']) => map.entries.filter((e) => e.kind === kind);
-  const title = (e: MapEntry) => (e.name === e.id ? e.name : `${e.name} (${e.id})`);
+  const title = (e: MapEntry) => (e.name === e.id ? `\`${e.id}\`` : `${e.name} (\`${e.id}\`)`);
   const now = (e: MapEntry) => {
     const p = position(e.id);
     return p ? `${round(p.x)}, ${round(p.z)}` : where(e.shape);
   };
-  const lines = [`${map.name} · ${map.size[0]} × ${map.size[2]} blocks · positions x, z in blocks`];
+  const lines = [
+    `**${map.name}** · ${map.size[0]} × ${map.size[2]} blocks · positions x, z in blocks`,
+  ];
   const section = (label: string, entries: readonly MapEntry[], line: (e: MapEntry) => string) => {
     if (entries.length === 0) return;
-    lines.push(`${label}:`);
-    for (const e of entries) lines.push(`  ${line(e)}`);
+    lines.push('', `**${label}**`);
+    for (const e of entries) lines.push(`- ${line(e)}`);
   };
   section('Player', of('player'), (e) => `${e.name} · ${now(e)}`);
   section('Characters', of('character'), (e) => `${title(e)} · ${now(e)}`);
@@ -75,5 +77,5 @@ function describeWorld({ map, position }: CommandContext): string[] {
     of('scatter'),
     (e) => `${title(e)} · ${(e.types ?? []).join(', ')} · ${where(e.shape)}`,
   );
-  return lines;
+  return lines.join('\n');
 }

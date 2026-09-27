@@ -20,7 +20,6 @@ import { DiagnosticsPanel, type PanelMessage } from './diagnosticsPanel';
 import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
-import { describeLine } from '../core/dialogue/lines';
 import { MessageConsole } from './messageConsole';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
@@ -290,7 +289,7 @@ async function main(): Promise<void> {
         composed,
         () => performance.now(),
         // In this page the reader is always the player (A6.2).
-        (line) => messageConsole.add(describeLine(line, true)),
+        (line) => messageConsole.message(line, true),
       );
       playerControls.yaw = local.startYaw;
       return local;
@@ -358,7 +357,7 @@ async function main(): Promise<void> {
         world: (world, diagnostics) => void receiveWorld(world, diagnostics),
         diagnostics: (diagnostics) =>
           showMessages(toMessages(diagnostics), current ? 'ready' : 'error'),
-        line: (line) => messageConsole.add(describeLine(line, connection!.role === 'driver')),
+        line: (line) => messageConsole.message(line, connection!.role === 'driver'),
         sayError: (error) => messageConsole.add(error, 'error'),
         role: (role) => {
           hook.connection = { role };

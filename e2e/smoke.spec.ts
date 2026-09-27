@@ -201,7 +201,7 @@ test('DIALOG-005.a, DIALOG-002.a: the console on the right shows every message, 
   expect(last.y).toBeGreaterThan(first.y);
 });
 
-test('DIALOG-005.b, DIALOG-005.c: the console is a block always there; it leaves the mouse to the scene, except on the messages and the box', async ({
+test('DIALOG-005.a, DIALOG-005.b, DIALOG-005.c: the console is a block as high as the window; messages are free selectable text with Markdown; the scene keeps the mouse outside it', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
@@ -218,23 +218,34 @@ test('DIALOG-005.b, DIALOG-005.c: the console is a block always there; it leaves
       },
       [x, y],
     );
-  // The block is always there, with its box at the bottom, before anything is written (A7.1).
+  // The block is always there, as high as the window, with its box at the bottom (A7.1, A7.4).
   const block = (await page.locator('#console').boundingBox())!;
   const box = (await page.locator('#console input').boundingBox())!;
+  const { width, height } = page.viewportSize()!;
   await expect(page.locator('#console input')).toBeVisible();
+  expect(block.y).toBeLessThanOrEqual(16);
+  expect(block.y + block.height).toBeGreaterThanOrEqual(height - 16);
   expect(box.y + box.height).toBeGreaterThan(block.y + block.height - 20);
   expect(await at(box.x + box.width / 2, box.y + box.height / 2)).toBe('INPUT');
-  // The empty part of the block is the scene.
-  expect(await at(block.x + block.width / 2, block.y + 40)).toBe('world');
+  // Left of the block, the scene.
+  expect(await at(block.x - 20, height / 2)).toBe('world');
+  expect(block.x).toBeGreaterThan(width / 2);
   await page.keyboard.press('Enter');
-  await page.keyboard.type('Buongiorno a tutti');
+  await page.keyboard.type('Buongiorno a **tutti**');
   await page.keyboard.press('Enter');
-  // The messages are at the top, and take the mouse to scroll them.
-  const line = (await page.locator('#console ol li').first().boundingBox())!;
-  expect(line.y).toBeLessThan(block.y + 60);
-  expect(await at(line.x + line.width / 2, line.y + line.height / 2)).toBe('LI');
-  // Below the messages, still the scene.
-  expect(await at(block.x + block.width / 2, line.y + line.height + 60)).toBe('world');
+  // The messages are at the top, free text that can be selected (A7.4).
+  const line = page.locator('#console > ol > li').first();
+  const bounds = (await line.boundingBox())!;
+  expect(bounds.y).toBeLessThan(block.y + 60);
+  await expect(line.locator('strong.who')).toHaveText('Tu');
+  await expect(line.locator('p > strong:not(.who)')).toHaveText('tutti');
+  const style = await line.evaluate((li) => {
+    const css = (
+      globalThis as unknown as { getComputedStyle(e: unknown): Record<string, string> }
+    ).getComputedStyle(li);
+    return { background: css['backgroundColor'], select: css['userSelect'] };
+  });
+  expect(style).toEqual({ background: 'rgba(0, 0, 0, 0)', select: 'text' });
 });
 
 test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help and /world answer in the console', async ({
@@ -262,7 +273,13 @@ test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab
   await page.keyboard.press('Enter');
   await page.keyboard.type('/world');
   await page.keyboard.press('Enter');
-  await expect.poll(() => talk(page, 'consoleLines')).toContain('  Anna (anna) · 61, 61');
+  // One block, with the characters where they are.
+  await expect
+    .poll(() => talk(page, 'consoleLines'))
+    .toContainEqual(expect.stringContaining('Anna (anna) · 61, 61'));
+  const world = (await talk(page, 'consoleLines')).filter((l) => l.includes('Anna (anna)'));
+  expect(world).toHaveLength(1);
+  expect(world[0]).toContain('Bruno (bruno)');
   // Commands are not said in the world.
   expect((await talk(page, 'consoleLines')).some((l) => l.includes('Tu: /help'))).toBe(false);
 });

@@ -83,3 +83,5 @@ Senza chiederlo, il personaggio sa:
 ## Messaggi
 
 `on_message(message)` riceve ogni frase che il personaggio sente: quelle dette entro 16 blocchi e quelle rivolte a lui con `@` da qualunque distanza. Un messaggio ha `sender` e `sender_name` (chi l'ha detto), `text`, `to_me`, `mentions` (l'elemento della mappa nominato, se uno solo) e `is_yes` / `is_no`.
+
+Le frasi di `say` compaiono nella console con il Markdown: `**grassetto**`, `*corsivo*`, `` `codice` ``, elenchi con `-`.

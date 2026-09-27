@@ -6,8 +6,12 @@ import type { SpokenLine } from '../sim/simulation';
  * where the player is the reader, the name elsewhere (A6.2).
  */
 export function describeLine(line: SpokenLine, readerIsPlayer: boolean): string {
+  return `${speakers(line, readerIsPlayer)}: ${line.text}`;
+}
+
+/** Who speaks and to whom: `Tobia`, `Tu → Tobia`. */
+export function speakers(line: SpokenLine, readerIsPlayer: boolean): string {
   const you = (id: string, name: string) => (id === 'player' && readerIsPlayer ? 'Tu' : name);
   const who = you(line.from, line.fromName);
-  const to = line.to === null ? '' : ` → ${you(line.to, line.toName ?? line.to)}`;
-  return `${who}${to}: ${line.text}`;
+  return line.to === null ? who : `${who} → ${you(line.to, line.toName ?? line.to)}`;
 }

@@ -84,10 +84,10 @@ describe('the console of the host', () => {
     );
     // Commands are answered in the terminal and not said in the world.
     type('/help');
-    expect(lines).toContain('yw3d  /help: this help.');
+    expect(lines).toContain('yw3d  - /help: this help.');
     type('/world');
-    expect(lines).toContain('yw3d    Lontana (lontana) · 61, 61');
-    expect(lines).toContain('yw3d  Characters:');
+    expect(lines).toContain('yw3d  - Lontana (lontana) · 61, 61');
+    expect(lines).toContain('yw3d  Characters');
     type('/vola');
     expect(lines.at(-1)).toBe('yw3d  unknown command "/vola": write /help');
     expect(heard).toHaveLength(3);

@@ -1,6 +1,10 @@
 import { suggest } from '../core/dialogue/address';
 import { isCommand, runCommand, type CommandContext } from '../core/dialogue/commands';
+import { speakers } from '../core/dialogue/lines';
+import { parseMarkdown } from '../core/dialogue/markdown';
 import type { Nameable } from '../core/dialogue/understand';
+import type { SpokenLine } from '../core/sim/simulation';
+import { blocksToDom } from './markdownDom';
 import { words } from '../core/dialogue/understand';
 
 /** Messages kept in the page; older ones leave the list (plan F07 P14). */
@@ -39,9 +43,9 @@ export class MessageConsole {
       toggled(open: boolean): void;
     },
   ) {
-    this.list = root.querySelector('ol')!;
+    this.list = root.querySelector(':scope > ol')!;
     this.input = root.querySelector('input')!;
-    this.suggestions = root.querySelector('ul')!;
+    this.suggestions = root.querySelector('ul.suggestions')!;
     this.reopen = root.querySelector<HTMLButtonElement>('button.reopen')!;
     const reduce = root.querySelector<HTMLButtonElement>('button.reduce')!;
     reduce.addEventListener('click', () => {
@@ -112,11 +116,30 @@ export class MessageConsole {
     if (this.isOpen) this.input.blur();
   }
 
-  /** A line of the console: a message, an error of this view, or the answer to a command. */
-  add(text: string, kind: LineKind = 'line'): void {
+  /** A message of the world: who speaks in bold, then its text as Markdown (A7.4). */
+  message(line: SpokenLine, readerIsPlayer: boolean): void {
+    const who = document.createElement('strong');
+    who.className = 'who';
+    who.textContent = speakers(line, readerIsPlayer);
+    const nodes = blocksToDom(parseMarkdown(line.text));
+    const first = nodes[0];
+    if (first instanceof HTMLParagraphElement) first.prepend(who, ': ');
+    else nodes.unshift(who);
+    this.append(nodes, 'line');
+  }
+
+  /** An answer of a command, as Markdown, or an error of this view, as plain text. */
+  add(text: string, kind: LineKind = 'info'): void {
+    this.append(
+      kind === 'error' ? [document.createTextNode(text)] : blocksToDom(parseMarkdown(text)),
+      kind,
+    );
+  }
+
+  private append(nodes: readonly Node[], kind: LineKind): void {
     const atBottom = this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight < 8;
     const item = document.createElement('li');
-    item.textContent = text;
+    item.append(...nodes);
     if (kind !== 'line') item.className = kind;
     this.list.append(item);
     while (this.list.children.length > MAX_LINES) this.list.firstElementChild!.remove();
@@ -149,7 +172,7 @@ export class MessageConsole {
       if (text === '') return;
       if (isCommand(text)) {
         const result = runCommand(text, this.context());
-        if (result.ok) for (const line of result.lines) this.add(line, 'info');
+        if (result.ok) this.add(result.text, 'info');
         else this.add(result.error, 'error');
       } else {
         this.callbacks.send(text);
