@@ -31,6 +31,23 @@ export function rotateColumn(x: number, z: number, rotation: Rotation): [number,
   }
 }
 
+/**
+ * Rotates a point (x, z) in block corners, not columns, around the anchor point: the same turn as
+ * `rotateColumn`, for things that sit between blocks, like the lit windows (plan F09 P8).
+ */
+export function rotatePoint(x: number, z: number, rotation: Rotation): [number, number] {
+  switch (rotation) {
+    case 0:
+      return [x, z];
+    case 90:
+      return [-z, x];
+    case 180:
+      return [-x, -z];
+    case 270:
+      return [z, -x];
+  }
+}
+
 export function rotateRect(rect: Rect, rotation: Rotation): Rect {
   const [ax, az] = rotateColumn(rect.minX, rect.minZ, rotation);
   const [bx, bz] = rotateColumn(rect.maxX - 1, rect.maxZ - 1, rotation);

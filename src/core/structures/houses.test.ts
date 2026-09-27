@@ -188,4 +188,29 @@ describe('houses', () => {
       }
     });
   });
+
+  it('RENDER-008.b: every window of a house is a lit rectangle inside its opening, in every rotation', () => {
+    for (const rotation of [0, 90, 180, 270] as Rotation[]) {
+      for (const style of NAMES) {
+        const text = `version: 2\nname: Test\nterrain: { seed: 11, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }\nstructures:\n  - { type: ${style}, name: Test, at: [64, 64], rotation: ${rotation} }\n`;
+        const { world, lights } = composeWorld(text, 'w.yaml', { registry });
+        const s = STYLES[style];
+        const layout = houseLayout(
+          style,
+          Math.round((s.width[0] + s.width[1]) / 2),
+          Math.round((s.depth[0] + s.depth[1]) / 2),
+          createRng(structureSeed(11, 64, 64, style)),
+        );
+        expect(lights).toHaveLength(layout.northWindows.length + layout.southWindows.length);
+        for (const { from, to } of lights) {
+          // Vertical, two blocks wide and high, flat along x or z.
+          expect(to[1] - from[1]).toBe(2);
+          expect(Math.hypot(to[0] - from[0], to[2] - from[2])).toBeCloseTo(2, 9);
+          expect(from[0] === to[0] || from[2] === to[2]).toBe(true);
+          const center = [0, 1, 2].map((i) => Math.floor((from[i]! + to[i]!) / 2));
+          expect(world!.getBlock(center[0]!, center[1]!, center[2]!)).toBe(AIR);
+        }
+      }
+    }
+  });
 });

@@ -22,6 +22,7 @@ import { PlayerControls } from './input';
 import { parseStartParams } from './params';
 import { MessageConsole } from './messageConsole';
 import { daylight, lightStep } from '../render/daylight';
+import { WindowLights } from '../render/windows';
 import { characterDetails } from '../protocol/details';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
@@ -44,6 +45,7 @@ interface Loaded {
   readonly world: World;
   readonly scene: WorldScene;
   readonly chunks: ChunkRenderer;
+  readonly windows: WindowLights;
   readonly result: ComposeResult;
   readonly composeMs: number;
   readonly meshingMs: number;
@@ -161,6 +163,8 @@ async function main(): Promise<void> {
     clock: () => clockNow() ?? null,
     skyColor: () =>
       current ? `#${(current.scene.scene.background as THREE.Color).getHexString()}` : null,
+    windows: () =>
+      current ? { count: current.result.lights.length, lit: current.windows.mesh.visible } : null,
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
     setView: (x, y, z, yaw, pitch) => {
       if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
@@ -205,9 +209,12 @@ async function main(): Promise<void> {
     const meshingMs = performance.now() - meshingStart;
     const scene = createWorldScene(result.world.size);
     scene.scene.add(chunks.group);
+    const windows = new WindowLights(result.lights);
+    scene.scene.add(windows.mesh);
 
     current?.chunks.dispose();
-    current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
+    current?.windows.dispose();
+    current = { world: result.world, scene, chunks, windows, result, composeMs, meshingMs };
     messageConsole.characters = result.characters.map((c) => ({ id: c.id, name: c.name }));
     messageConsole.context = () =>
       result.map && {
@@ -428,7 +435,9 @@ async function main(): Promise<void> {
     // day (A9.2), and the shadows are drawn again only when the step changes.
     const minutes = clockNow();
     if (minutes !== undefined) {
-      current.scene.setDaylight(daylight(minutes));
+      const light = daylight(minutes);
+      current.scene.setDaylight(light);
+      current.windows.setBrightness(light.windows);
       const step = lightStep(minutes);
       if (step !== lastShadowStep) {
         renderer.shadowMap.needsUpdate = true;

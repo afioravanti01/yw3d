@@ -92,12 +92,13 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Ora e parte del giorno nell'overlay e nell'intestazione di `/world`; `/time` in `/help`; e2e dell'ora che scorre senza host e di `/time`.
   - Fatto quando: e2e di TIME-001.c verdi.
 
-- [ ] **T9.05** Prova d'uso con l'utente
+- [x] **T9.05** Prova d'uso con l'utente
   - Req: TIME-003, RENDER-003, RENDER-004, RENDER-008 · Dip: T9.04
   - **Punto di controllo**: l'utente guarda il ciclo del giorno, salta alle ore con `/time`, e misura gli fps a mezzogiorno e di notte. Le osservazioni diventano deviazioni o emendamenti prima di T9.06.
   - Fatto quando: osservazioni e misure registrate nel piano.
+  - Osservazioni: stelle troppo grandi e visibili all'alba e al tramonto (corrette in T9.03); ombre che scattano ogni 2 s, poi in movimento continuo a ogni frame, infine a scatti ogni decimo del giorno (A9.2): «ora va bene». Durante la prova la scimmietta (T9.12, T9.13). Fps non riportati dall'utente: si misurano alla verifica di T9.11.
 
-- [ ] **T9.06** Finestre illuminate
+- [x] **T9.06** Finestre illuminate
   - Req: RENDER-008 · Dip: T9.05
   - `lights` nel tipo di struttura e nelle case (P8); quad luminosi con l'intensità della notte.
   - Fatto quando: test delle luci delle case verdi; finestre accese di notte nel browser.

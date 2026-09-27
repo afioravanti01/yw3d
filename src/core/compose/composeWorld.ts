@@ -9,8 +9,14 @@ import {
 import { formatPath, type Issue } from '../schema/schema';
 import { WATER } from '../blocks/builtin';
 import { resolveAppearance, type Appearance } from '../characters/appearance';
-import { rotateColumn, StructureBuilder, type Rect } from '../structures/builder';
-import { basinOf, buildStructure, type StructureRegistry } from '../structures/registry';
+import { rotateColumn, rotatePoint, StructureBuilder, type Rect } from '../structures/builder';
+import {
+  basinOf,
+  buildStructure,
+  lightsOf,
+  type LightRect,
+  type StructureRegistry,
+} from '../structures/registry';
 import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
@@ -116,6 +122,8 @@ export interface ComposeResult {
   readonly goals: ReadonlyMap<string, Goal>;
   /** Characters declared in the file (CHAR-001.a), in order. */
   readonly characters: readonly CharacterStart[];
+  /** Lit rectangles of all structures, in world coordinates (RENDER-008.b). */
+  readonly lights: readonly LightRect[];
   /** Structures built, in order: declared one by one first, then distributed. */
   readonly placements: readonly PlacedStructure[];
   /** Duration of each step in milliseconds. */
@@ -150,6 +158,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     map: undefined,
     goals: new Map(),
     characters: [],
+    lights: [],
     placements: [],
     timings,
   });
@@ -367,6 +376,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       agent: c.agent,
       body: c.body,
     })),
+    lights: placements.flatMap((p) => placedLights(p, baseY.get(p)!)),
     placements: placements.map((p) => ({
       type: p.type.name,
       x: p.x,
@@ -400,6 +410,18 @@ function basinColumnsOf(placement: Placement): BasinColumns | undefined {
     shoreWidth: basin.shoreWidth,
     shoreBlock: basin.shoreBlock,
   };
+}
+
+/** The lit rectangles of a placement, turned and moved into the world (plan F09 P8). */
+function placedLights(placement: Placement, y: number): LightRect[] {
+  const place = ([lx, ly, lz]: readonly [number, number, number]) => {
+    const [rx, rz] = rotatePoint(lx, lz, placement.rotation);
+    return [placement.x + rx, y + ly, placement.z + rz] as const;
+  };
+  return lightsOf(placement.type, placement.params, placement.seed).map((light) => ({
+    from: place(light.from),
+    to: place(light.to),
+  }));
 }
 
 function stamp(world: World, placement: Placement, y: number): void {

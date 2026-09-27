@@ -508,3 +508,22 @@ test('TIME-001.c, TIME-002.a, RENDER-004.a: without the host the hour runs in th
   expect(b).toBeGreaterThan(r!);
   await expect(page.locator('#debug-overlay')).toContainText(/time\s+23:0\d · night/);
 });
+
+test('RENDER-008.b: the windows of the houses light up at night, not by day', async ({ page }) => {
+  await open(page);
+  const windows = () =>
+    page.evaluate(() =>
+      (
+        globalThis as unknown as { __yw3d: { windows(): { count: number; lit: boolean } } }
+      ).__yw3d.windows(),
+    );
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/time 12:00');
+  await page.keyboard.press('Enter');
+  await expect.poll(windows).toMatchObject({ lit: false });
+  expect((await windows()).count).toBeGreaterThan(10);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/time 23:00');
+  await page.keyboard.press('Enter');
+  await expect.poll(windows).toMatchObject({ lit: true });
+});

@@ -27,6 +27,8 @@ export interface TestHook {
   clock(): number | null;
   /** The color of the sky at the horizon, `#rrggbb` (RENDER-004). */
   skyColor(): string | null;
+  /** The lit windows: how many, and whether they show now (RENDER-008.b). */
+  windows(): { count: number; lit: boolean } | null;
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

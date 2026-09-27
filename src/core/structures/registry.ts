@@ -28,6 +28,15 @@ export interface Basin {
   readonly shoreBlock: number;
 }
 
+/**
+ * A lit rectangle, e.g. a window at night (RENDER-008.b, plan F09 P8): two opposite corners of a
+ * vertical rectangle in block corners, local before rotation (or in the world, once placed).
+ */
+export interface LightRect {
+  readonly from: readonly [x: number, y: number, z: number];
+  readonly to: readonly [x: number, y: number, z: number];
+}
+
 export interface StructureType<P = unknown> {
   /** Unique name, used in world files. */
   readonly name: string;
@@ -44,6 +53,8 @@ export interface StructureType<P = unknown> {
    * ring around a basin, or on the ring around the footprint. Must be deterministic.
    */
   approach?(context: StructureContext<P>): readonly (readonly [x: number, z: number])[];
+  /** Surfaces that light up at night, like windows (RENDER-008.b). Must be deterministic. */
+  lights?(context: StructureContext<P>): readonly LightRect[];
   /** Writes the structure in local coordinates. Must be deterministic (STRUCT-002.a). */
   generate(context: StructureContext<P>): void;
 }
@@ -117,6 +128,13 @@ export function approachOf<P>(
     random: createRng(seed),
     builder: new StructureBuilder(),
   });
+}
+
+/** The lit rectangles declared by a type (local, before rotation), empty when none. */
+export function lightsOf<P>(type: StructureType<P>, params: P, seed: number): readonly LightRect[] {
+  return (
+    type.lights?.({ params, seed, random: createRng(seed), builder: new StructureBuilder() }) ?? []
+  );
 }
 
 /** The basin of a `dig` structure, or undefined for other modes. */

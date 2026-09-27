@@ -2,7 +2,7 @@ import { AIR, COBBLESTONE, OAK_LOG, PLANKS, ROOF_TILES } from '../blocks/builtin
 import { randomInt, type Random } from '../math/rng';
 import { int, object } from '../schema/schema';
 import type { Rect, StructureBuilder } from './builder';
-import { defineStructure, type StructureType } from './registry';
+import { defineStructure, type LightRect, type StructureType } from './registry';
 
 /**
  * Houses (STRUCT-006). Local coordinates: the walls span x0 … x1 − 1 (the long side, along x)
@@ -168,6 +168,23 @@ function buildHouse(builder: StructureBuilder, style: HouseStyle, layout: HouseL
   builder.fill(cx, 0, cz, cx + 1, layout.ridgeY + 3, cz + 1, COBBLESTONE);
 }
 
+/** How far inside the opening the light of a window sits, in blocks (plan F09 P8). */
+const LIGHT_INSET = 0.9;
+
+/** The windows of a house as lit rectangles, just inside each opening (RENDER-008.b). */
+export function houseLights(layout: HouseLayout): LightRect[] {
+  const y0 = WINDOW_BOTTOM;
+  const y1 = WINDOW_BOTTOM + WINDOW_SIZE;
+  const rect = (x: number, z: number): LightRect => ({
+    from: [x, y0, z],
+    to: [x + WINDOW_SIZE, y1, z],
+  });
+  return [
+    ...layout.northWindows.map((x) => rect(x, layout.z0 + LIGHT_INSET)),
+    ...layout.southWindows.map((x) => rect(x, layout.z1 - LIGHT_INSET)),
+  ];
+}
+
 function house(style: HouseStyle): StructureType<{ width: number; depth: number }> {
   const s = STYLES[style];
   return defineStructure({
@@ -193,6 +210,8 @@ function house(style: HouseStyle): StructureType<{ width: number; depth: number 
     generate({ params, random, builder }) {
       buildHouse(builder, style, houseLayout(style, params.width, params.depth, random));
     },
+    lights: ({ params, random }) =>
+      houseLights(houseLayout(style, params.width, params.depth, random)),
     // In front of the door, outside (MAP-003.b): the same layout as the generator.
     approach({ params, random }) {
       const { doorX, z1 } = houseLayout(style, params.width, params.depth, random);
