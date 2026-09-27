@@ -45,7 +45,7 @@ describe('what an agent knows of the world', () => {
     expect(whereIs(map, self).map((e) => e.id)).toEqual(['piazza', 'orti']);
   });
 
-  it('AGENT-002.a: the request has who it is, where, the map with coordinates, the surroundings, the time, the memory and what happened', () => {
+  it('AGENT-002.a: the request has who it is, where, the map with coordinates, the surroundings, the hour and the part of the day, the memory and what happened', () => {
     const text = buildContext({
       identity: {
         id: 'marta',
@@ -58,6 +58,8 @@ describe('what an agent knows of the world', () => {
       self,
       nearby,
       time: 125.4,
+      timeOfDay: '21:30',
+      partOfDay: 'night',
       memory: ['t=100s viandante → you: ciao'],
       triggers: [
         { kind: 'message', from: 'player', fromName: 'viandante', to: 'marta', text: 'Cosa vedi?' },
@@ -73,13 +75,14 @@ describe('what an agent knows of the world', () => {
     expect(text).toContain('- viandante (player) says to marta: Cosa vedi?');
     const state = JSON.parse(text.split('WORLD STATE (JSON):\n')[1]!.split('\n')[0]!) as {
       you: { at: number[]; in: string[] };
-      time_seconds: number;
+      time: { of_day: string; part_of_day: string; seconds: number };
       surroundings: { id: string }[];
       world: { elements: { id: string; at: number[]; description?: string }[] };
       memory: string[];
     };
     expect(state.you).toMatchObject({ at: [40.5, 40.5], in: ['piazza', 'orti'] });
-    expect(state.time_seconds).toBe(125);
+    expect(state.time).toEqual({ of_day: '21:30', part_of_day: 'night', seconds: 125 });
+    expect(text).toContain('This world has its own clock');
     expect(state.surroundings[0]!.id).toBe('orti');
     expect(state.world.elements.find((e) => e.id === 'lontano')).toMatchObject({
       at: [120, 120],

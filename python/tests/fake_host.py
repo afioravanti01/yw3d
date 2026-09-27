@@ -77,9 +77,10 @@ class FakeHost:
     def replaced(self, request: Dict[str, Any]) -> None:
         self.tell({"type": "action_replaced", "id": request["id"]})
 
-    def perception(self, time: float, x: float = 30.5, z: float = 34.5, nearby: Any = ()) -> None:
+    def perception(self, time: float, x: float = 30.5, z: float = 34.5, nearby: Any = (),
+                   clock: str = "08:00", part: str = "day") -> None:
         self.tell({
-            "type": "perception", "time": time,
+            "type": "perception", "time": time, "time_of_day": clock, "part_of_day": part,
             "self": {"x": x, "y": 34, "z": z, "yaw": 0, "on_ground": True, "in_water": False},
             "action": None, "nearby": list(nearby),
         })

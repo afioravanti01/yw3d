@@ -60,6 +60,9 @@ export interface ContextInput {
   readonly nearby: readonly SeenEntity[];
   /** Seconds of the world. */
   readonly time: number;
+  /** The hour of the world, `HH:MM`, and the part of the day (AGENT-002.a, F09). */
+  readonly timeOfDay?: string;
+  readonly partOfDay?: string;
   /** Recent events, oldest first, already written as lines (AGENT-005). */
   readonly memory: readonly string[];
   readonly triggers: readonly AgentTrigger[];
@@ -216,6 +219,7 @@ function instructions(identity: AgentIdentity): string {
     `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
     'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',
     'Plans in steps: set "continue": true when your actions are one step of a longer plan and you must decide again once they are done (you will be asked); set it to false when you are done.',
+    'This world has its own clock: the hour is time.of_day in the world state (dawn, day, dusk or night in time.part_of_day), not the real hour. Use it when asked the time, and let it color what you do.',
   ];
   const reply =
     'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …], "continue": false}.';
@@ -265,7 +269,12 @@ export function buildContext(input: ContextInput): string {
       at: [round(self.x), round(self.z)],
       in: whereIs(map, self).map((e) => e.id),
     },
-    time_seconds: Math.round(input.time),
+    // The hour and the part of the day; the seconds date the lines of the memory.
+    time: {
+      ...(input.timeOfDay ? { of_day: input.timeOfDay } : {}),
+      ...(input.partOfDay ? { part_of_day: input.partOfDay } : {}),
+      seconds: Math.round(input.time),
+    },
     surroundings: surroundings(map, self, input.nearby),
     world: {
       name: map.name,

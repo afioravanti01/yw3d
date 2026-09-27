@@ -55,6 +55,8 @@ Poi, **4 volte al secondo**, la percezione:
 {
   "type": "perception",
   "time": 12.5,
+  "time_of_day": "08:12",
+  "part_of_day": "day",
   "self": { "x": 158.5, "y": 34, "z": 66.5, "yaw": 0, "on_ground": true, "in_water": false },
   "action": { "id": "walk-3", "kind": "walk_to" },
   "nearby": [
@@ -64,6 +66,7 @@ Poi, **4 volte al secondo**, la percezione:
 ```
 
 - `time`: secondi di simulazione dall'avvio del mondo.
+- `time_of_day`: l'ora del mondo, `HH:MM`; `part_of_day`: `dawn` (05:30–07:00), `day`, `dusk` (18:30–20:00) o `night`. L'ora segue l'orologio del mondo (sezione `time` del file) e `/time`.
 - `nearby`: entità entro 32 blocchi (16 m), dalla più vicina; `kind` è `player` o `character`.
 - Se il programma legge più lentamente, riceve solo l'ultima percezione, non un arretrato.
 

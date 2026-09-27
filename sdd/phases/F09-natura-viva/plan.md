@@ -113,10 +113,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Onde e colore del cielo nel materiale dell'acqua (P10).
   - Fatto quando: acqua che si muove nel browser.
 
-- [ ] **T9.09** Ora per programmi e agenti
+- [x] **T9.09** Ora per programmi e agenti
   - Req: PY-002, AGENT-002 · Dip: T9.02
   - `self.clock` e `self.part_of_day` nella libreria; ora nel contesto degli agenti; guide `docs/python.md`, `docs/agenti.md`, `docs/controllori.md`, `worlds/README.md`.
   - Fatto quando: test di PY-002.d e AGENT-002.a verdi; un agente dice l'ora giusta dal vivo.
+  - Dal vivo (Claude Code, `haiku`): alle 20:04 reali, con il mondo alle 21:30, Marta risponde «Sono le 21:30, è notte», in 40 s.
 
 - [x] **T9.12** Corpo della scimmietta
   - Req: CHAR-003, CHAR-001 · Dip: T9.05

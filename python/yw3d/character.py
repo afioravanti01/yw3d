@@ -59,6 +59,9 @@ class Character:
         self.on_ground = True
         self.in_water = False
         self.time = 0.0
+        # The hour of the world, "HH:MM", and the part of the day: dawn, day, dusk or night.
+        self.clock = ""
+        self.part_of_day = ""
         self.nearby: List[Entity] = []
         self._connection: Any = None
         self._next_id = 0
@@ -348,6 +351,8 @@ class Character:
 
     def _perceive(self, message: Dict[str, Any]) -> None:
         self.time = message["time"]
+        self.clock = message.get("time_of_day", self.clock)
+        self.part_of_day = message.get("part_of_day", self.part_of_day)
         me = message["self"]
         self.position = Position(me["x"], me["y"], me["z"])
         self.yaw = me["yaw"]

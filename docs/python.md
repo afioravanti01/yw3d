@@ -101,6 +101,7 @@ Si scrivono solo quelli che servono. Ognuno interrompe la routine; i gestori non
 Senza chiederlo, il personaggio sa:
 
 - `self.id`, `self.name`, `self.description`;
+- `self.clock`, l'ora del mondo (`"21:30"`), e `self.part_of_day`: `"dawn"`, `"day"`, `"dusk"` o `"night"`; per esempio `if self.part_of_day == "night": await self.walk_to("casa")`;
 - `self.position` (x, y, z in blocchi) e `self.time` (secondi dall'avvio del mondo). Arrivano 4 volte al secondo: subito dopo un'azione possono essere vecchi di un quarto di secondo;
 - `self.nearby`: le entità entro 32 blocchi, ognuna con `id`, `name`, `distance` e `is_player`;
 - `self.map`: ogni elemento del mondo. `self.map["laghetto1"]` ha `id`, `name`, `description`, `kind` (`place`, `structure`, `scatter`, `character`, `player`) e `center`; `for e in self.map` li scorre tutti, `self.map.of_kind("place")` quelli di un tipo.

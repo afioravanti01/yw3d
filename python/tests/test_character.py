@@ -336,7 +336,8 @@ class TestState(unittest.TestCase):
             async def routine(self) -> None:
                 seen.append((self.id, self.name, self.description, self.position.x, self.position.z))
                 await self.wait(1)
-                seen.append((self.time, self.position.x, [(e.id, e.name, e.is_player) for e in self.nearby]))
+                seen.append((self.time, self.position.x, [(e.id, e.name, e.is_player) for e in self.nearby],
+                             self.clock, self.part_of_day))
                 seen.append((self.map.name, self.map["orto"].description, self.map["orto"].center,
                              [e.id for e in self.map.of_kind("place")], "pozzo" in self.map))
                 seen.append((self.map["orto"].contains(Position(12, 34, 29.9)),
@@ -347,14 +348,14 @@ class TestState(unittest.TestCase):
 
         async def host_side(host: FakeHost) -> None:
             wait = await host.next()
-            host.perception(time=3.5, x=31, z=33, nearby=[
+            host.perception(time=3.5, x=31, z=33, clock="21:30", part="night", nearby=[
                 {"id": "player", "name": "Ada", "kind": "player", "x": 30, "y": 34, "z": 30, "distance": 3.2},
             ])
             host.done(wait)
             await host.next()
             self.assertEqual(seen, [
                 ("tobia", "Tobia", "Il garzone.", 30.5, 34.5),
-                (3.5, 31, [("player", "Ada", True)]),
+                (3.5, 31, [("player", "Ada", True)], "21:30", "night"),
                 ("Borgo", "Zucchine.", (15.0, 20.0), ["pozzo", "orto"], True),
                 (True, False, True, False),
             ])

@@ -77,7 +77,7 @@ A ogni richiesta l'agente riceve:
 - dove si trova: coordinate e luoghi o strutture in cui è;
 - i **dintorni** entro 32 blocchi (16 m): posti e personaggi con distanza e direzione; così risponde a «Cosa vedi?»;
 - la **mappa** di tutto il mondo, con id, nomi, descrizioni e coordinate;
-- il tempo del mondo, gli ultimi 12 eventi (ciò che ha sentito, detto e fatto), e cosa lo ha fatto pensare.
+- l'ora del mondo e la parte del giorno (l'agente sa che è l'ora del mondo, non quella reale), gli ultimi 12 eventi (ciò che ha sentito, detto e fatto), e cosa lo ha fatto pensare.
 
 Risponde prima con ciò che il mondo contiene; per il resto, con le sue conoscenze.
 

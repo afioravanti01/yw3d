@@ -265,6 +265,8 @@ export class AgentRuntime {
       self: p ? { x: p.self.x, y: p.self.y, z: p.self.z } : { x: 0, y: 0, z: 0 },
       nearby: p?.nearby ?? [],
       time: p?.time ?? 0,
+      timeOfDay: p?.time_of_day,
+      partOfDay: p?.part_of_day,
       memory: [...this.memory],
       triggers,
     };
