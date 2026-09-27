@@ -2,6 +2,7 @@ import { parseControllerMessage, type ControllerError } from '../../protocol/con
 import type { HostSession } from '../session';
 import { PREFIX, type Terminal } from '../terminal';
 import { ControllerLink } from './link';
+import { PlayerLink } from './player';
 
 /** The part of a WebSocket (the `ws` package) that a controller connection needs. */
 export interface ControllerSocket {
@@ -27,6 +28,7 @@ export function attachControllerSocket(
   now: () => number,
 ): void {
   let link: ControllerLink | undefined;
+  let player: PlayerLink | undefined;
   let drainTimer: ReturnType<typeof setInterval> | undefined;
   const refuse = (message: string) => {
     const error: ControllerError = { type: 'error', message };
@@ -40,10 +42,23 @@ export function attachControllerSocket(
       link.receive(text);
       return;
     }
+    if (player) {
+      player.receive(text);
+      return;
+    }
     const parsed = parseControllerMessage(text);
     if (!parsed.ok) return refuse(parsed.error.message);
+    if (parsed.message.kind === 'player') {
+      if (!session.world) return refuse('there is no world yet');
+      // Speaks as the player (PROTO-007).
+      player = new PlayerLink(session, (message) => socket.send(JSON.stringify(message)));
+      terminal.line(`${PREFIX}  a client on the WebSocket speaks as the player`);
+      return;
+    }
     if (parsed.message.kind !== 'control') {
-      return refuse('the first message must be {"type": "control", "character": "…"}');
+      return refuse(
+        'the first message must be {"type": "control", "character": "…"} or {"type": "player"}',
+      );
     }
     const id = parsed.message.character;
     if (!session.agents?.ids.includes(id)) return refuse(`there is no character "${id}"`);
@@ -70,10 +85,15 @@ export function attachControllerSocket(
 
   socket.on('close', () => {
     if (drainTimer) clearInterval(drainTimer);
+    player?.close();
     if (!link) return;
     link.close();
     terminal.line(
-      `${PREFIX}  [${link.characterId}] the WebSocket client left: the character stops`,
+      `${PREFIX}  [${link.characterId}] the WebSocket client left: ${
+        session.world?.result.characters.find((c) => c.id === link!.characterId)?.behavior
+          ? 'its behavior goes on'
+          : 'the character stops'
+      }`,
     );
   });
 }

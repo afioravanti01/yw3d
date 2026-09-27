@@ -1,4 +1,5 @@
 import type { ActionRequest, AgentEvent, Perception } from '../core/agents/agentWorld';
+import type { WorldMap } from '../core/map/worldMap';
 import { MAX_CHARACTER_SPEED_MPS, MIN_CHARACTER_SPEED_MPS } from '../core/physics/constants';
 import {
   formatPath,
@@ -12,19 +13,50 @@ import {
 } from '../core/schema/schema';
 
 /**
- * Protocol between the host and the controllers of characters (PROTO-001), version 1: JSON
- * messages, one per line on stdio, one per frame on the WebSocket `/controller`. Every
- * message has a `type`; fields are `snake_case` (F05 Q8).
+ * Protocol between the host and the controllers of characters (PROTO-001), version 2 (plan
+ * F06 P13): JSON messages, one per line on stdio, one per frame on the WebSocket
+ * `/controller`. Every message has a `type`; fields are `snake_case` (F05 Q8).
  */
-export const CONTROLLER_PROTOCOL_VERSION = 1;
+export const CONTROLLER_PROTOCOL_VERSION = 2;
 export const CONTROLLER_SOCKET_PATH = '/controller';
 
 export interface ControllerHello {
   readonly type: 'hello';
   readonly version: number;
-  readonly character: { readonly id: string };
+  readonly character: {
+    readonly id: string;
+    readonly name: string;
+    readonly description: string | null;
+  };
   /** Size of the world in blocks: x, y, z. */
   readonly world: { readonly size: readonly [number, number, number] };
+  /** Every element of the world, with its id (MAP-002, PROTO-001.a). */
+  readonly map: WorldMap;
+}
+
+/** The map of the world after a reload (PROTO-001.e). */
+export interface MapMessage {
+  readonly type: 'map';
+  readonly map: WorldMap;
+}
+
+/** The first message to a client that speaks as the player (PROTO-007). */
+export interface PlayerHello {
+  readonly type: 'hello';
+  readonly version: number;
+  readonly player: { readonly id: 'player'; readonly name: string };
+  readonly world: { readonly size: readonly [number, number, number] };
+  readonly map: WorldMap;
+}
+
+/** A sentence the player hears, for a client that speaks as the player (PROTO-007). */
+export interface PlayerHeard {
+  readonly type: 'heard';
+  readonly from: string;
+  readonly from_name: string;
+  readonly to: string | null;
+  readonly to_name: string | null;
+  readonly text: string;
 }
 
 export interface ControllerError {
@@ -33,7 +65,11 @@ export interface ControllerError {
 }
 
 /** Messages from the host to a controller. */
-export type HostToController = ControllerHello | Perception | AgentEvent | ControllerError;
+export type HostToController =
+  ControllerHello | MapMessage | Perception | AgentEvent | ControllerError;
+
+/** Messages from the host to a client that speaks as the player. */
+export type HostToPlayer = PlayerHello | MapMessage | PlayerHeard | ControllerError;
 
 /** The first message on the WebSocket: which character the client wants to drive (PROTO-004). */
 export interface ControlRequest {
@@ -41,12 +77,17 @@ export interface ControlRequest {
   readonly character: string;
 }
 
-export function helloMessage(id: string, size: readonly [number, number, number]): ControllerHello {
+export function helloMessage(
+  character: ControllerHello['character'],
+  size: readonly [number, number, number],
+  map: WorldMap,
+): ControllerHello {
   return {
     type: 'hello',
     version: CONTROLLER_PROTOCOL_VERSION,
-    character: { id },
+    character,
     world: { size },
+    map,
   };
 }
 
@@ -94,6 +135,7 @@ const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
   wait: object({ type: oneOf(['wait']), id: actionId(), seconds: number({ min: 0, max: 3600 }) }),
   stop: object({ type: oneOf(['stop']), id: actionId() }),
   control: object({ type: oneOf(['control']), character: str() }),
+  player: object({ type: oneOf(['player']) }),
 };
 
 function pointOrTarget(
@@ -110,7 +152,8 @@ function pointOrTarget(
 
 export type ControllerMessage =
   | { readonly kind: 'action'; readonly request: ActionRequest }
-  | { readonly kind: 'control'; readonly character: string };
+  | { readonly kind: 'control'; readonly character: string }
+  | { readonly kind: 'player' };
 
 export type ParsedControllerMessage =
   | { readonly ok: true; readonly message: ControllerMessage }
@@ -148,8 +191,43 @@ export function parseControllerMessage(text: string): ParsedControllerMessage {
   }
   if (type === 'control')
     return { ok: true, message: { kind: 'control', character: parsed.character as string } };
+  if (type === 'player') return { ok: true, message: { kind: 'player' } };
   const { type: kind, ...fields } = parsed;
   // Drop the absent optional fields, so that the request has either a point or a target.
   const clean = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
   return { ok: true, message: { kind: 'action', request: { kind, ...clean } as ActionRequest } };
+}
+
+const playerSay = object({
+  type: oneOf(['say']),
+  text: str(),
+  to: optional(str()),
+});
+
+export type ParsedPlayerMessage =
+  | { readonly ok: true; readonly text: string; readonly to: string | undefined }
+  | { readonly ok: false; readonly error: ControllerError };
+
+/** A message of a client that speaks as the player: `{ "type": "say", "text", "to"? }`. */
+export function parsePlayerMessage(text: string): ParsedPlayerMessage {
+  const fail = (message: string): ParsedPlayerMessage => ({
+    ok: false,
+    error: { type: 'error', message },
+  });
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return fail(`not valid JSON: ${text.slice(0, 80)}`);
+  }
+  const issues: Issue[] = [];
+  const parsed = playerSay.parse(raw, [], issues);
+  if (!parsed) {
+    return fail(
+      `a client of the player sends { "type": "say", "text": …, "to"?: … }: ${issues
+        .map((i) => `${formatPath(i.path) || 'say'}: ${i.message}`)
+        .join('; ')}`,
+    );
+  }
+  return { ok: true, text: parsed.text, to: parsed.to };
 }

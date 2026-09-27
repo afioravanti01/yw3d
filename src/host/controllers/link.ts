@@ -1,4 +1,5 @@
 import type { AgentEvent, AgentListener, Perception } from '../../core/agents/agentWorld';
+import type { WorldMap } from '../../core/map/worldMap';
 import {
   helloMessage,
   parseControllerMessage,
@@ -39,11 +40,28 @@ export class ControllerLink implements AgentListener {
     private readonly now: () => number,
   ) {}
 
-  /** Attaches to the character and greets the controller. */
+  /** Attaches to the character and greets the controller (PROTO-001.a). */
   start(): void {
     this.session.attachController(this.characterId, this);
-    const size = this.session.world!.result.world.size;
-    this.write(helloMessage(this.characterId, [size.x, size.y, size.z]));
+    const { result } = this.session.world!;
+    const size = result.world.size;
+    const character = result.characters.find((c) => c.id === this.characterId)!;
+    this.write(
+      helloMessage(
+        {
+          id: character.id,
+          name: character.name,
+          description: character.description ?? null,
+        },
+        [size.x, size.y, size.z],
+        result.map!,
+      ),
+    );
+  }
+
+  /** The world was composed again: the controller gets the new map (PROTO-001.e). */
+  worldChanged(map: WorldMap): void {
+    this.write({ type: 'map', map });
   }
 
   /** A message from the controller. */

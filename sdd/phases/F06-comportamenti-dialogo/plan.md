@@ -222,7 +222,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - La sessione usa la `Simulation`. Terminale: nome del mondo, comportamenti, azioni fallite, limite raggiunto. Ricarica per ogni `.yaml` (P15), con i comportamenti che ripartono. Frasi alle viste filtrate sul giocatore.
   - Fatto quando: test di HOST-001.c, BEHAV-001.g, CHAR-001.c verdi; test di F04 e F05 verdi senza cambiarne le attese.
 
-- [ ] **T6.11** Protocollo dei controllori, versione 2
+- [x] **T6.11** Protocollo dei controllori, versione 2
   - Req: PROTO-001, PROTO-002, PROTO-004, PROTO-007 · Dip: T6.10
   - P13: `hello` con nome e mappa, `map` alla ricarica, client su un personaggio con comportamento (sospensione e ripresa, Q2), client come giocatore.
   - Fatto quando: test di PROTO-001.a e .e, PROTO-004.a–b, PROTO-007.a verdi.

@@ -133,7 +133,13 @@ describe('controllers on stdio', () => {
     const sent: string[] = [];
     let open = false;
     const fakeSession = {
-      world: { result: { world: { size: { x: 64, y: 96, z: 64 } } } },
+      world: {
+        result: {
+          world: { size: { x: 64, y: 96, z: 64 } },
+          characters: [{ id: 'x', name: 'X', description: undefined }],
+          map: { name: 'T', description: null, size: [64, 96, 64], entries: [] },
+        },
+      },
       agents: { request: () => {}, release: () => {} },
       attachController: () => {},
       detachController: () => {},

@@ -6,7 +6,8 @@ import { composeWorld, type ComposeResult } from '../core/compose/composeWorld';
 import { STEP_SECONDS } from '../core/physics/constants';
 import { IDLE, type Intent } from '../core/physics/entity';
 import { FixedStepper } from '../core/physics/fixedStep';
-import { Simulation, type SpokenLine } from '../core/sim/simulation';
+import { Simulation, type SayResult, type SpokenLine } from '../core/sim/simulation';
+import type { WorldMap } from '../core/map/worldMap';
 import { createDefaultStructures } from '../core/structures/builtin';
 import type { StructureRegistry, StructureType } from '../core/structures/registry';
 import type { World } from '../core/world/world';
@@ -56,6 +57,11 @@ export interface SessionOptions {
 /** Intents older than this are dropped: a stalled view does not keep the player walking (P9). */
 export const INTENT_TIMEOUT_SECONDS = 0.5;
 
+/** A controller of a character: its events and perception, and the map after a reload. */
+export interface ControllerSink extends AgentListener {
+  worldChanged?(map: WorldMap): void;
+}
+
 /** A view connected to the host: the host sends it messages, and gets its messages back. */
 export interface ViewHandle {
   readonly id: number;
@@ -85,7 +91,9 @@ export class HostSession {
   sim: Simulation | undefined;
   private controllers: RunningController[] = [];
   /** Controllers attached to characters, kept across reloads (PROTO-004). */
-  private readonly controllerSinks = new Map<string, AgentListener>();
+  private readonly controllerSinks = new Map<string, ControllerSink>();
+  /** Who hears what the player hears besides the options: clients of the player (PROTO-007). */
+  private readonly listeners = new Set<(line: SpokenLine) => void>();
   private readonly stepper = new FixedStepper();
   /** Simulated time, seconds: intents expire on this clock, so that tests are exact. */
   private time = 0;
@@ -214,6 +222,7 @@ export class HostSession {
     this.sim = sim;
     for (const [id, sink] of this.controllerSinks) {
       if (sim.agents.ids.includes(id)) sim.attach(id, sink);
+      sink.worldChanged?.(world.result.map!);
     }
     if (world.result.characters.length > 0) {
       this.terminal.line(
@@ -232,6 +241,19 @@ export class HostSession {
   /** A sentence the player hears: to the console and the views (DIALOG-002, DIALOG-004). */
   private heard(line: SpokenLine): void {
     this.options.heard?.(line);
+    for (const listener of this.listeners) listener(line);
+  }
+
+  /** Hears what the player hears, until the returned function is called (PROTO-007). */
+  listen(listener: (line: SpokenLine) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  /** The player says a sentence (DIALOG-001.b–c), from a view, the console or a client. */
+  playerSays(text: string, options: { to?: string | null; lookAt?: boolean } = {}): SayResult {
+    if (!this.sim) return { ok: false, error: 'there is no world yet' };
+    return this.sim.playerSays(text, options);
   }
 
   /**
@@ -274,7 +296,7 @@ export class HostSession {
   }
 
   /** Routes the events and perception of a character to its controller (PROTO-003, PROTO-004). */
-  attachController(characterId: string, sink: AgentListener): void {
+  attachController(characterId: string, sink: ControllerSink): void {
     this.controllerSinks.set(characterId, sink);
     this.sim?.attach(characterId, sink);
   }
@@ -283,7 +305,7 @@ export class HostSession {
    * The controller of a character went away: it stops, or its behavior goes on (PROTO-003.b,
    * PROTO-004.b).
    */
-  detachController(characterId: string, sink: AgentListener): void {
+  detachController(characterId: string, sink: ControllerSink): void {
     if (this.controllerSinks.get(characterId) !== sink) return;
     this.controllerSinks.delete(characterId);
     this.sim?.detach(characterId, sink);

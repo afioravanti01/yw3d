@@ -4,14 +4,22 @@ import { CONTROLLER_PROTOCOL_VERSION, helloMessage, parseControllerMessage } fro
 const parse = (value: unknown) => parseControllerMessage(JSON.stringify(value));
 
 describe('controller messages', () => {
-  it('PROTO-001.a: the first message declares version, character and world size', () => {
-    expect(helloMessage('guardiano', [512, 96, 512])).toEqual({
+  it('PROTO-001.a: the first message declares version, character with name and description, world size and map', () => {
+    const map = { name: 'Valle', description: null, size: [512, 96, 512] as const, entries: [] };
+    expect(
+      helloMessage(
+        { id: 'guardiano', name: 'Bruno', description: 'Il guardiano.' },
+        [512, 96, 512],
+        map,
+      ),
+    ).toEqual({
       type: 'hello',
       version: CONTROLLER_PROTOCOL_VERSION,
-      character: { id: 'guardiano' },
+      character: { id: 'guardiano', name: 'Bruno', description: 'Il guardiano.' },
       world: { size: [512, 96, 512] },
+      map,
     });
-    expect(CONTROLLER_PROTOCOL_VERSION).toBe(1);
+    expect(CONTROLLER_PROTOCOL_VERSION).toBe(2);
   });
 
   it('PROTO-001.b: each action is a message with its id', () => {
