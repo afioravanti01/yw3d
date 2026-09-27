@@ -25,16 +25,30 @@ export function runCli(
   options: { readonly cwd: string; readonly env?: NodeJS.ProcessEnv; readonly signal: AbortSignal },
 ): Promise<CliRun> {
   return new Promise((resolve, reject) => {
+    // A group of its own, so that stopping it also stops the processes the CLI runs: they
+    // would keep the pipes open, and the request would end only when they do.
+    const group = process.platform !== 'win32';
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env,
       stdio: ['pipe', 'pipe', 'pipe'],
+      detached: group,
     });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (chunk: Buffer) => (stdout += chunk.toString('utf8')));
     child.stderr.on('data', (chunk: Buffer) => (stderr += chunk.toString('utf8')));
-    const abort = () => child.kill('SIGTERM');
+    const abort = () => {
+      if (group && child.pid !== undefined) {
+        try {
+          process.kill(-child.pid, 'SIGTERM');
+          return;
+        } catch {
+          // No such group any more: the process alone, if it is still there.
+        }
+      }
+      child.kill('SIGTERM');
+    };
     options.signal.addEventListener('abort', abort, { once: true });
     child.on('error', (error) => reject(new BrainError(`cannot run ${command}: ${error.message}`)));
     child.on('close', (code) => {

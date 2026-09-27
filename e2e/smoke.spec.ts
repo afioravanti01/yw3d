@@ -499,9 +499,11 @@ test('TIME-001.c, TIME-002.a, RENDER-004.a: without the host the hour runs in th
   const first = (await clockHook(page, 'clock'))!;
   expect(first).toBeGreaterThanOrEqual(480);
   expect(first).toBeLessThan(485);
+  // 3 s make 1.2 minutes of the day; less when frames are slow, since the hour follows the
+  // simulated time and a frame runs at most 5 steps (software WebGL right after a cold start).
   await page.waitForTimeout(3000);
   const later = (await clockHook(page, 'clock'))!;
-  expect(later - first).toBeGreaterThan(0.8);
+  expect(later - first).toBeGreaterThan(0.2);
   expect(later - first).toBeLessThan(3);
   const noon = await clockHook(page, 'skyColor');
   await page.keyboard.press('Enter');
@@ -534,4 +536,19 @@ test('RENDER-008.b: the windows of the houses light up at night, not by day', as
   await page.keyboard.type('/time 23:00');
   await page.keyboard.press('Enter');
   await expect.poll(windows).toMatchObject({ lit: true });
+});
+
+test('CHAR-002.d: a monkey has its name over its head like a person; screenshot for visual review (plan P12)', async ({
+  page,
+}) => {
+  mkdirSync('e2e/screenshots', { recursive: true });
+  await open(page, '?world=test-monkey');
+  // The player looks south, at Bimba (a monkey) and Anna (a person).
+  await expect(page.locator('#bubbles .label[data-id="bimba"] .name')).toHaveText('Bimba');
+  await expect(page.locator('#bubbles .label[data-id="anna"] .name')).toHaveText('Anna');
+  await page.evaluate(async () => {
+    const h = (globalThis as unknown as HookGlobal).__yw3d;
+    for (let i = 0; i < 30; i++) await h.nextFrame();
+  });
+  await page.screenshot({ path: 'e2e/screenshots/monkey.png' });
 });

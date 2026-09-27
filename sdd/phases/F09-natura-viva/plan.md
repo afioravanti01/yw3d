@@ -134,10 +134,16 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - In `AgentWorld`, un personaggio senza azioni, a terra e senza appoggio sotto il centro riceve un'intenzione lieve lontano dal gradino, finché non scende (A9.5).
   - Fatto quando: test di CHAR-001.e verde.
 
-- [ ] **T9.10** Test end-to-end
+- [x] **T9.15+** CLI degli agenti fermate con i loro processi
+  - Req: AGENT-006 · Dip: —
+  - Difetto di F08, emerso in T9.10 su Linux: allo scadere del tempo limite l'host fermava solo il processo della CLI; i processi lanciati dalla CLI tenevano aperte le uscite, e la richiesta finiva solo con loro (5 s invece di subito nel test). La CLI gira in un gruppo di processi suo, fermato per intero.
+  - Fatto quando: test di AGENT-006.c verde su Linux, senza processi rimasti.
+
+- [x] **T9.10** Test end-to-end
   - Req: TIME-001, TIME-002, CHAR-003 · Dip: T9.04, T9.06, T9.07, T9.08, T9.13
   - Suite completa nei due progetti.
   - Fatto quando: `npm run e2e` verde.
+  - Esito: 32 test nei due progetti; aggiunto il mondo della scimmietta, con il nome sopra la testa e uno screenshot (`e2e/screenshots/monkey.png`) per la checklist di CHAR-003.b.
 
 - [ ] **T9.11** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T9.09, T9.10
@@ -165,3 +171,4 @@ Task in ordine, fermandosi alla prova d'uso di T9.05. Commit a fine task con `np
 | T9.03 (P7) | Ombre ridisegnate prima a ogni frame, poi solo a ogni decimo del giorno, con la direzione della luce ferma nel decimo | Prova d'uso di T9.05: ogni 2 s «scattano», a ogni frame «un continuo movimento» | Emendamento A9.2 |
 | T9.07 | Vento sulle foglie realizzato, poi tolto; resta la correzione dell'ambiente dei programmi Python (`PYTHON_COLORS=0`), nata da un test dell'host che falliva con `FORCE_COLOR` nell'ambiente | Emendamento A9.3: l'utente non vuole il movimento delle foglie | A9.3 |
 | T9.05 (P7) | Le figure non proiettano più nella mappa delle ombre; ognuna ha un disco scuro sotto i piedi, visibile quando sta a terra | L'utente: i personaggi «sembrano tutti volare poco sopra il suolo». La mappa si ridisegna solo col terreno e col decimo del giorno (A9.2), e l'ombra di chi si muove restava indietro | Nessuno |
+| T9.10 | Nel test e2e dell'ora senza host, la soglia minima scende da 0,8 a 0,2 minuti del giorno in 3 s | Col WebGL software, appena accesa la macchina, i frame sono lenti: la simulazione fa al più 5 passi per frame e l'ora, che segue il tempo simulato, resta indietro rispetto al tempo reale (0,69 invece di 1,2). La velocità dell'orologio resta verificata dai test unitari | Nessuno |
