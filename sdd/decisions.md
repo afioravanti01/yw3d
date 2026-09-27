@@ -142,3 +142,23 @@ Data: 2026-09-27 · Stato: accettata (alla prova d'uso di F07) · Supera la part
 **Alternative.** *Messaggi a qualunque distanza* (D-010): comodo, ma toglie senso allo spazio e alle commissioni tra personaggi.
 
 **Conseguenze.** Per parlare con un personaggio lontano bisogna raggiungerlo, o mandarci qualcuno. Gli agenti di F08 dovranno muoversi per parlarsi.
+
+## D-012 — Agenti LLM come programmi Python della libreria, configurabili dal file del mondo
+Data: 2026-09-27 · Stato: accettata (prima della spec di F08) · Aggiorna D-008 sul canale MCP
+
+**Contesto.** Dopo F07 un personaggio è un programma Python con routine e gestori, e parla solo con chi ha vicino (D-011). Per F08 l'utente vuole agenti LLM configurabili anche senza scrivere codice, con le CLI già installate o con una chiave API, che conoscano tutto il mondo.
+
+**Decisione.**
+1. **Un agente è un programma Python.** La libreria `yw3d` offre un agente pronto: un autore lo estende in Python, oppure lo dichiara nel `world.yaml` e l'host avvia l'agente pronto con quella configurazione.
+2. **Due modalità.** `headless`: una CLI della macchina (Claude Code, Codex, opencode), con modello ed effort facoltativi; senza, valgono quelli già configurati nella CLI. `api`: le API di Anthropic o l'interfaccia compatibile con OpenAI (OpenAI, Ollama, LM Studio, OpenRouter…), con modello ed effort; la chiave sta in una variabile d'ambiente, mai nel file.
+3. **Risposta strutturata, niente MCP in F08.** La libreria dà all'LLM il contesto del mondo e gli chiede una risposta strutturata (cosa dire, a chi, quali azioni); poi la esegue con le azioni della libreria, nel rispetto della fisica (P3). Funziona uguale con ogni CLI e ogni API.
+4. **L'agente conosce il mondo**: mappa con coordinate, personaggi, dintorni. Risponde prima nel contesto del mondo, poi con le sue conoscenze.
+5. **Iniziativa configurabile**: solo quando serve (messaggi, chi si avvicina, tasto E) oppure anche da solo a intervalli, secondo i suoi obiettivi.
+
+**Alternative.**
+- *Server MCP dell'host con le azioni come strumenti* (D-008): più vicino agli agenti «veri», ma ogni CLI gestisce MCP in modalità headless a modo suo; resta possibile in una fase successiva, per agenti esterni.
+- *Agenti solo in Python*: più semplice, ma obbliga a scrivere codice anche per un personaggio che parla e basta.
+
+**Conseguenze.**
+- Il protocollo dei controllori resta su due canali (stdio, WebSocket); il terzo (MCP) esce da F08. Costituzione alla v1.4.
+- Gli agenti passano dal consenso come ogni programma (PROTO-005); in modalità `api` usano la rete e la chiave dell'utente.

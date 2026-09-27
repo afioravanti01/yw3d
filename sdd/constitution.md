@@ -3,11 +3,11 @@
 > Principi non negoziabili del progetto. Ogni spec e ogni piano devono rispettarli.
 > Si modifica solo con una decisione esplicita registrata in [decisions.md](decisions.md).
 
-Versione: 1.3 — 2026-09-27 (D-010: personaggi programmati in Python, console dei messaggi)
+Versione: 1.4 — 2026-09-27 (D-012: agenti LLM come programmi Python, senza MCP in F08)
 
 ## Visione
 
-yw3d è un mondo 3D a blocchi immerso nella natura e interamente **programmabile**: lo stato iniziale del mondo (terreno, strutture, personaggi) è descritto in un file YAML, e nuovi tipi di strutture si aggiungono via codice. Il mondo è il contenitore di personaggi animati guidati da programmi scritti dall'utente, in Python come linguaggio di riferimento o in qualunque altro linguaggio, e da agenti LLM (claude, codex, opencode, ollama o altri), con cui il giocatore interagisce da una console dei messaggi. Il mondo gira in un host headless avviato da riga di comando a partire da una cartella con il YAML e gli script; il browser è una vista collegata, e per i mondi senza controllori esterni può funzionare da solo. Tutto ciò che si muove rispetta la fisica del mondo.
+yw3d è un mondo 3D a blocchi immerso nella natura e interamente **programmabile**: lo stato iniziale del mondo (terreno, strutture, personaggi) è descritto in un file YAML, e nuovi tipi di strutture si aggiungono via codice. Il mondo è il contenitore di personaggi animati guidati da programmi scritti dall'utente, in Python come linguaggio di riferimento o in qualunque altro linguaggio, e da agenti LLM (Claude Code, Codex, opencode, oppure le API di Anthropic e compatibili con OpenAI), con cui il giocatore interagisce da una console dei messaggi. Il mondo gira in un host headless avviato da riga di comando a partire da una cartella con il YAML e gli script; il browser è una vista collegata, e per i mondi senza controllori esterni può funzionare da solo. Tutto ciò che si muove rispetta la fisica del mondo.
 
 Non è un clone di Minecraft: grafica senza texture pixel-art, voxel più piccoli, un mondo finito e "scritto" invece che infinito e casuale, strutture con un carattere proprio.
 
@@ -59,8 +59,8 @@ Un personaggio può essere guidato da qualunque programma che parli il protocoll
 | Test end-to-end | Playwright (Chromium) |
 | Formato del mondo | YAML (da F02) |
 | Host | Processo Node headless, avviato con `yw3d <cartella del mondo>` (da F04) |
-| Protocollo dei controllori | Un modello di messaggi su tre canali: JSON a righe su stdio, WebSocket, server MCP (da F05–F08) |
-| Agenti LLM | CLI disponibili sulla macchina dell'utente, in modalità headless, collegate via MCP (da F08; D-008, D-010) |
+| Protocollo dei controllori | Un modello di messaggi su due canali: JSON a righe su stdio, WebSocket (da F05); un server MCP resta possibile più avanti (D-012) |
+| Agenti LLM | Programmi Python della libreria `yw3d` che usano le CLI della macchina in modalità headless (Claude Code, Codex, opencode) o le API di Anthropic e compatibili con OpenAI (da F08; D-012) |
 
 Motivazioni in [decisions.md](decisions.md) (D-001, D-008, D-009).
 

@@ -11,7 +11,7 @@
 | F05 | Personaggi e protocollo dei controllori | `done` (G3, 2026-09-26) | F04 |
 | F06 | Comportamenti, mappa e dialogo | `done` (G3, 2026-09-27) | F05 |
 | F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
-| F08 | Agenti LLM | planned | F07 |
+| F08 | Agenti LLM | `specifying` | F07 |
 | F09 | Natura viva | planned | F02 |
 
 La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09.
@@ -96,17 +96,16 @@ La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decis
 **Aree:** DIALOG, CHAR, PROTO, YAML (modificati), PY (nuova); BEHAV (rimossa).
 
 ## F08 — Agenti LLM
-**Obiettivo:** personaggi guidati da agenti LLM tramite le CLI disponibili sulla macchina dell'utente.
-- Server MCP dell'host: le azioni di F05 come strumenti, mappa (F06) e percezione come risorse o come risposte agli strumenti.
-- Controllori `agent` nel YAML: quale CLI usare (claude, codex, opencode, ollama…), persona, obiettivi, luogo di riferimento; avvio headless e verifica della configurazione.
-- Architettura "cervello e corpo": l'agente decide, il corpo esegue con navigazione e fisica; nessun agente può violare la fisica (P3).
-- Dialogo libero con il giocatore, sul dialogo di F06; memoria per personaggio.
-- Budget di costo e latenza, limiti di frequenza, ripiego se l'agente non risponde. Valutazione di una modalità a turni per esperimenti riproducibili (D-008).
+**Obiettivo:** personaggi guidati da agenti LLM, configurati nel file del mondo o scritti in Python, che conoscono il mondo e parlano con il giocatore (D-012).
+- Agente pronto nella libreria Python: si estende in Python o si dichiara nel `world.yaml` (`agent:`), in modalità `headless` (Claude Code, Codex, opencode; modello ed effort facoltativi) o `api` (Anthropic, compatibile OpenAI; chiave in una variabile d'ambiente).
+- "Cervello e corpo": l'LLM riceve il contesto del mondo e risponde in forma strutturata (cosa dire, a chi, quali azioni); la libreria esegue con le azioni di F07, nel rispetto della fisica (P3).
+- Conoscenza del mondo: mappa con coordinate, personaggi, dintorni («Cosa vedi?»); prima il mondo, poi le conoscenze generali.
+- Iniziativa configurabile (solo reattivo o anche autonomo), memoria per personaggio, tempo limite e ripiego, limiti di frequenza.
 
-**Note per la spec** (da D-009, aggiornata con D-010): decidere se un agente può scrivere o modificare il programma Python del suo personaggio, oltre a guidarlo con le azioni.
+**Note per la spec:** se un agente può scrivere o modificare il programma Python del suo personaggio; una modalità a turni per esperimenti riproducibili; un server MCP per agenti esterni (fuori da F08, D-012).
 
 **Demo:** chiedo a una pescatrice guidata da un LLM dove si pesca meglio; mi risponde e mi accompagna al laghetto.
-**Aree:** AGENT, MCP (nuove); PROTO, DIALOG (modificati).
+**Aree:** AGENT (nuova); CHAR, PROTO, HOST, DEBUG, PY (modificati).
 
 ## F09 — Natura viva
 Ciclo giorno/notte, vento su foglie ed erba, acqua animata, particelle (polline, lucciole), audio ambientale.
