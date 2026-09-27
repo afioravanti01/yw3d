@@ -28,6 +28,7 @@ Il mondo ha un'**ora del giorno** che scorre: il sole attraversa il cielo, tramo
 - **US-3** Come autore, fisso nel file del mondo l'ora di partenza e la durata del giorno.
 - **US-4** Come autore di un agente o di un programma, il mio personaggio sa che ore sono: Marta può dire «all'alba abboccano meglio» sapendo se è l'alba.
 - **US-5** Come osservatore, porto il mondo a un'ora precisa per vedere cosa succede di notte, senza aspettare.
+- **US-6** Come autore, aggiungo al mondo una scimmietta guidata da un LLM che ogni tot secondi decide dove andare (A9.1).
 
 ## Requisiti AGGIUNTI
 
@@ -52,6 +53,12 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 
 ### TIME-003 — Osservare un giorno
 - **a** `[manuale]` Seguire il mondo per un giorno intero è piacevole e leggibile: alba e tramonto si riconoscono, la notte non è mai nera, i passaggi di luce e ombre sono continui, senza scatti.
+
+### CHAR-003 — Animali (emendamento A9.1)
+- **a** `[unit]` Un personaggio può dichiarare `body: monkey` (predefinito `human`): una scimmietta, alta circa 0,7 m, con un'entità fisica più piccola di quella di una persona. Si guida come ogni personaggio: con un agente, un programma o un controllore.
+- **b** `[manuale]` La scimmietta ha una figura propria, simpatica e riconoscibile (pelo marrone, muso chiaro, coda lunga), che sta ferma, cammina, corre e salta con animazioni sue; ha il nome sopra la testa come gli altri.
+- **c** `[unit]` L'agente di un animale riceve istruzioni da animale: non parla la lingua degli umani, si muove, guarda, segue, e al più emette versi brevi. Con l'iniziativa autonoma e un intervallo (`every`, AGENT-004.b) decide da sé dove andare.
+- **d** `[manuale]` Con un agente autonomo, a ogni intervallo la scimmietta si sposta per il mondo in modo vivace e plausibile (verso alberi, persone, il laghetto), senza incastrarsi.
 
 ## Requisiti MODIFICATI
 
@@ -130,3 +137,4 @@ Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A9.1 | 2026-09-27 | CHAR-003 (nuovo), CHAR-001.a | Un personaggio può avere il corpo di una scimmietta (`body: monkey`), con figura, dimensioni e animazioni proprie; l'agente di un animale riceve istruzioni da animale e, con l'iniziativa autonoma, si sposta da sé a intervalli configurabili | Un primo animale nel mondo, guidato da un LLM | Utente (richiesta diretta, prima di G2) |

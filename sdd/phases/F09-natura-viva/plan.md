@@ -49,12 +49,14 @@ src/host/agents/context.ts          ora e parte del giorno nel contesto
 | P8 | **Finestre**: il tipo di struttura può dichiarare `lights` (come `approach` in F06): rettangoli locali con la loro normale; le case dichiarano le loro finestre dal `houseLayout`. La scena ne fa quad luminosi, appena dentro l'apertura, con un'intensità che segue la notte | Luci puntiformi | Molte finestre, costo zero: niente luci vere, solo superfici chiare |
 | P9 | **Vento**: il mesher aggiunge un attributo per vertice (1 per i blocchi di foglie, 0 per gli altri); il materiale del terreno sposta in orizzontale i vertici con l'attributo, con due onde in funzione del tempo e della posizione, e un'intensità che varia lentamente | Geometria a parte per le foglie | Nessun oggetto in più; i tronchi restano fermi |
 | P10 | **Acqua**: il materiale dell'acqua sposta in verticale di poco i vertici della superficie e ne modula la luminosità con onde; il colore si mescola con quello dell'orizzonte del momento | Riflessi veri (render su texture) | Leggero; RENDER-009.b chiede movimento e riflessi della luce, non specchi |
+| P12 | **Scimmietta** (A9.1): campo `body` del personaggio (`human`, `monkey`); entità fisica di 0,8 × 1,4 blocchi; la navigazione usa la stessa griglia delle persone (va dove va una persona, per prudenza); figura propria nel rendering (`monkeyFigure`: busto chino, testa grande, muso chiaro, braccia lunghe, coda) con una sua funzione di posa, pura come quella delle persone | Una griglia di navigazione per ogni taglia | Una sola griglia basta a un animale piccolo; la figura è l'unica parte nuova da disegnare |
+| P13 | **Agente animale**: se il corpo non è `human`, le istruzioni cambiano: niente lingua umana, solo versi brevi nelle frasi; nell'iniziativa autonoma l'invito è a spostarsi verso qualcosa di interessante nei dintorni (alberi, persone, acqua) | Un tipo di agente a parte | Stesso runtime; cambia solo il testo delle istruzioni |
 | P11 | **Ora per chi guida i personaggi**: nella percezione `time_of_day` (`"HH:MM"`) e `part_of_day` (`dawn`, `day`, `dusk`, `night`); nella libreria Python `self.clock` e `self.part_of_day`; nel contesto degli agenti l'ora e la parte del giorno al posto dei soli secondi | Un evento a ogni cambio di parte del giorno | Basta leggerla; un evento si aggiungerà se serve |
 
 ## Strategia di test
 - **Unit.** Orologio (TIME-001.a, d) con tabelle di ore; sezione `time` con errori; scostamento e ricarica (TIME-001.b); `/time` con la vista che guida, le viste che guardano, il terminale (TIME-002.a); `daylight.ts`: direzione del sole alle ore chiave, luce mai nera di notte, finestre accese solo di notte; `lights` delle case; attributo delle foglie nel mesher; ora nella percezione, nella libreria, nel contesto.
 - **E2E.** Senza host l'ora scorre (TIME-001.c); `/time 22:00` cambia la luce della scena (colore di fondo) nel browser.
-- **Manuale.** Checklist a T9.12 con le misure a parte: fps a mezzogiorno e di notte (PERF-001.b), RENDER-003, RENDER-004, RENDER-008, RENDER-009, TIME-003.a, DEBUG-001.a.
+- **Manuale.** Checklist a T9.11 con le misure a parte: fps a mezzogiorno e di notte (PERF-001.b), RENDER-003, RENDER-004, RENDER-008, RENDER-009, TIME-003.a, DEBUG-001.a, CHAR-003.b e .d.
 
 ## Dipendenze nuove
 Nessuna.
@@ -115,8 +117,18 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `self.clock` e `self.part_of_day` nella libreria; ora nel contesto degli agenti; guide `docs/python.md`, `docs/agenti.md`, `docs/controllori.md`, `worlds/README.md`.
   - Fatto quando: test di PY-002.d e AGENT-002.a verdi; un agente dice l'ora giusta dal vivo.
 
+- [ ] **T9.12** Corpo della scimmietta
+  - Req: CHAR-003, CHAR-001 · Dip: T9.05
+  - Campo `body`; entità più piccola; figura e pose della scimmietta (P12).
+  - Fatto quando: test di CHAR-003.a e delle pose verdi; la scimmietta si vede camminare nel browser.
+
+- [ ] **T9.13** Agente animale e scimmietta nell'esempio
+  - Req: CHAR-003 · Dip: T9.12
+  - Istruzioni da animale (P13); la scimmietta autonoma in `examples/agenti`; guida `docs/agenti.md`.
+  - Fatto quando: test di CHAR-003.c verdi; dal vivo la scimmietta si sposta da sola a ogni intervallo.
+
 - [ ] **T9.10** Test end-to-end
-  - Req: TIME-001, TIME-002 · Dip: T9.04, T9.06, T9.07, T9.08
+  - Req: TIME-001, TIME-002, CHAR-003 · Dip: T9.04, T9.06, T9.07, T9.08, T9.13
   - Suite completa nei due progetti.
   - Fatto quando: `npm run e2e` verde.
 
@@ -128,10 +140,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 ## Ordine e parallelismo
 
 ```
-T9.01 ─ T9.02 ─┬─ T9.03 ─ T9.04 ─ T9.05 ─┬─ T9.06 ─┐
-               │                          ├─ T9.07 ─┼─ T9.10 ─┐
-               │                          └─ T9.08 ─┘         ├─ T9.11
-               └─ T9.09 ──────────────────────────────────────┘
+T9.01 ─ T9.02 ─┬─ T9.03 ─ T9.04 ─ T9.05 ─┬─ T9.06 ─────────┐
+               │                          ├─ T9.07 ─────────┤
+               │                          ├─ T9.08 ─────────┼─ T9.10 ─┐
+               │                          └─ T9.12 ─ T9.13 ─┘         ├─ T9.11
+               └─ T9.09 ──────────────────────────────────────────────┘
 ```
 Punti di controllo: G2 prima di T9.01; prova d'uso a T9.05; G3 a T9.11.
 
