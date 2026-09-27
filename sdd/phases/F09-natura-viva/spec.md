@@ -49,7 +49,7 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 
 ### RENDER-009 — Vento e acqua
 - **a** ~~Le foglie degli alberi ondeggiano leggermente, come mosse dal vento~~ — rimosso (A9.3).
-- **b** `[manuale]` La superficie dell'acqua si muove con piccole onde e cambia riflessi con la luce del momento.
+- **b** ~~La superficie dell'acqua si muove con piccole onde~~ — rimosso (A9.4).
 
 ### TIME-003 — Osservare un giorno
 - **a** `[manuale]` Seguire il mondo per un giorno intero è piacevole e leggibile: alba e tramonto si riconoscono, la notte non è mai nera, i passaggi di luce sono continui, senza scatti; le ombre cambiano direzione solo ogni decimo del giorno (A9.2).
@@ -140,3 +140,4 @@ Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 | A9.1 | 2026-09-27 | CHAR-003 (nuovo), CHAR-001.a | Un personaggio può avere il corpo di una scimmietta (`body: monkey`), con figura, dimensioni e animazioni proprie; l'agente di un animale riceve istruzioni da animale e, con l'iniziativa autonoma, si sposta da sé a intervalli configurabili | Un primo animale nel mondo, guidato da un LLM | Utente (richiesta diretta, prima di G2) |
 | A9.2 | 2026-09-27 | TIME-003.a, Q5 | Le ombre non si muovono con continuità: la direzione della luce cambia a scatti, ogni decimo del giorno (6 minuti con il giorno di un'ora); i colori della luce e del cielo restano continui | Nella prova d'uso le ombre aggiornate ogni 2 s «scattano», quelle aggiornate a ogni frame creano «un continuo movimento che rende la scena strana» | Utente (proposta diretta nella prova d'uso di T9.05) |
 | A9.3 | 2026-09-27 | RENDER-009.a | Rimosso: niente vento sulle foglie | Nella prova il movimento non si vedeva; l'utente: «non mi interessa questo movimento delle foglie e potrebbe appesantire molto la scena» | Utente (richiesta diretta) |
+| A9.4 | 2026-09-27 | RENDER-009.b, RENDER-007 | Rimosso: niente acqua animata; RENDER-009 resta senza criteri | L'utente: «salta l'acqua» | Utente (richiesta diretta) |

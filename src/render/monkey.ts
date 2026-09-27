@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { FigureState } from './figure';
+import { GroundShadow, type FigureState } from './figure';
 import { advancePhase, pose } from './pose';
 
 /** Colors of the monkey: brown fur, a light face and hands, dark eyes (CHAR-003.b). */
@@ -26,12 +26,14 @@ export class MonkeyFigure {
   private readonly rightLeg = new THREE.Group();
   private readonly tail = new THREE.Group();
   private readonly tailTip = new THREE.Group();
+  private readonly shadow = new GroundShadow(0.45);
   private phase = 0;
   private speed = 0;
   private last: FigureState | undefined;
 
   constructor(name = 'monkey') {
     this.group.name = name;
+    this.group.add(this.shadow.mesh);
     const box = (
       parent: THREE.Object3D,
       color: number,
@@ -47,7 +49,6 @@ export class MonkeyFigure {
         new THREE.MeshLambertMaterial({ color }),
       );
       mesh.position.set(x, y, z);
-      mesh.castShadow = true;
       mesh.receiveShadow = true;
       parent.add(mesh);
     };
@@ -110,6 +111,7 @@ export class MonkeyFigure {
     });
     this.group.position.set(state.x, state.y, state.z);
     this.group.rotation.set(0, yaw, 0);
+    this.shadow.update(state);
     this.body.position.y = p.bob * 0.4;
     // A monkey always leans a little forward, more when it runs.
     this.body.rotation.x = -(0.18 + p.lean);

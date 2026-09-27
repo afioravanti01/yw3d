@@ -48,7 +48,7 @@ src/host/agents/context.ts          ora e parte del giorno nel contesto
 | P7 | **Ombre**: `needsUpdate` ogni 2 s di tempo reale e dopo ogni ricostruzione di regione; con `/time` subito | A ogni frame | Il sole si muove di mezzo grado ogni 2 s con un giorno di 60 minuti (Q5) |
 | P8 | **Finestre**: il tipo di struttura può dichiarare `lights` (come `approach` in F06): rettangoli locali con la loro normale; le case dichiarano le loro finestre dal `houseLayout`. La scena ne fa quad luminosi, appena dentro l'apertura, con un'intensità che segue la notte | Luci puntiformi | Molte finestre, costo zero: niente luci vere, solo superfici chiare |
 | P9 | **Vento** (annullato, A9.3): il mesher aggiunge un attributo per vertice (1 per i blocchi di foglie, 0 per gli altri); il materiale del terreno sposta in orizzontale i vertici con l'attributo, con due onde in funzione del tempo e della posizione, e un'intensità che varia lentamente | Geometria a parte per le foglie | Nessun oggetto in più; i tronchi restano fermi |
-| P10 | **Acqua**: il materiale dell'acqua sposta in verticale di poco i vertici della superficie e ne modula la luminosità con onde; il colore si mescola con quello dell'orizzonte del momento | Riflessi veri (render su texture) | Leggero; RENDER-009.b chiede movimento e riflessi della luce, non specchi |
+| P10 | **Acqua** (annullata, A9.4): il materiale dell'acqua sposta in verticale di poco i vertici della superficie e ne modula la luminosità con onde; il colore si mescola con quello dell'orizzonte del momento | Riflessi veri (render su texture) | Leggero; RENDER-009.b chiede movimento e riflessi della luce, non specchi |
 | P12 | **Scimmietta** (A9.1): campo `body` del personaggio (`human`, `monkey`); entità fisica di 0,8 × 1,4 blocchi; la navigazione usa la stessa griglia delle persone (va dove va una persona, per prudenza); figura propria nel rendering (`monkeyFigure`: busto chino, testa grande, muso chiaro, braccia lunghe, coda) con una sua funzione di posa, pura come quella delle persone | Una griglia di navigazione per ogni taglia | Una sola griglia basta a un animale piccolo; la figura è l'unica parte nuova da disegnare |
 | P13 | **Agente animale**: se il corpo non è `human`, le istruzioni cambiano: niente lingua umana, solo versi brevi nelle frasi; nell'iniziativa autonoma l'invito è a spostarsi verso qualcosa di interessante nei dintorni (alberi, persone, acqua) | Un tipo di agente a parte | Stesso runtime; cambia solo il testo delle istruzioni |
 | P11 | **Ora per chi guida i personaggi**: nella percezione `time_of_day` (`"HH:MM"`) e `part_of_day` (`dawn`, `day`, `dusk`, `night`); nella libreria Python `self.clock` e `self.part_of_day`; nel contesto degli agenti l'ora e la parte del giorno al posto dei soli secondi | Un evento a ogni cambio di parte del giorno | Basta leggerla; un evento si aggiungerà se serve |
@@ -108,7 +108,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Attributo delle foglie nel mesher e spostamento nel materiale (P9).
   - Fatto quando: test del mesher verdi; foglie che ondeggiano nel browser.
 
-- [ ] **T9.08** Acqua animata
+- [x] **T9.08** ~~Acqua animata~~ — annullato (A9.4)
   - Req: RENDER-009 · Dip: T9.05
   - Onde e colore del cielo nel materiale dell'acqua (P10).
   - Fatto quando: acqua che si muove nel browser.
@@ -158,3 +158,4 @@ Task in ordine, fermandosi alla prova d'uso di T9.05. Commit a fine task con `np
 | T9.12, T9.13 | Fatti prima di chiudere la prova d'uso di T9.05 | Richiesta dell'utente durante la prova: la scimmietta nel mondo degli agenti | Nessuno |
 | T9.03 (P7) | Ombre ridisegnate prima a ogni frame, poi solo a ogni decimo del giorno, con la direzione della luce ferma nel decimo | Prova d'uso di T9.05: ogni 2 s «scattano», a ogni frame «un continuo movimento» | Emendamento A9.2 |
 | T9.07 | Vento sulle foglie realizzato, poi tolto; resta la correzione dell'ambiente dei programmi Python (`PYTHON_COLORS=0`), nata da un test dell'host che falliva con `FORCE_COLOR` nell'ambiente | Emendamento A9.3: l'utente non vuole il movimento delle foglie | A9.3 |
+| T9.05 (P7) | Le figure non proiettano più nella mappa delle ombre; ognuna ha un disco scuro sotto i piedi, visibile quando sta a terra | L'utente: i personaggi «sembrano tutti volare poco sopra il suolo». La mappa si ridisegna solo col terreno e col decimo del giorno (A9.2), e l'ombra di chi si muove restava indietro | Nessuno |

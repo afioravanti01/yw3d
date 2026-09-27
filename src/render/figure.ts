@@ -12,6 +12,39 @@ export interface FigureState {
 }
 
 /**
+ * A soft dark disc on the ground under a figure (plan F09, deviation of T9.05): the shadow map
+ * is drawn again only when the terrain or the step of the light changes, so moving figures do
+ * not cast into it; this disc keeps them on the ground.
+ */
+export class GroundShadow {
+  readonly mesh: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
+
+  constructor(radius: number) {
+    this.mesh = new THREE.Mesh(
+      new THREE.CircleGeometry(radius, 20),
+      new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.32,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      }),
+    );
+    this.mesh.name = 'ground shadow';
+    this.mesh.rotation.x = -Math.PI / 2;
+    this.mesh.position.y = 0.01;
+    this.mesh.renderOrder = 1;
+  }
+
+  /** Shown under the feet while the figure stands on the ground. */
+  update(state: FigureState): void {
+    this.mesh.visible = state.onGround && state.submerged === 0;
+  }
+}
+
+/**
  * An articulated figure of blocks (CHAR-002): head, body, arms and legs hung on joints, in the
  * colors of its appearance, 1.2 blocks wide and 3.5 tall, standing on its origin and facing -z.
  * The pose comes from `pose` (plan F05 P13); the step cycle from the distance walked.
@@ -24,12 +57,14 @@ export class AnimatedFigure {
   private readonly rightArm = new THREE.Group();
   private readonly leftLeg = new THREE.Group();
   private readonly rightLeg = new THREE.Group();
+  private readonly shadow = new GroundShadow(0.7);
   private phase = 0;
   private speed = 0;
   private last: FigureState | undefined;
 
   constructor(appearance: Appearance, name = 'figure') {
     this.group.name = name;
+    this.group.add(this.shadow.mesh);
     const material = (color: number) => new THREE.MeshLambertMaterial({ color });
     const box = (
       parent: THREE.Object3D,
@@ -43,7 +78,6 @@ export class AnimatedFigure {
     ) => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material(color));
       mesh.position.set(x, y, z);
-      mesh.castShadow = true;
       mesh.receiveShadow = true;
       parent.add(mesh);
     };
@@ -95,6 +129,7 @@ export class AnimatedFigure {
     });
     this.group.position.set(state.x, state.y, state.z);
     this.group.rotation.set(0, yaw, 0);
+    this.shadow.update(state);
     this.body.position.y = p.bob;
     this.body.rotation.x = -p.lean;
     this.leftLeg.rotation.x = -p.leftLeg;
