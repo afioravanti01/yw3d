@@ -2,6 +2,12 @@ import type { ActionRequest, AgentEvent, AgentWorld } from '../agents/agentWorld
 import { areaContains } from '../compose/areas';
 import type { Goal, WorldMap } from '../map/worldMap';
 import { fnv1a, hash3 } from '../math/rng';
+import {
+  understandChoice,
+  understandElement,
+  understandYesNo,
+  type Nameable,
+} from '../dialogue/understand';
 import { allHold } from './builtin';
 import type {
   BehaviorAction,
@@ -9,6 +15,7 @@ import type {
   BehaviorState,
   Instruction,
   Program,
+  Question,
   Reaction,
   Reference,
   TargetValue,
@@ -33,6 +40,8 @@ export interface BehaviorWorld {
   inside(entity: string, area: string): boolean;
   /** Name of an element of the map, for the texts (Q9). */
   nameOf(id: string): string | undefined;
+  /** The elements of the map, to understand answers (DIALOG-003). */
+  readonly elements: readonly Nameable[];
   request(characterId: string, request: ActionRequest): void;
   /** A line for the terminal of the host (BEHAV-002.f, BEHAV-002.g). */
   log(characterId: string, message: string): void;
@@ -61,6 +70,7 @@ export function agentBehaviorWorld(
       );
     },
     nameOf: (id) => names.get(id),
+    elements: map.entries.map((e) => ({ id: e.id, name: e.name })),
     request: (id, request) => agents.request(id, request),
     log,
   };
@@ -89,6 +99,33 @@ export class Behaviors {
   /** An event of the agent world for a character. */
   event(characterId: string, event: AgentEvent): void {
     this.runners.get(characterId)?.event(event);
+  }
+
+  /** Whether a character is waiting for the answer to its question (BEHAV-005.a). */
+  waiting(characterId: string): boolean {
+    return this.runners.get(characterId)?.waiting() ?? false;
+  }
+
+  /**
+   * A sentence of the player, heard by the characters within 16 blocks with their distance
+   * (BEHAV-005.a, F06 Q7): it answers the question of the character it is said to, or, said
+   * to nobody, of the nearest one that is waiting (the first by id at the same distance).
+   * Returns who took it as an answer: that character does not hear it as a sentence
+   * (BEHAV-005.d).
+   */
+  answer(
+    text: string,
+    to: string | null,
+    hearers: readonly { readonly id: string; readonly distance: number }[],
+  ): string | undefined {
+    const waiting = hearers.filter((h) => this.waiting(h.id));
+    const who =
+      to !== null
+        ? waiting.find((h) => h.id === to)
+        : [...waiting].sort((a, b) => a.distance - b.distance || a.id.localeCompare(b.id))[0];
+    if (!who) return undefined;
+    this.runners.get(who.id)!.answer(text);
+    return who.id;
   }
 
   /** A client drives the character: the behavior waits (PROTO-004.a, F06 Q2). */
@@ -128,9 +165,13 @@ interface Running {
   readonly stack: Frame[];
   /** Id of the action asked of the agent world. */
   readonly id: string;
-  /** `stop`: a `follow` that ran for its time (BEHAV-002.b). */
-  readonly kind: 'action' | 'stop';
+  /**
+   * `stop`: a `follow` that ran for its time (BEHAV-002.b); `ask`: a question, said and then
+   * waiting for the answer until `until` (BEHAV-005.a).
+   */
+  readonly kind: 'action' | 'stop' | 'ask';
   readonly until: number | undefined;
+  readonly question?: Question;
 }
 
 class Runner {
@@ -172,9 +213,14 @@ class Runner {
     if (this.suspended) return;
     const running = this.running;
     if (running?.until !== undefined && this.world.time + 1e-9 >= running.until) {
-      // A `follow` that ran for its time stops, then the next instruction comes.
-      this.running = { ...running, id: this.newId(), kind: 'stop', until: undefined };
-      this.world.request(this.id, { kind: 'stop', id: this.running.id });
+      if (running.kind === 'ask') {
+        // No answer in time (BEHAV-005.c).
+        this.answered(running, 'no_answer', undefined);
+      } else {
+        // A `follow` that ran for its time stops, then the next instruction comes.
+        this.running = { ...running, id: this.newId(), kind: 'stop', until: undefined };
+        this.world.request(this.id, { kind: 'stop', id: this.running.id });
+      }
     }
     this.checkEvents();
     this.advance();
@@ -194,6 +240,45 @@ class Runner {
       case 'heard':
         return this.heard(event);
     }
+  }
+
+  waiting(): boolean {
+    return !this.suspended && this.running?.kind === 'ask';
+  }
+
+  /** The answer of the player to the question (BEHAV-005.b–c), understood with DIALOG-003. */
+  answer(text: string): void {
+    const running = this.running;
+    if (running?.kind !== 'ask') return;
+    const { expect } = running.question!;
+    let key: string | undefined;
+    let answer: string | undefined;
+    if (expect.kind === 'place') {
+      answer = understandElement(text, this.world.elements);
+      key = answer === undefined ? undefined : 'then';
+    } else if (expect.kind === 'yes_no') {
+      key = understandYesNo(text);
+      answer = key === 'yes' ? 'sì' : key;
+    } else {
+      key = understandChoice(text, expect.options);
+      answer = key;
+    }
+    this.answered(running, key ?? 'not_understood', answer);
+    if (!this.advancing) this.advance();
+  }
+
+  /** Goes on after a question: the branch of the answer, if any, else the next instruction. */
+  private answered(running: Running, key: string, answer: string | undefined): void {
+    const question = running.question!;
+    this.running = undefined;
+    running.frame.index++;
+    const body =
+      key === 'not_understood'
+        ? question.notUnderstood
+        : key === 'no_answer'
+          ? question.noAnswer
+          : question.answers[key];
+    if (body) running.stack.push({ body, index: 0, refs: { ...running.frame.refs, answer } });
   }
 
   suspend(): void {
@@ -373,8 +458,7 @@ class Runner {
           this.start(instruction, frame, stack, step.action);
           break;
         case 'ask':
-          // Questions come with the dialogue (T6.08): until then, the next instruction.
-          frame.index++;
+          this.ask(instruction, frame, stack, step.question);
           break;
       }
     }
@@ -407,10 +491,24 @@ class Runner {
     this.world.request(this.id, { ...action, id } as ActionRequest);
   }
 
+  /** Says the question; the character then stands still and waits (BEHAV-005.a). */
+  private ask(instruction: Instruction, frame: Frame, stack: Frame[], question: Question): void {
+    const id = this.newId();
+    this.running = { instruction, frame, stack, id, kind: 'ask', until: undefined, question };
+    this.world.request(this.id, { kind: 'say', id, text: question.text });
+  }
+
   /** The outcome of an action of this behavior; others (interrupted ones) are ignored. */
   private outcome(id: string, failure: string | undefined): void {
     const running = this.running;
     if (!running || running.id !== id) return;
+    if (running.kind === 'ask') {
+      // The question is said: the waiting starts, up to its time limit (BEHAV-005.a).
+      if (running.until === undefined) {
+        this.running = { ...running, until: this.world.time + running.question!.timeout };
+      }
+      return;
+    }
     this.running = undefined;
     if (failure === undefined || running.kind === 'stop') {
       running.frame.index++;

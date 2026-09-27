@@ -1,4 +1,10 @@
-import { AgentWorld, type ActionRequest, type AgentEvent } from '../agents/agentWorld';
+import {
+  AgentWorld,
+  HEARING_DISTANCE,
+  type ActionRequest,
+  type AgentEvent,
+} from '../agents/agentWorld';
+import { understandElement } from '../dialogue/understand';
 import { createDefaultRegistry, STONE } from '../blocks/builtin';
 import { spawnCharacters } from '../characters/characters';
 import { composeWorld, type ComposeResult } from '../compose/composeWorld';
@@ -36,6 +42,11 @@ export interface Harness {
   until(condition: () => boolean, seconds?: number): boolean;
   /** Times at which a character said a text. */
   saidAt(id: string, text: string): number[];
+  /**
+   * The player says a sentence, as the simulation will do it: it answers a question, or it is
+   * heard by the characters within 16 blocks, with its addressee and the element it names.
+   */
+  playerSays(text: string, to?: string): string | undefined;
   state(id: string): { x: number; y: number; z: number };
 }
 
@@ -96,6 +107,7 @@ export function behaviorHarness(
     position: base.position,
     inside: base.inside,
     nameOf: base.nameOf,
+    elements: base.elements,
     log: base.log,
     request: (id, request) => {
       requests.push({ ...request, by: id, at: base.time });
@@ -125,6 +137,28 @@ export function behaviorHarness(
         agents.step();
       }
       return condition();
+    },
+    playerSays: (text, to) => {
+      const p = player!.state;
+      const hearers = result.characters.flatMap((c) => {
+        const s = agents.stateOf(c.id)!;
+        const distance = Math.hypot(s.x - p.x, s.y - p.y, s.z - p.z);
+        return distance <= HEARING_DISTANCE ? [{ id: c.id, distance }] : [];
+      });
+      const answerer = behaviors.answer(text, to ?? null, hearers);
+      const mentions = understandElement(text, base.elements) ?? null;
+      for (const h of hearers) {
+        if (h.id === answerer) continue;
+        behaviors.event(h.id, {
+          type: 'heard',
+          from: 'player',
+          text,
+          distance: h.distance,
+          to: to ?? null,
+          mentions,
+        });
+      }
+      return answerer;
     },
     saidAt: (id, text) =>
       requests.flatMap((r) => (r.by === id && r.kind === 'say' && r.text === text ? [r.at] : [])),

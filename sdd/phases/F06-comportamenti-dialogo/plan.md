@@ -207,7 +207,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Runner (P6, P7, P8): routine, reazioni con priorità, ripresa, fallimenti, limite con avviso, stati, eventi, condizioni, memoria, caso, `follow` con durata.
   - Fatto quando: test di BEHAV-002.a–g, BEHAV-003.a–c, BEHAV-004.a e .c–e, BEHAV-006.c verdi.
 
-- [ ] **T6.08** Domande e frasi nei comportamenti
+- [x] **T6.08** Domande e frasi nei comportamenti
   - Req: BEHAV-004, BEHAV-005 · Dip: T6.04, T6.07
   - `ask` con attese, rami e tempo limite; la risposta come meta; le risposte non fanno scattare reazioni; riferimenti nelle reazioni alle frasi; nomi nei testi (Q9).
   - Fatto quando: test di BEHAV-004.b e BEHAV-005.a–e verdi.
