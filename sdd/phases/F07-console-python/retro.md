@@ -40,7 +40,7 @@ Verifica automatica: `npm run check` verde (297 test, compresi i test della libr
 - **H1 — Contesto.** Torna a scendere: 894 righe contro le 979 di F06, con una fase che tocca nove aree.
 - **H2 — Stabilità.** Smentita di nuovo, ma in modo diverso da F06: 7 emendamenti, **tutti nati usando il sistema** durante la prova d'uso e la verifica, nessuno da ambiguità della spec. Riguardano la forma della console (A7.1, A7.4, A7.8), un comando nuovo (A7.2) e soprattutto una regola del mondo che l'utente ha rovesciato (A7.5, A7.6: si parla solo da vicino; D-011), con la conseguenza di una funzione nuova (A7.7: i personaggi si fanno domande).
 - **H3 — Qualità.** La lezione di F06 ha funzionato: i criteri sull'esperienza e la prova d'uso hanno portato i problemi a galla quando costavano poco. La libreria Python, la parte più delicata, non ha avuto emendamenti: la sua forma ha retto all'uso vero.
-- **H4 — Overhead.** 0,21 sulle righe aggiunte. La fase ha tolto più codice di quanto ne abbia aggiunto: sostituire il linguaggio dei comportamenti con una libreria Python di circa 600 righe ha ridotto il sistema.
+- **H4 — Overhead.** 0,21 sulle righe aggiunte. La fase ha tolto più codice di quanto ne abbia aggiunto: sostituire il linguaggio dei comportamenti con una libreria Python di circa 750 righe ha ridotto il sistema.
 - **H5 — Tracciabilità.** Confermata: `sdd:trace` ha trovato un requisito (DEBUG-001) realizzato ma non citato da nessun task.
 
 ## Cosa ha funzionato
