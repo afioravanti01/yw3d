@@ -280,6 +280,16 @@ test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab
   const world = (await talk(page, 'consoleLines')).filter((l) => l.includes('Anna (anna)'));
   expect(world).toHaveLength(1);
   expect(world[0]).toContain('Bruno (bruno)');
+  // A line closes the answer of a command.
+  const answer = page.locator('#console > ol > li.info').last();
+  expect(
+    await answer.evaluate(
+      (li) =>
+        (
+          globalThis as unknown as { getComputedStyle(e: unknown): Record<string, string> }
+        ).getComputedStyle(li)['borderBottomStyle'],
+    ),
+  ).toBe('solid');
   // Commands are not said in the world.
   expect((await talk(page, 'consoleLines')).some((l) => l.includes('Tu: /help'))).toBe(false);
 });
