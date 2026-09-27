@@ -232,7 +232,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `console.ts` e `readline` condiviso con il consenso (P16).
   - Fatto quando: test di DIALOG-004.a–c verdi.
 
-- [ ] **T6.13** Modalità solo browser con la simulazione condivisa
+- [x] **T6.13** Modalità solo browser con la simulazione condivisa
   - Req: BEHAV-001, CHAR-001, YAML-009 · Dip: T6.09
   - `localSimulation.ts` al posto del solo giocatore locale; file esterni (P14) nella modalità solo browser e nel messaggio del mondo; titolo della pagina.
   - Fatto quando: senza host un personaggio con comportamento cammina e parla; stesso hash della vista collegata con file esterni.

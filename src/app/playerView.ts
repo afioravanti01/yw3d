@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import type { BlockRegistry } from '../core/blocks/registry';
 import type { EntityState, Intent } from '../core/physics/entity';
-import { FixedStepper } from '../core/physics/fixedStep';
-import { PhysicsWorld, type EntityHandle } from '../core/physics/physicsWorld';
-import { EYE_HEIGHT, PLAYER_SIZE, spawnAtStart, thirdPersonCamera } from '../core/player/player';
+import { EYE_HEIGHT, thirdPersonCamera } from '../core/player/player';
 import type { World } from '../core/world/world';
 import type { FlyCamera } from '../render/flyCamera';
 import type { Appearance } from '../core/characters/appearance';
@@ -38,67 +36,6 @@ export interface PlayerSource {
   /** Duration of the last simulation step in this page, 0 when the host simulates. */
   readonly lastStepMs: number;
   replaceWorld(world: World): void;
-}
-
-/** The player simulated in the page, as in F03 (browser-only mode, APP-003.a). */
-export class LocalPlayer implements PlayerSource {
-  lastStepMs = 0;
-  readonly startYaw: number;
-  private physics: PhysicsWorld;
-  private player: EntityHandle;
-  private readonly stepper = new FixedStepper();
-  private previous: EntityState;
-
-  constructor(
-    world: World,
-    private readonly registry: BlockRegistry,
-    start: { readonly x: number; readonly z: number; readonly yaw: number } | undefined,
-    private readonly now: () => number,
-  ) {
-    this.physics = new PhysicsWorld(world, registry);
-    const spawned = spawnAtStart(this.physics, start);
-    this.player = spawned.player;
-    this.startYaw = spawned.yaw;
-    this.previous = this.player.state;
-  }
-
-  advance(dt: number, intent: Intent): void {
-    const steps = this.stepper.advance(dt);
-    for (let i = 0; i < steps; i++) {
-      this.previous = this.player.state;
-      this.player.intent = intent;
-      const start = this.now();
-      this.physics.step();
-      this.lastStepMs = this.now() - start;
-    }
-  }
-
-  /** Interpolation between the last two steps (plan F03 P6). */
-  render(): Position {
-    const alpha = this.stepper.alpha;
-    const current = this.player.state;
-    return {
-      x: this.previous.x + (current.x - this.previous.x) * alpha,
-      y: this.previous.y + (current.y - this.previous.y) * alpha,
-      z: this.previous.z + (current.z - this.previous.z) * alpha,
-    };
-  }
-
-  state(): PlayerState {
-    return this.player.state;
-  }
-
-  figureYaw(): undefined {
-    return undefined;
-  }
-
-  /** A new world after a hot reload: the player keeps its place (YAML-007.a). */
-  replaceWorld(world: World): void {
-    const { x, y, z } = this.player.state;
-    this.physics = new PhysicsWorld(world, this.registry);
-    this.player = this.physics.spawn(PLAYER_SIZE, x, y, z);
-    this.previous = this.player.state;
-  }
 }
 
 /** The player simulated by the host (HOST-002.b): intents go out, states come in. */

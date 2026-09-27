@@ -10,7 +10,6 @@ import { formatDiagnostic, type Diagnostic } from '../core/yaml/report';
 import type { CharacterSnapshot, WorldMessage } from '../protocol/messages';
 import { CharacterViews } from './characterViews';
 import { SpeechBubbles } from './speechBubbles';
-import { spawnCharacters } from '../core/characters/characters';
 import { blocksToMeters } from '../core/world/units';
 import { ChunkRenderer } from '../render/chunkRenderer';
 import { FlyCamera } from '../render/flyCamera';
@@ -21,7 +20,8 @@ import { DiagnosticsPanel, type PanelMessage } from './diagnosticsPanel';
 import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
-import { LocalPlayer, PlayerView, RemotePlayer, type PlayerSource } from './playerView';
+import { LocalSimulation } from './localSimulation';
+import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
 import { installTestHook, type TestHook } from './testHook';
 import * as bundledWorlds from './worlds';
 
@@ -95,12 +95,15 @@ async function main(): Promise<void> {
     if (code === 'KeyV') playerView?.toggleThirdPerson();
     if (code === 'KeyC') playerView?.toggleFree(camera);
     // E: the nearest character within 3 m reacts through its controller (PROTO-002.c).
-    if (code === 'KeyE' && playerView?.mode !== 'free') connection?.interact();
+    if (code === 'KeyE' && playerView?.mode !== 'free') {
+      if (connection) connection.interact();
+      else local?.interact();
+    }
   });
   const characterViews = new CharacterViews();
   const bubbles = new SpeechBubbles(required<HTMLElement>('#bubbles'));
-  /** Characters of the browser-only mode: standing where they start (CHAR-001.d). */
-  let standingCharacters: CharacterSnapshot[] = [];
+  /** The simulation of the browser-only mode (APP-003.a, BEHAV-001.f). */
+  let local: LocalSimulation | undefined;
   let reloadMs = 0;
   let worldName = params.world;
 
@@ -195,8 +198,9 @@ async function main(): Promise<void> {
     }
     scene.scene.add(playerView.animated.group);
     characterViews.reset(result.characters, scene.scene);
-    standingCharacters = standingPlaces(result);
     renderer.shadowMap.needsUpdate = true;
+    // The title of the page is the name of the world (YAML-009.c).
+    document.title = result.name ?? 'yw3d';
     hook.seed = result.seed ?? 0;
     hook.structureCounts = result.structureCounts;
   };
@@ -236,6 +240,7 @@ async function main(): Promise<void> {
       registry: createDefaultStructures(),
       seedOverride: params.seedOverride,
       now: () => performance.now(),
+      readFile: (relative) => worlds.readWorldFile(file.path, relative),
     });
     if (params.seedOverride !== undefined && result.world) {
       messages.push({
@@ -249,9 +254,13 @@ async function main(): Promise<void> {
       return;
     }
     const composed = result as ComposeResult & { world: World };
+    // A reload keeps the player where it is; characters and behaviors start over (BEHAV-001.g).
+    local?.recompose(composed);
     show(composed, performance.now() - start, () => {
-      const local = new LocalPlayer(composed.world, registry, composed.player, () =>
-        performance.now(),
+      local = new LocalSimulation(
+        composed,
+        () => performance.now(),
+        () => {},
       );
       playerControls.yaw = local.startYaw;
       return local;
@@ -286,6 +295,8 @@ async function main(): Promise<void> {
         registry: structures,
         seedOverride: world.seedOverride,
         now: () => performance.now(),
+        // The files the world names, as the host read them: the same world (plan F06 P14).
+        readFile: (relative) => world.files[relative],
       });
       if (!result.world || result.world.hash() !== world.hash) {
         messages.push({
@@ -337,9 +348,9 @@ async function main(): Promise<void> {
     );
   }
 
-  /** Characters as shown now: from the host, or standing still without it. */
+  /** Characters as shown now: from the host, or from the simulation of this page. */
   const shownCharacters = (): CharacterSnapshot[] =>
-    connection ? connection.interpolatedCharacters(performance.now()) : standingCharacters;
+    connection ? connection.interpolatedCharacters(performance.now()) : (local?.characters() ?? []);
 
   const overlay = new DebugOverlay();
   const fpsMeter = new FpsMeter();
@@ -404,26 +415,6 @@ async function main(): Promise<void> {
       lastChunkRebuildMs: shown.chunks.stats.lastChunkRebuildMs,
     }));
   });
-}
-
-/** Where the characters stand at the start, without a host to move them (CHAR-001.d). */
-function standingPlaces(result: ComposeResult & { world: World }): CharacterSnapshot[] {
-  const physics = new PhysicsWorld(result.world, createDefaultRegistry());
-  const characters = spawnCharacters(physics, result.characters);
-  physics.step();
-  return characters.map(({ start, entity }) => ({
-    id: start.id,
-    x: entity.state.x,
-    y: entity.state.y,
-    z: entity.state.z,
-    speed: 0,
-    onGround: entity.state.onGround,
-    submerged: entity.state.submerged,
-    yaw: start.yaw,
-    speech: null,
-    controlled: false,
-    action: null,
-  }));
 }
 
 /** The overlay line about the characters (DEBUG-001.a): how many, and the nearest one. */

@@ -32,7 +32,18 @@ export function checkWorlds(
       failed = true;
       continue;
     }
-    const result = composeWorld(text, file, { registry });
+    // Files the world names (behaviors) are next to it, in its folder (BEHAV-001.a).
+    const folder = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : '';
+    const result = composeWorld(text, file, {
+      registry,
+      readFile: (relative) => {
+        try {
+          return read(`${folder}${relative}`);
+        } catch {
+          return undefined;
+        }
+      },
+    });
     for (const d of result.diagnostics) print(formatDiagnostic(d));
     if (hasErrors(result.diagnostics)) {
       failed = true;

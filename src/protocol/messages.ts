@@ -56,6 +56,8 @@ export interface CharacterSnapshot {
   /** Whether a controller drives it now, and its running action (DEBUG-001.a). */
   readonly controlled: boolean;
   readonly action: string | null;
+  /** State and instruction of its behavior, if it has one (DEBUG-001.a). */
+  readonly activity: string | null;
 }
 
 export type HostMessage =

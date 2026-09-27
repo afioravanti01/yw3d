@@ -1,0 +1,16 @@
+# End-to-end test world with behaviors, one of them in an external file (BEHAV-001.f).
+version: 2
+name: Borgo dei test
+terrain:
+  seed: 7
+  generator: 1
+  size: [128, 96, 128]
+places:
+  - { id: fonte, name: Fonte, at: [70, 60] }
+characters:
+  - id: anna
+    name: Anna
+    at: [60, 60]
+    behavior: { file: comportamenti/anna.yaml }
+  # A controller needs the host: without it, Bruno stands still (CHAR-001.d).
+  - { id: bruno, name: Bruno, at: [64, 66], controller: { command: node nessuno.mjs } }

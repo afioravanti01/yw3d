@@ -8,6 +8,7 @@ import { IDLE, type Intent } from '../core/physics/entity';
 import { FixedStepper } from '../core/physics/fixedStep';
 import { Simulation, type SayResult, type SpokenLine } from '../core/sim/simulation';
 import type { WorldMap } from '../core/map/worldMap';
+import { activityOf } from '../core/sim/activity';
 import { createDefaultStructures } from '../core/structures/builtin';
 import type { StructureRegistry, StructureType } from '../core/structures/registry';
 import type { World } from '../core/world/world';
@@ -330,6 +331,7 @@ export class HostSession {
       speech: c.speech,
       controlled: this.controllerSinks.has(c.id),
       action: this.agents?.perceive(c.id).action?.kind ?? null,
+      activity: this.sim ? activityOf(this.sim, c.id) : null,
     }));
   }
 

@@ -132,6 +132,43 @@ test('APP-003.a: without the host the app runs on its own with the worlds of the
   expect(await hookValue(page, 'status')).toBe('ready');
 });
 
+type Shown = { id: string; x: number; z: number; speech: string | null };
+const shownCharacters = (page: Page) =>
+  page.evaluate(() =>
+    (globalThis as unknown as { __yw3d: { characters(): Shown[] } }).__yw3d.characters(),
+  );
+
+test('BEHAV-001.f, CHAR-001.d: without the host characters with a behavior act; with a controller they stand still', async ({
+  page,
+}) => {
+  await open(page, '?world=test-behaviors');
+  // The behavior of Anna is in an external file: the browser composes the same world as Node.
+  const file = 'e2e/worlds/test-behaviors.yaml';
+  const node = composeWorld(readFileSync(file, 'utf8'), file, {
+    registry: createDefaultStructures(),
+    readFile: (relative) => readFileSync(`e2e/worlds/${relative}`, 'utf8'),
+  });
+  expect(await worldHash(page)).toBe(node.world!.hash());
+  await page.waitForFunction(
+    () =>
+      (globalThis as unknown as { __yw3d: { characters(): Shown[] } }).__yw3d
+        .characters()
+        .some((c) => c.speech === 'Eccomi alla fonte.'),
+    undefined,
+    { timeout: 30_000 },
+  );
+  const [anna, bruno] = await shownCharacters(page);
+  expect(Math.hypot(anna!.x - 70.5, anna!.z - 60.5)).toBeLessThanOrEqual(1.8);
+  expect([bruno!.x, bruno!.z]).toEqual([64.5, 66.5]);
+});
+
+test('YAML-009.c: the title of the page is the name of the world', async ({ page }) => {
+  await open(page, '?world=test-behaviors');
+  await expect(page).toHaveTitle('Borgo dei test');
+  await open(page);
+  await expect(page).toHaveTitle('La valle');
+});
+
 test('CHAR-001.d: without the host the characters stand where they start', async ({ page }) => {
   await open(page, '?world=test-characters');
   await page.waitForTimeout(500);
