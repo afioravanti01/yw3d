@@ -95,7 +95,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Schema `agent` (P4 della spec, Q6–Q8), esclusivo con `program` e `controller`; configurazione nel risultato della composizione; agenti nell'elenco e nell'impronta del consenso (P12); righe del terminale.
   - Fatto quando: test di AGENT-001.a e .d, CHAR-001.a e .c, PROTO-005.a verdi.
 
-- [ ] **T8.03** Contesto del mondo
+- [x] **T8.03** Contesto del mondo
   - Req: AGENT-002 · Dip: T8.02
   - `context.ts` (P3): identità, posizione e luoghi, mappa, dintorni con direzioni, tempo, memoria, eventi.
   - Fatto quando: test di AGENT-002.a–b verdi.

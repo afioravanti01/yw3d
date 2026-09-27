@@ -1,0 +1,92 @@
+import { describe, expect, it } from 'vitest';
+import { composeWorld } from '../../core/compose/composeWorld';
+import { TERRAIN_GENERATOR_VERSION } from '../../core/gen/terrain';
+import { createDefaultStructures } from '../../core/structures/builtin';
+import { buildContext, direction, surroundings, whereIs, type SeenEntity } from './context';
+
+const WORLD = `version: 2
+name: Borgo
+description: Un borgo con un laghetto.
+terrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [128, 96, 128] }
+places:
+  - { id: piazza, name: Piazza, at: [40, 40] }
+  - { id: orti, name: Orti, description: Zucchine e pomodori., area: { rect: { from: [30, 30], to: [50, 50] } } }
+  - { id: lontano, name: Posto lontano, at: [120, 120] }
+structures:
+  - { type: pond, id: laghetto1, name: Laghetto del borgo, at: [40, 70], params: { radius: 8 } }
+characters:
+  - { id: marta, name: Marta, description: La pescatrice., at: [40, 40] }
+  - { id: tobia, name: Tobia, at: [44, 36] }
+`;
+
+const map = composeWorld(WORLD, 'w.yaml', { registry: createDefaultStructures() }).map!;
+const self = { x: 40.5, y: 34, z: 40.5 };
+const nearby: SeenEntity[] = [
+  { id: 'player', name: 'viandante', kind: 'player', x: 40.5, y: 34, z: 30.5, distance: 10 },
+  { id: 'tobia', name: 'Tobia', kind: 'character', x: 50.5, y: 34, z: 40.5, distance: 10 },
+];
+
+describe('what an agent knows of the world', () => {
+  it('AGENT-002.b: the surroundings within 32 blocks, nearest first, with distance and direction', () => {
+    expect(direction(self, { x: 40.5, z: 20 })).toBe('north');
+    expect(direction(self, { x: 60, z: 40.5 })).toBe('east');
+    expect(direction(self, { x: 50, z: 50 })).toBe('south-east');
+    expect(direction(self, { x: 30, z: 30 })).toBe('north-west');
+    const around = surroundings(map, self, nearby);
+    expect(around.map((s) => [s.id, s.direction])).toEqual([
+      ['orti', 'here'],
+      ['piazza', 'here'],
+      ['player', 'north'],
+      ['tobia', 'east'],
+      ['laghetto1', 'south'],
+    ]);
+    // Far away, not in the surroundings, but in the map of the context.
+    expect(around.some((s) => s.id === 'lontano')).toBe(false);
+    expect(whereIs(map, self).map((e) => e.id)).toEqual(['piazza', 'orti']);
+  });
+
+  it('AGENT-002.a: the request has who it is, where, the map with coordinates, the surroundings, the time, the memory and what happened', () => {
+    const text = buildContext({
+      identity: {
+        id: 'marta',
+        name: 'Marta',
+        description: 'La pescatrice.',
+        persona: 'Burbera ma gentile.',
+        goals: ['pescare una carpa'],
+      },
+      map,
+      self,
+      nearby,
+      time: 125.4,
+      memory: ['t=100s viandante → you: ciao'],
+      triggers: [
+        { kind: 'message', from: 'player', fromName: 'viandante', to: 'marta', text: 'Cosa vedi?' },
+      ],
+    });
+    expect(text).toContain('You are Marta');
+    expect(text).toContain('La pescatrice.');
+    expect(text).toContain('Burbera ma gentile.');
+    expect(text).toContain('Your goals: pescare una carpa.');
+    expect(text).toContain(
+      'When a question is not about this world, answer with your own knowledge',
+    );
+    expect(text).toContain('- viandante (player) says to marta: Cosa vedi?');
+    const state = JSON.parse(text.split('WORLD STATE (JSON):\n')[1]!.split('\n')[0]!) as {
+      you: { at: number[]; in: string[] };
+      time_seconds: number;
+      surroundings: { id: string }[];
+      world: { elements: { id: string; at: number[]; description?: string }[] };
+      memory: string[];
+    };
+    expect(state.you).toMatchObject({ at: [40.5, 40.5], in: ['piazza', 'orti'] });
+    expect(state.time_seconds).toBe(125);
+    expect(state.surroundings[0]!.id).toBe('orti');
+    expect(state.world.elements.find((e) => e.id === 'lontano')).toMatchObject({
+      at: [120, 120],
+    });
+    expect(state.world.elements.find((e) => e.id === 'orti')).toMatchObject({
+      description: 'Zucchine e pomodori.',
+    });
+    expect(state.memory).toEqual(['t=100s viandante → you: ciao']);
+  });
+});
