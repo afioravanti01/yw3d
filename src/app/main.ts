@@ -486,6 +486,7 @@ async function main(): Promise<void> {
         : null,
       characters: describeNearest(characters, view.source.state(), shown.result),
       seed: hook.seed,
+      clock: clockNow() ?? null,
       world: worldName,
       structureCounts: shown.result.structureCounts,
       warnings: shown.result.diagnostics.filter((d) => d.severity === 'warning').length,

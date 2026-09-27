@@ -476,3 +476,35 @@ test('screenshots of the player in first and third person (plan P12)', async ({ 
   await settle();
   await page.screenshot({ path: 'e2e/screenshots/player-third.png' });
 });
+
+type Clock = { clock(): number | null; skyColor(): string | null };
+const clockHook = <K extends keyof Clock>(page: Page, key: K) =>
+  page.evaluate((k) => (globalThis as unknown as { __yw3d: Clock }).__yw3d[k](), key) as Promise<
+    ReturnType<Clock[K]>
+  >;
+
+test('TIME-001.c, TIME-002.a, RENDER-004.a: without the host the hour runs in the page; /time moves it and the sky follows', async ({
+  page,
+}) => {
+  await open(page, '?world=test-dialogue');
+  // The file sets no time: the world starts at 08:00, and 60 real minutes make a day.
+  const first = (await clockHook(page, 'clock'))!;
+  expect(first).toBeGreaterThanOrEqual(480);
+  expect(first).toBeLessThan(485);
+  await page.waitForTimeout(3000);
+  const later = (await clockHook(page, 'clock'))!;
+  expect(later - first).toBeGreaterThan(0.8);
+  expect(later - first).toBeLessThan(3);
+  const noon = await clockHook(page, 'skyColor');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/time 23:00');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => clockHook(page, 'clock')).toBeGreaterThanOrEqual(23 * 60);
+  await expect.poll(() => clockHook(page, 'skyColor')).not.toBe(noon);
+  const night = (await clockHook(page, 'skyColor'))!;
+  // Dark blue at night.
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(night.slice(i, i + 2), 16));
+  expect(Math.max(r!, g!, b!)).toBeLessThan(90);
+  expect(b).toBeGreaterThan(r!);
+  await expect(page.locator('#debug-overlay')).toContainText(/time\s+23:0\d · night/);
+});

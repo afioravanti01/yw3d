@@ -87,7 +87,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `daylight.ts` (P4, P5); cielo con sole, luna e stelle (P6); ombre ogni 2 s (P7).
   - Fatto quando: test di `daylight.ts` verdi; il giorno si vede passare nel browser.
 
-- [ ] **T9.04** Ora nell'overlay e nella console
+- [x] **T9.04** Ora nell'overlay e nella console
   - Req: DEBUG-001, DIALOG-005, TIME-001 · Dip: T9.03
   - Ora e parte del giorno nell'overlay e nell'intestazione di `/world`; `/time` in `/help`; e2e dell'ora che scorre senza host e di `/time`.
   - Fatto quando: e2e di TIME-001.c verdi.

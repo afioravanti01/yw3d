@@ -1,3 +1,4 @@
+import { formatClock, partOfDay } from '../core/time/clock';
 import { blocksToMeters } from '../core/world/units';
 
 export interface OverlayData {
@@ -26,6 +27,8 @@ export interface OverlayData {
     rttMs: number;
   } | null;
   seed: number;
+  /** The hour of the world, minutes after midnight (DEBUG-001.a, TIME-001); null before a world. */
+  clock: number | null;
   world: string;
   structureCounts: Record<string, number>;
   warnings: number;
@@ -115,6 +118,7 @@ export class DebugOverlay {
       `characters ${d.characters.count}${d.characters.nearest ? ` · nearest: ${d.characters.nearest}` : ''}`,
       `step       ${d.stepMs.toFixed(3)} ms (physics, last step)`,
       `free cam   ${d.speedMps.toFixed(1)} m/s`,
+      `time       ${d.clock === null ? '—' : `${formatClock(d.clock)} · ${partOfDay(d.clock)}`}`,
       `world      ${d.world} · seed ${d.seed} · ${d.warnings} warning${d.warnings === 1 ? '' : 's'}`,
       `structures ${formatCounts(d.structureCounts)}`,
       `chunks     ${d.meshedChunks} meshed / ${d.totalChunks}`,
