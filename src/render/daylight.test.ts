@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daylight, moonDirection, sunDirection } from './daylight';
+import { daylight, lightStep, moonDirection, sunDirection } from './daylight';
 
 const at = (hh: number, mm = 0) => hh * 60 + mm;
 
@@ -54,5 +54,16 @@ describe('the light of the hour', () => {
       const b = daylight(m + 1).horizon;
       expect(Math.max(...a.map((v, i) => Math.abs(v - b[i]!)))).toBeLessThan(0.03);
     }
+  });
+
+  it('TIME-003.a: the light changes direction in steps of a tenth of the day, not all the time', () => {
+    expect(lightStep(at(12, 5))).toBe(at(13, 12));
+    expect(lightStep(at(9, 40))).toBe(lightStep(at(11, 59)));
+    // Within a step the direction stays, while the colors keep flowing.
+    const a = daylight(at(9, 40));
+    const b = daylight(at(11, 50));
+    expect(b.light.towards).toEqual(a.light.towards);
+    expect(b.zenith).not.toEqual(a.zenith);
+    expect(daylight(at(12, 5)).light.towards).not.toEqual(a.light.towards);
   });
 });

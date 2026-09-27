@@ -10,6 +10,12 @@ export type Rgb = readonly [number, number, number];
 /** The sun rises in the east at 06:00 and sets in the west at 19:00 (P4). */
 export const SUNRISE = 6 * 60;
 export const SUNSET = 19 * 60;
+/**
+ * The direction of the light changes in steps, a tenth of the day each (amendment A9.2): shadows
+ * that move all the time make the scene restless. Within a step the light comes from where its
+ * body is at the middle of the step.
+ */
+export const LIGHT_STEPS = 10;
 const SUN_HIGHEST = (60 * Math.PI) / 180;
 const MOON_HIGHEST = (45 * Math.PI) / 180;
 
@@ -41,13 +47,21 @@ function arc(t: number, highest: number): Vec3 {
 
 const wrap = (m: number) => ((m % 1440) + 1440) % 1440;
 
+const sunPath = (minutes: number) => (wrap(minutes) - SUNRISE) / (SUNSET - SUNRISE);
+const moonPath = (minutes: number) => wrap(minutes - SUNSET) / (1440 - (SUNSET - SUNRISE));
+
 export function sunDirection(minutes: number): Vec3 {
-  return arc((wrap(minutes) - SUNRISE) / (SUNSET - SUNRISE), SUN_HIGHEST);
+  return arc(sunPath(minutes), SUN_HIGHEST);
 }
 
 export function moonDirection(minutes: number): Vec3 {
-  const nightLength = 1440 - (SUNSET - SUNRISE);
-  return arc(wrap(minutes - SUNSET) / nightLength, MOON_HIGHEST);
+  return arc(moonPath(minutes), MOON_HIGHEST);
+}
+
+/** The middle of the step of the day that holds `minutes` (A9.2). */
+export function lightStep(minutes: number): number {
+  const step = 1440 / LIGHT_STEPS;
+  return Math.floor(wrap(minutes) / step) * step + step / 2;
 }
 
 const hex = (value: number): Rgb => [
@@ -193,7 +207,12 @@ export function daylight(minutes: number): Daylight {
   const sunStrength = smoothstep(-0.04, 0.14, sun[1]);
   const moonStrength = smoothstep(-0.04, 0.14, moon[1]) * (1 - sunStrength);
   const bySun = sunStrength >= moonStrength;
-  const body = bySun ? sun : moon;
+  // The direction of the step (A9.2), kept on the body's path over the sky.
+  const clamp = (t: number) => Math.min(1, Math.max(0, t));
+  const step = lightStep(m);
+  const body = bySun
+    ? arc(clamp(sunPath(step)), SUN_HIGHEST)
+    : arc(clamp(moonPath(step)), MOON_HIGHEST);
   // Shadows from a body near the horizon would be endless: the light never goes below 8°.
   const lowest = Math.sin((8 * Math.PI) / 180);
   const up = Math.max(body[1], lowest);

@@ -21,7 +21,7 @@ import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
 import { MessageConsole } from './messageConsole';
-import { daylight } from '../render/daylight';
+import { daylight, lightStep } from '../render/daylight';
 import { characterDetails } from '../protocol/details';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
@@ -411,7 +411,7 @@ async function main(): Promise<void> {
 
   const overlay = new DebugOverlay();
   const fpsMeter = new FpsMeter();
-  let lastShadowMinutes: number | undefined;
+  let lastShadowStep: number | undefined;
   const timer = new THREE.Timer();
   timer.connect(document);
   renderer.setAnimationLoop((time) => {
@@ -424,14 +424,15 @@ async function main(): Promise<void> {
     if (current.chunks.update() > 0) {
       renderer.shadowMap.needsUpdate = true;
     }
-    // The light of the hour (plan F09 P4–P7): while the hour flows the shadows are drawn
-    // again on every frame, so they follow the sun smoothly (redrawn every 2 s they jumped).
+    // The light of the hour (plan F09 P4–P7): its direction moves in steps of a tenth of the
+    // day (A9.2), and the shadows are drawn again only when the step changes.
     const minutes = clockNow();
     if (minutes !== undefined) {
       current.scene.setDaylight(daylight(minutes));
-      if (minutes !== lastShadowMinutes) {
+      const step = lightStep(minutes);
+      if (step !== lastShadowStep) {
         renderer.shadowMap.needsUpdate = true;
-        lastShadowMinutes = minutes;
+        lastShadowStep = step;
       }
     }
     current.scene.update(camera);

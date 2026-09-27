@@ -155,4 +155,4 @@ Task in ordine, fermandosi alla prova d'uso di T9.05. Commit a fine task con `np
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T9.12, T9.13 | Fatti prima di chiudere la prova d'uso di T9.05 | Richiesta dell'utente durante la prova: la scimmietta nel mondo degli agenti | Nessuno |
-| T9.03 (P7) | Ombre ridisegnate a ogni frame mentre l'ora scorre, non ogni 2 s | Prova d'uso di T9.05: «le ombre scattano», ogni ridisegno era un gradino visibile | Nessuno: è la condizione di TIME-003.a; fps da misurare nella prova |
+| T9.03 (P7) | Ombre ridisegnate prima a ogni frame, poi solo a ogni decimo del giorno, con la direzione della luce ferma nel decimo | Prova d'uso di T9.05: ogni 2 s «scattano», a ogni frame «un continuo movimento» | Emendamento A9.2 |

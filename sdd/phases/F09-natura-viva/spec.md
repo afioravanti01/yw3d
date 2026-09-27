@@ -52,7 +52,7 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **b** `[manuale]` La superficie dell'acqua si muove con piccole onde e cambia riflessi con la luce del momento.
 
 ### TIME-003 — Osservare un giorno
-- **a** `[manuale]` Seguire il mondo per un giorno intero è piacevole e leggibile: alba e tramonto si riconoscono, la notte non è mai nera, i passaggi di luce e ombre sono continui, senza scatti.
+- **a** `[manuale]` Seguire il mondo per un giorno intero è piacevole e leggibile: alba e tramonto si riconoscono, la notte non è mai nera, i passaggi di luce sono continui, senza scatti; le ombre cambiano direzione solo ogni decimo del giorno (A9.2).
 
 ### CHAR-003 — Animali (emendamento A9.1)
 - **a** `[unit]` Un personaggio può dichiarare `body: monkey` (predefinito `human`): una scimmietta, alta circa 0,7 m, con un'entità fisica più piccola di quella di una persona. Si guida come ogni personaggio: con un agente, un programma o un controllore.
@@ -132,9 +132,10 @@ Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 | Q2 | L'ora alla ricarica | Continua; riparte dal file al riavvio dell'host o se cambia `time` | TIME-001.b |
 | Q3 | Chi imposta l'ora | La vista che guida e il terminale, con `/time HH:MM`; niente pausa né accelerazione | TIME-002.a |
 | Q4 | Parti del giorno | alba 05:30–07:00, giorno 07:00–18:30, tramonto 18:30–20:00, notte 20:00–05:30 | TIME-001.d |
-| Q5 | Ombre | Ricalcolate circa ogni 2 s di tempo reale; nessuno scatto visibile (TIME-003.a) | piano |
+| Q5 | Ombre | Ricalcolate a ogni decimo del giorno (A9.2) | piano |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
 | A9.1 | 2026-09-27 | CHAR-003 (nuovo), CHAR-001.a | Un personaggio può avere il corpo di una scimmietta (`body: monkey`), con figura, dimensioni e animazioni proprie; l'agente di un animale riceve istruzioni da animale e, con l'iniziativa autonoma, si sposta da sé a intervalli configurabili | Un primo animale nel mondo, guidato da un LLM | Utente (richiesta diretta, prima di G2) |
+| A9.2 | 2026-09-27 | TIME-003.a, Q5 | Le ombre non si muovono con continuità: la direzione della luce cambia a scatti, ogni decimo del giorno (6 minuti con il giorno di un'ora); i colori della luce e del cielo restano continui | Nella prova d'uso le ombre aggiornate ogni 2 s «scattano», quelle aggiornate a ogni frame creano «un continuo movimento che rende la scena strana» | Utente (proposta diretta nella prova d'uso di T9.05) |
