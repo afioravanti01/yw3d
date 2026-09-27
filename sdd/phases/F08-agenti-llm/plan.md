@@ -156,15 +156,17 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Fatto quando: G3 approvato dall'utente.
 
 ## Cervelli
-Da completare in T8.01.
+Opzioni lette dall'aiuto delle versioni installate (2026-09-27); le chiamate vere si fanno in T8.01.
 
-| Cervello | Modello | Effort | Risposta strutturata | Strumenti | Verificato |
+| Cervello | Chiamata | Modello | Effort | Risposta strutturata | Senza strumenti né sessione |
 |---|---|---|---|---|---|
-| Claude Code 2.1.283 | `--model` | `--effort low\|medium\|high` | `--json-schema` con `--output-format json` | da verificare | opzioni lette da `--help` |
-| Codex 0.125.0 | `--model` (da verificare) | `-c model_reasoning_effort=…` (da verificare) | `--output-schema` (da verificare) | sandbox in sola lettura (da verificare) | no: il sandbox di sviluppo lo termina |
-| opencode | `--model provider/modello` (documentazione) | da verificare | estrazione del JSON | da verificare | non installato |
-| Anthropic API | `model` | da verificare | strumento obbligato | — | no |
-| Compatibile OpenAI | `model` | `reasoning_effort` (da verificare) | `response_format` `json_schema` | — | no |
+| Claude Code 2.1.283 | `claude -p` con il contesto sullo stdin | `--model` | `--effort low\|medium\|high` | `--output-format json --json-schema <schema>` | `--tools ""`, `--no-session-persistence` |
+| Codex 0.157.1 | `codex exec -` con il contesto sullo stdin | `-m` | `-c model_reasoning_effort=…` (chiave di `config.toml`, da provare) | `--output-schema <file>`, `-o <file>` per l'ultimo messaggio | `-s read-only`, `--ephemeral`, `--skip-git-repo-check`, `-C <cartella temporanea>` |
+| opencode 2.0.18 | `opencode run <messaggio>` | `-m provider/modello` | variante del modello `#…`, solo con un modello indicato (da provare) | `--format json` per gli eventi; il JSON della risposta si estrae dal testo | da verificare: nessuna opzione per disattivare gli strumenti |
+| Anthropic API | `POST /v1/messages` | `model` | da verificare in T8.01 | strumento obbligato con lo schema | — |
+| Compatibile OpenAI | `POST <indirizzo>/chat/completions` | `model` | `reasoning_effort` (da verificare) | `response_format` `json_schema`, o estrazione dal testo | — |
+
+Nel `PATH` di questa macchina c'è anche una Codex 0.125.0 installata con npm (`/usr/local/bin/codex`), che viene trovata prima della 0.157.1 in `~/.local/bin`: l'host usa la CLI del `PATH`, quindi va tolta o messa dopo.
 
 ## Ordine e parallelismo
 
