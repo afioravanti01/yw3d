@@ -22,6 +22,8 @@ export class LocalSimulation implements PlayerSource {
   private readonly stepper = new FixedStepper();
   private previous: EntityState;
   private previousCharacters = new Map<string, EntityState>();
+  /** The programs the characters declare, which only the host runs. */
+  private programs: ReadonlyMap<string, string>;
 
   constructor(
     result: ComposeResult & { readonly world: World },
@@ -29,6 +31,7 @@ export class LocalSimulation implements PlayerSource {
     private readonly heard: (line: SpokenLine) => void,
   ) {
     this.sim = new Simulation(result, { now, heard });
+    this.programs = programsOf(result);
     this.startYaw = this.sim.view.yaw;
     this.previous = this.sim.player.state;
   }
@@ -80,6 +83,7 @@ export class LocalSimulation implements PlayerSource {
     const { x, y, z } = this.sim.player.state;
     const view = this.sim.view;
     this.sim = new Simulation(result, { now: this.now, heard: this.heard, playerAt: { x, y, z } });
+    this.programs = programsOf(result);
     this.sim.view = view;
     this.previous = this.sim.player.state;
     this.previousCharacters = new Map();
@@ -102,6 +106,10 @@ export class LocalSimulation implements PlayerSource {
         speech: c.speech,
         controlled: false,
         action: this.sim.agents.perceive(c.id).action?.kind ?? null,
+        // Without the host no program runs (D-010).
+        program: this.programs.has(c.id)
+          ? { file: this.programs.get(c.id)!, state: 'stopped' as const }
+          : null,
       };
     });
   }
@@ -119,4 +127,8 @@ export class LocalSimulation implements PlayerSource {
   get playerSpeech(): string | null {
     return this.sim.playerSaying;
   }
+}
+
+function programsOf(result: ComposeResult): ReadonlyMap<string, string> {
+  return new Map(result.characters.flatMap((c) => (c.program ? [[c.id, c.program] as const] : [])));
 }

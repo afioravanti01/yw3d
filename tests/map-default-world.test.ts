@@ -47,6 +47,7 @@ describe('destinations in the default world', () => {
           yaw: 0,
           appearance: resolveAppearance(undefined, 1, `v${i}`),
           command: undefined,
+          program: undefined,
         })),
       );
       physics.step();

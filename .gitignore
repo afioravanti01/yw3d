@@ -4,3 +4,7 @@ dist/
 test-results/
 playwright-report/
 e2e/screenshots/
+
+# Python bytecode of the library and of world programs
+__pycache__/
+*.pyc

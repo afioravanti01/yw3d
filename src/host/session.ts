@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type { AgentListener, AgentWorld } from '../core/agents/agentWorld';
 import { composeWorld, type ComposeResult } from '../core/compose/composeWorld';
@@ -22,6 +22,7 @@ import {
 } from '../protocol/messages';
 import { checkPrograms, type CommandConsent } from './consent';
 import { startStdioController, type RunningController } from './controllers/stdio';
+import { checkPython, defaultPython, programCommand, programEnv, type PythonCheck } from './python';
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
 import { structureFiles, type WorldFolder } from './worldFolder';
@@ -47,8 +48,18 @@ export interface SessionOptions {
   readonly moduleUrl?: (file: string) => string;
   /** Whether the commands of the controllers may run: the user's consent (PROTO-005). */
   readonly consent?: CommandConsent;
+  /** The Python interpreter of the programs (`--python`); `python3` by default (F07 Q2). */
+  readonly python?: string;
+  /** Checks the interpreter; replaced in tests. */
+  readonly checkPython?: (python: string) => PythonCheck;
   /** The sentences the player hears (DIALOG-004.a): the console of the host. */
   readonly heard?: (line: SpokenLine) => void;
+}
+
+/** The program of a character and whether it runs (DEBUG-001.a, plan F07 P15). */
+export interface ProgramStatus {
+  readonly file: string;
+  state: 'running' | 'stopped' | 'error';
 }
 
 /** Intents older than this are dropped: a stalled view does not keep the player walking (P9). */
@@ -94,6 +105,9 @@ export class HostSession {
   /** Physics, player, characters and dialogue (plan F06 P1); undefined before the first world. */
   sim: Simulation | undefined;
   private controllers: RunningController[] = [];
+  /** State of the program of each character that has one (DEBUG-001.a, plan F07 P15). */
+  private readonly programs = new Map<string, ProgramStatus>();
+  private python: PythonCheck | undefined;
   /** Controllers attached to characters, kept across reloads (PROTO-004). */
   private readonly controllerSinks = new Map<string, ControllerSink>();
   /** Programs waiting while a client drives their character (PROTO-004). */
@@ -147,6 +161,10 @@ export class HostSession {
       registry,
       seedOverride: this.options.seedOverride,
       now: this.options.now,
+      programExists: (relative) => {
+        const full = path.join(this.folder.root, relative);
+        return existsSync(full) && statSync(full).isFile();
+      },
     });
     diagnostics.push(...result.diagnostics);
     const world =
@@ -221,7 +239,10 @@ export class HostSession {
     if (world.result.characters.length > 0) {
       this.terminal.line(
         `${PREFIX}  characters: ${world.result.characters
-          .map((c) => `${c.id} (${c.command ?? 'no controller'})`)
+          .map(
+            (c) =>
+              `${c.id} (${c.program ? `program ${c.program}` : (c.command ?? 'no controller')})`,
+          )
           .join(', ')}`,
       );
     }
@@ -252,36 +273,71 @@ export class HostSession {
   }
 
   /**
-   * Stops the controllers of the previous world and starts the ones declared now, when their
-   * commands may run (PROTO-003.b: they restart at every reload).
+   * Stops the controllers and programs of the previous world and starts the ones declared now,
+   * when their commands may run (PROTO-003.b, PY-003.c: they restart at every reload).
    */
   private async restartControllers(world: SessionWorld): Promise<void> {
     for (const controller of this.controllers) controller.stop();
     this.controllers = [];
-    const declared = world.result.characters.flatMap((c) =>
-      c.command ? [{ id: c.id, command: c.command }] : [],
-    );
+    this.programs.clear();
+    const python = this.options.python ?? defaultPython();
+    const declared = world.result.characters.flatMap((c) => {
+      if (c.program) {
+        this.programs.set(c.id, { file: c.program, state: 'stopped' });
+        return [{ id: c.id, command: programCommand(python, c.program), program: true }];
+      }
+      return c.command ? [{ id: c.id, command: c.command, program: false }] : [];
+    });
     if (declared.length === 0) return;
     if (!(await (this.options.consent ?? (async () => false))(declared))) return;
     // The world may have changed while the user was answering.
     if (this.world !== world) return;
-    const runnable = new Set(
-      checkPrograms(declared, this.folder.root, this.terminal).map((c) => c.id),
-    );
-    for (const character of world.result.characters) {
-      if (!character.command || !runnable.has(character.id)) continue;
+    const programs = declared.filter((c) => c.program);
+    if (programs.length > 0) {
+      this.python ??= (this.options.checkPython ?? checkPython)(python);
+      if (!this.python.ok) {
+        for (const c of programs) {
+          this.terminal.line(`${PREFIX}  [${c.id}] cannot start the program: ${this.python.error}`);
+        }
+      }
+    }
+    const runnable = [
+      ...(this.python?.ok ? programs : []),
+      ...checkPrograms(
+        declared.filter((c) => !c.program),
+        this.folder.root,
+        this.terminal,
+      ).map((c) => ({ ...c, program: false })),
+    ];
+    for (const c of runnable) {
+      const status = this.programs.get(c.id);
+      if (status) status.state = 'running';
       this.controllers.push(
         startStdioController(
-          character.id,
-          character.command,
+          c.id,
+          c.command,
           this.folder.root,
           this,
           this.terminal,
           // Simulated time: a controller is judged on the world's clock, not the wall clock.
           () => (this.agents?.time ?? 0) * 1000,
+          c.program
+            ? {
+                program: true,
+                env: programEnv(),
+                ended: (end) => {
+                  if (this.programs.get(c.id) === status) status!.state = end;
+                },
+              }
+            : {},
         ),
       );
     }
+  }
+
+  /** The program of a character and its state, if it has one (DEBUG-001.a). */
+  programOf(characterId: string): ProgramStatus | undefined {
+    return this.programs.get(characterId);
   }
 
   /** Stops the controllers: the host is closing. */
@@ -360,6 +416,7 @@ export class HostSession {
       speech: c.speech,
       controlled: this.controllerSinks.has(c.id),
       action: this.agents?.perceive(c.id).action?.kind ?? null,
+      program: this.programs.has(c.id) ? { ...this.programs.get(c.id)! } : null,
     }));
   }
 

@@ -61,6 +61,7 @@ export async function startHostServer(
     seedOverride: options.seed,
     now: () => performance.now(),
     consent,
+    python: options.python,
   });
   await session.load();
 

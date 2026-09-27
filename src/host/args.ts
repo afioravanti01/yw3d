@@ -11,6 +11,8 @@ export interface CliOptions {
   readonly seed: number | undefined;
   /** Runs the commands of the characters without asking (PROTO-005.a). */
   readonly allowCommands: boolean;
+  /** Python interpreter of the programs, when not the default one (F07 Q2). */
+  readonly python: string | undefined;
 }
 
 export type ParsedArgs =
@@ -33,7 +35,9 @@ Options:
   --lan          accept connections from the local network (default: this machine only)
   --seed <n>     replace the terrain seed of world.yaml (0 … ${MAX_SEED})
   --allow-commands
-                 run the commands of the characters without asking
+                 run the commands and programs of the characters without asking
+  --python <path>
+                 Python interpreter of the programs (default: python3, python on Windows)
   -h, --help     show this help`;
 
 /** Parses the command-line arguments after `yw3d` (plan F04 P12). */
@@ -44,6 +48,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let lan = false;
   let seed: number | undefined;
   let allowCommands = false;
+  let python: string | undefined;
   const error = (message: string): ParsedArgs => ({ kind: 'error', message });
 
   for (let i = 0; i < argv.length; i++) {
@@ -62,6 +67,14 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       case '--allow-commands':
         allowCommands = true;
         break;
+      case '--python': {
+        const raw = value();
+        if (raw === undefined || raw.trim() === '') {
+          return error('--python needs the path of a Python interpreter');
+        }
+        python = raw;
+        break;
+      }
       case '--port': {
         const raw = value();
         const n = Number(raw);
@@ -89,5 +102,5 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     }
   }
   if (folder === undefined) return error('missing the world folder');
-  return { kind: 'run', options: { folder, port, open, lan, seed, allowCommands } };
+  return { kind: 'run', options: { folder, port, open, lan, seed, allowCommands, python } };
 }

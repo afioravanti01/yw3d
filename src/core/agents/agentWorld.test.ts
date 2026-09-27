@@ -23,6 +23,7 @@ const start = (id: string, x: number, z: number): CharacterStart => ({
   yaw: 0,
   appearance: resolveAppearance(undefined, 1, id),
   command: undefined,
+  program: undefined,
 });
 
 function setup(

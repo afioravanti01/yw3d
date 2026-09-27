@@ -156,7 +156,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - P6: `yes_no`, `say` con `to`, `paused` e `resumed`, esito `paused` delle azioni sospese; `docs/controllori.md` aggiornato.
   - Fatto quando: test di PROTO-004.a–b e del nuovo `heard` verdi.
 
-- [ ] **T7.07** Programmi nella cartella del mondo
+- [x] **T7.07** Programmi nella cartella del mondo
   - Req: PY-001, PY-003, HOST-001, CHAR-001 · Dip: T7.02, T7.06
   - `program` nel file del mondo; `python.ts` (P7) con `--python`; consenso; ricarica per i `.py`; stato dei programmi (P15) nel terminale.
   - Fatto quando: test di PY-001.a, PY-003.a–b, HOST-001.c verdi; un programma Python minimo parte, riceve `hello` e muove il personaggio.

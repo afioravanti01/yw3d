@@ -14,6 +14,7 @@ import { dig, flatten, type DugBasin } from './adapt';
 import { DEFAULT_WORLD_SIZE, validateWorldSize, World, type WorldSize } from '../world/world';
 import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import { DEFAULT_PLAYER_NAME, loadWorldFile, type PlaceDecl } from '../yaml/worldFile';
+import { insideFolder } from '../yaml/paths';
 import { areaInsideWorld } from './areas';
 import { buildWorldMap, checkIds, type Goal, type WorldMap } from '../map/worldMap';
 import { checkStructureTypes, findConflicts, placeStructures, type Placement } from './placement';
@@ -21,6 +22,11 @@ import { scatterStructures } from './scatter';
 
 export interface ComposeOptions {
   readonly registry: StructureRegistry;
+  /**
+   * Whether a file of the world folder exists, by its path relative to the folder: the host
+   * checks the programs of the characters with it (PY-003.b); without it they are not checked.
+   */
+  readonly programExists?: (path: string) => boolean;
   /** Replaces the terrain seed of the file (APP-001.a). */
   readonly seedOverride?: number;
   /** Clock for the step timings, e.g. `performance.now`; the core has no clock of its own. */
@@ -41,6 +47,8 @@ export interface CharacterStart {
   readonly appearance: Appearance;
   /** Command of the controller that drives it, if any (PROTO-003). */
   readonly command: string | undefined;
+  /** Its Python program, relative to the world folder, if any (PY-003.a). */
+  readonly program: string | undefined;
 }
 
 export interface PlacedStructure {
@@ -196,6 +204,14 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
         message: `the character is outside the world: x and z must be within 0..${size.x - 1} and 0..${size.z - 1}`,
       });
     }
+    // The file of a program is checked where there is a disk: in the host (PY-003.b).
+    const program = character.program && insideFolder(character.program);
+    if (program && options.programExists && !options.programExists(program)) {
+      issues.push({
+        path: ['characters', i, 'program'],
+        message: `the program "${character.program}" does not exist in the world folder`,
+      });
+    }
   });
   const singles = placeStructures(decl.structures ?? [], options.registry, seed, size, issues);
   for (const [a, b] of findConflicts(singles)) {
@@ -326,6 +342,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       yaw: (-c.yaw * Math.PI) / 180,
       appearance: resolveAppearance(c.appearance, seed, c.id),
       command: c.controller?.command,
+      program: c.program === undefined ? undefined : insideFolder(c.program),
     })),
     placements: placements.map((p) => ({
       type: p.type.name,

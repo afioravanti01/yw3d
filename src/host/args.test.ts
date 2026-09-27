@@ -50,6 +50,7 @@ describe('yw3d command line', () => {
         lan: false,
         seed: undefined,
         allowCommands: false,
+        python: undefined,
       },
     });
     expect(
@@ -72,8 +73,14 @@ describe('yw3d command line', () => {
         lan: true,
         seed: 42,
         allowCommands: true,
+        python: undefined,
       },
     });
+    expect(parseArgs(['valle', '--python', '/opt/py/bin/python3.12'])).toMatchObject({
+      options: { python: '/opt/py/bin/python3.12' },
+    });
+    expect(parseArgs(['valle', '--python']).kind).toBe('error');
+    expect(USAGE).toContain('--python <path>');
     expect(parseArgs(['valle', '--help'])).toEqual({ kind: 'help' });
     expect(parseArgs(['-h'])).toEqual({ kind: 'help' });
     for (const bad of [

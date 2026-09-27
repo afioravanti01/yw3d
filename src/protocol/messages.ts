@@ -57,6 +57,11 @@ export interface CharacterSnapshot {
   /** Whether a controller drives it now, and its running action (DEBUG-001.a). */
   readonly controlled: boolean;
   readonly action: string | null;
+  /** Its Python program and whether it runs, if it has one (DEBUG-001.a). */
+  readonly program: {
+    readonly file: string;
+    readonly state: 'running' | 'stopped' | 'error';
+  } | null;
 }
 
 export type HostMessage =

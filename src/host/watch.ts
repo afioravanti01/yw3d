@@ -12,7 +12,7 @@ export const RELOAD_DELAY_MS = 150;
 
 /**
  * Whether a file change concerns the world: `world.yaml`, any other YAML file of the folder
- * (plan F06 P15), or a file under `structures/`.
+ * (plan F06 P15), a file under `structures/`, or a Python program (PY-003.c).
  */
 export function affectsWorld(folder: WorldFolder, file: string): boolean {
   const relative = path.relative(folder.root, path.resolve(file));
@@ -20,6 +20,7 @@ export function affectsWorld(folder: WorldFolder, file: string): boolean {
   return (
     relative === WORLD_FILE ||
     /\.ya?ml$/.test(relative) ||
+    (/\.py$/.test(relative) && !relative.split(path.sep).includes('__pycache__')) ||
     relative.startsWith(STRUCTURES_DIR + path.sep)
   );
 }

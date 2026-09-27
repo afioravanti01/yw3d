@@ -1,3 +1,4 @@
+import { insideFolder } from './paths';
 import {
   color,
   int,
@@ -157,7 +158,10 @@ const playerSchema = object({
 export const BEHAVIORS_REMOVED =
   'behaviors in YAML were replaced by Python programs: see docs/python.md';
 
-/** A character (CHAR-001.a), driven by a command (PROTO-003) or standing still. */
+/**
+ * A character (CHAR-001.a), driven by a Python program of the world folder (PY-003.a) or by a
+ * command (PROTO-003), not both; without either it stands still.
+ */
 const characterSchema = object(
   {
     id: identifier(),
@@ -166,12 +170,33 @@ const characterSchema = object(
     at: pair(),
     yaw: number({ min: -360, max: 360, default: 0 }),
     appearance: optional(appearanceSchema),
+    program: optional(str()),
     behavior: optional(unknownValue()),
     controller: optional(object({ command: str() })),
   },
   (character, path, issues) => {
     if (character.behavior !== undefined) {
       issues.push({ path: [...path, 'behavior'], message: BEHAVIORS_REMOVED });
+    }
+    if (character.program !== undefined && character.controller !== undefined) {
+      issues.push({
+        path: [...path, 'controller'],
+        message: 'a character has either a program or a controller, not both',
+      });
+    }
+    if (character.program !== undefined) {
+      const inside = insideFolder(character.program);
+      if (!inside) {
+        issues.push({
+          path: [...path, 'program'],
+          message: `the program "${character.program}" must be a file inside the world folder`,
+        });
+      } else if (!inside.endsWith('.py')) {
+        issues.push({
+          path: [...path, 'program'],
+          message: `the program "${character.program}" must be a Python file (.py)`,
+        });
+      }
     }
   },
 );

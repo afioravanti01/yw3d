@@ -28,6 +28,7 @@ describe('performance with characters', () => {
       yaw: 0,
       appearance: resolveAppearance(undefined, 1, `c${i}`),
       command: undefined,
+      program: undefined,
     }));
     const agents = new AgentWorld(physics, spawnCharacters(physics, starts), undefined, finder, {
       event: () => {},
