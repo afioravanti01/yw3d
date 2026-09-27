@@ -67,6 +67,8 @@ export function startConsole(session: HostSession, input: LineInput, terminal: T
         map && {
           map,
           position: (id) => session.agents?.stateOf(id),
+          clock: () => session.clock?.minutes,
+          setClock: (minutes) => session.setClock(minutes),
           details: (id) => {
             const start = world?.characters.find((c) => c.id === id);
             const now = session.characterSnapshots().find((c) => c.id === id);

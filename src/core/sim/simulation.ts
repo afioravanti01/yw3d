@@ -1,4 +1,15 @@
 import {
+  DEFAULT_DAY_MINUTES,
+  DEFAULT_START,
+  formatClock,
+  parseClock,
+  partOfDay,
+  secondsBetween,
+  timeOfDay,
+  type ClockSettings,
+  type PartOfDay,
+} from '../time/clock';
+import {
   AgentWorld,
   HEARING_DISTANCE,
   MAX_SAY_LENGTH,
@@ -47,6 +58,8 @@ export type SayResult =
 export interface SimulationOptions {
   /** Where the player is: kept across reloads (HOST-003.a); the start of the file otherwise. */
   readonly playerAt?: { readonly x: number; readonly y: number; readonly z: number };
+  /** The hour at the start, to keep the hour of the world across a reload (TIME-001.b). */
+  readonly clockAt?: number;
   /** Every message of the world, as it is said (DIALOG-002.a, DIALOG-004.a). */
   readonly heard?: (line: SpokenLine) => void;
   /** Clock for the duration of a step, e.g. `performance.now`. */
@@ -63,6 +76,9 @@ export class Simulation {
   intent: Intent = IDLE;
   /** Duration of the last step, milliseconds. */
   lastStepMs = 0;
+  /** The clock of the world (TIME-001) and how far `/time` moved it, simulated seconds. */
+  readonly clockSettings: ClockSettings;
+  private clockOffset = 0;
   /** What the player is saying, for its speech bubble (DIALOG-001.d). */
   private playerSpeech: { text: string; until: number } | undefined;
   /** External controllers by character (PROTO-003, PROTO-004). */
@@ -76,6 +92,17 @@ export class Simulation {
     readonly result: ComposeResult & { readonly world: World },
     private readonly options: SimulationOptions = {},
   ) {
+    this.clockSettings = result.clock ?? {
+      startMinutes: parseClock(DEFAULT_START)!,
+      dayMinutes: DEFAULT_DAY_MINUTES,
+    };
+    if (options.clockAt !== undefined) {
+      this.clockOffset = secondsBetween(
+        this.clockSettings.startMinutes,
+        options.clockAt,
+        this.clockSettings,
+      );
+    }
     const registry = createDefaultRegistry();
     this.physics = new PhysicsWorld(result.world, registry);
     if (options.playerAt) {
@@ -112,6 +139,17 @@ export class Simulation {
   /** Simulated seconds since the world started. */
   get time(): number {
     return this.agents.time;
+  }
+
+  /** The hour of the world, minutes after midnight, and the part of the day (TIME-001). */
+  get clock(): { readonly minutes: number; readonly part: PartOfDay } {
+    const minutes = timeOfDay(this.time + this.clockOffset, this.clockSettings);
+    return { minutes, part: partOfDay(minutes) };
+  }
+
+  /** Brings the world to an hour, going forward (`/time`, TIME-002.a). */
+  setClock(minutes: number): void {
+    this.clockOffset += secondsBetween(this.clock.minutes, minutes, this.clockSettings);
   }
 
   /** One fixed step: the player's intent, the agent world and the physics. */
@@ -223,8 +261,11 @@ export class Simulation {
 
   /** Perception with the names of the entities nearby (PROTO-002.a). */
   private named(perception: Perception): Perception {
+    const clock = this.clock;
     return {
       ...perception,
+      time_of_day: formatClock(clock.minutes),
+      part_of_day: clock.part,
       nearby: perception.nearby.map((e) => ({ ...e, name: this.names.get(e.id) ?? e.id })),
     };
   }

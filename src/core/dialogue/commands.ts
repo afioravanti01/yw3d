@@ -1,4 +1,5 @@
 import type { MapEntry, MapShape, WorldMap } from '../map/worldMap';
+import { formatClock, parseClock, partOfDay } from '../time/clock';
 import { address } from './address';
 
 /**
@@ -44,6 +45,10 @@ export interface CommandContext {
   position(id: string): { readonly x: number; readonly z: number } | undefined;
   /** What drives a character and what it is doing; undefined when unknown. */
   details?(id: string): CharacterDetails | undefined;
+  /** The hour of the world, minutes after midnight (TIME-001). */
+  clock?(): number | undefined;
+  /** Brings the world to an hour; absent where the time cannot be set (TIME-002.a). */
+  setClock?(minutes: number): void;
 }
 
 export const HELP = [
@@ -53,6 +58,7 @@ export const HELP = [
   '- `@name message`: to one character within 16 blocks of you (id or name; Tab completes it).',
   '- Esc goes back to the game; the × at the top of the console reduces it.',
   '- `/world`: the characters and the player where they are now, the places and the structures.',
+  '- `/time`: the hour of the world; `/time HH:MM` brings the world to that hour.',
   '- `/describe @name`: the description of a character and its technical data: what drives it, model or program, state, action, position.',
   '- `/help`: this help.',
 ].join('\n');
@@ -67,6 +73,12 @@ export function runCommand(text: string, context?: CommandContext): CommandResul
   if (name === 'world') {
     if (!context) return { ok: false, error: 'there is no world yet' };
     return { ok: true, text: describeWorld(context) };
+  }
+  if (name === 'time') {
+    if (!context?.clock || context.clock() === undefined) {
+      return { ok: false, error: 'there is no world yet' };
+    }
+    return time(text.trim().slice('/time'.length).trim(), context);
   }
   if (name === 'describe') {
     if (!context) return { ok: false, error: 'there is no world yet' };
@@ -134,6 +146,19 @@ function driverLines(driver: Driver): string[] {
 
 const round = (v: number) => String(Math.round(v));
 
+/** `/time` shows the hour of the world; `/time HH:MM` brings it there (TIME-002.a). */
+function time(written: string, context: CommandContext): CommandResult {
+  const now = (minutes: number) => `**${formatClock(minutes)}**, ${partOfDay(minutes)}`;
+  if (written === '') return { ok: true, text: `It is ${now(context.clock!()!)}.` };
+  const minutes = parseClock(written);
+  if (minutes === undefined) return { ok: false, error: 'write /time HH:MM, e.g. /time 21:30' };
+  if (!context.setClock) {
+    return { ok: false, error: 'only the view that drives the player can set the time' };
+  }
+  context.setClock(minutes);
+  return { ok: true, text: `The world is now at ${now(minutes)}.` };
+}
+
 /** Where an element is, in blocks: a point, a rectangle of columns, a circle. */
 function where(shape: MapShape): string {
   switch (shape.kind) {
@@ -147,15 +172,18 @@ function where(shape: MapShape): string {
 }
 
 /** Every element of the map, grouped by kind, as one block; who moves is where it is now. */
-function describeWorld({ map, position }: CommandContext): string {
+function describeWorld(context: CommandContext): string {
+  const { map, position } = context;
   const of = (kind: MapEntry['kind']) => map.entries.filter((e) => e.kind === kind);
   const title = (e: MapEntry) => (e.name === e.id ? `\`${e.id}\`` : `${e.name} (\`${e.id}\`)`);
   const now = (e: MapEntry) => {
     const p = position(e.id);
     return p ? `${round(p.x)}, ${round(p.z)}` : where(e.shape);
   };
+  const minutes = context.clock?.();
+  const hour = minutes === undefined ? '' : ` · ${formatClock(minutes)} (${partOfDay(minutes)})`;
   const lines = [
-    `**${map.name}** · ${map.size[0]} × ${map.size[2]} blocks · positions x, z in blocks`,
+    `**${map.name}**${hour} · ${map.size[0]} × ${map.size[2]} blocks · positions x, z in blocks`,
   ];
   const section = (label: string, entries: readonly MapEntry[], line: (e: MapEntry) => string) => {
     if (entries.length === 0) return;

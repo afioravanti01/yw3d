@@ -51,6 +51,7 @@ export class HostConnection {
   views = 0;
   /** Round-trip time of the last ping, ms. */
   rttMs = 0;
+  private lastClock: { minutes: number; at: number } | undefined;
   readonly address: string;
 
   private readonly socket: WebSocket;
@@ -128,6 +129,21 @@ export class HostConnection {
     this.send({ type: 'say', text });
   }
 
+  /** `/time HH:MM` from the driving view (TIME-002.a). */
+  setTime(minutes: number): void {
+    this.send({ type: 'time', minutes });
+  }
+
+  /**
+   * The hour of the world now, minutes after midnight (TIME-001.b): the last one of the host,
+   * moved on by the time passed since, at the pace of a day of `dayMinutes` real minutes.
+   */
+  clock(dayMinutes: number): number | undefined {
+    if (!this.lastClock) return undefined;
+    const seconds = (this.now() - this.lastClock.at) / 1000;
+    return (this.lastClock.minutes + (seconds * 1440) / (dayMinutes * 60)) % 1440;
+  }
+
   interact(): void {
     this.send({ type: 'interact' });
   }
@@ -161,6 +177,7 @@ export class HostConnection {
       case 'hello':
         this.role = message.role;
         this.views = message.views;
+        if (message.clock !== null) this.lastClock = { minutes: message.clock, at: this.now() };
         if (message.player) this.record(message.player);
         this.recordCharacters(message.characters);
         this.handlers.hello(message);
@@ -173,6 +190,7 @@ export class HostConnection {
         break;
       case 'state':
         this.views = message.views;
+        this.lastClock = { minutes: message.clock, at: this.now() };
         this.record(message.player);
         this.recordCharacters(message.characters);
         break;

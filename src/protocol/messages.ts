@@ -82,6 +82,8 @@ export type HostMessage =
       readonly player: PlayerSnapshot | null;
       readonly characters: readonly CharacterSnapshot[];
       readonly views: number;
+      /** The hour of the world, minutes after midnight (TIME-001.b); null before a world. */
+      readonly clock: number | null;
     }
   | {
       readonly type: 'world';
@@ -97,6 +99,8 @@ export type HostMessage =
       readonly player: PlayerSnapshot;
       readonly characters: readonly CharacterSnapshot[];
       readonly views: number;
+      /** The hour of the world, minutes after midnight (TIME-001.b). */
+      readonly clock: number;
     }
   | { readonly type: 'role'; readonly role: Role }
   | { readonly type: 'pong'; readonly id: number }
@@ -116,4 +120,6 @@ export type ViewMessage =
   /** The player pressed E near a character (PROTO-002.c). */
   | { readonly type: 'interact' }
   /** The player says a sentence, from the driving view (DIALOG-001). */
-  | { readonly type: 'say'; readonly text: string };
+  | { readonly type: 'say'; readonly text: string }
+  /** `/time HH:MM` from the driving view (TIME-002.a): minutes after midnight. */
+  | { readonly type: 'time'; readonly minutes: number };

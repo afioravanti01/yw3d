@@ -1,3 +1,4 @@
+import type { PartOfDay } from '../time/clock';
 import type { Character } from '../characters/characters';
 import { areaContains } from '../compose/areas';
 import { regionOf } from '../map/goals';
@@ -103,6 +104,9 @@ export interface Perception {
   readonly action: { readonly id: string; readonly kind: ActionRequest['kind'] } | null;
   /** Entities within SIGHT_DISTANCE, nearest first. */
   readonly nearby: readonly PerceivedEntity[];
+  /** The hour of the world, `HH:MM`, and the part of the day, added by the simulation. */
+  readonly time_of_day?: string;
+  readonly part_of_day?: PartOfDay;
 }
 
 interface Running {

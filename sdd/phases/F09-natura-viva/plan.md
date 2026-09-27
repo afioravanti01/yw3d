@@ -77,7 +77,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `clock.ts` (P1); sezione `time` con `start` e `day_minutes`.
   - Fatto quando: test di TIME-001.a e .d, YAML-001.a verdi.
 
-- [ ] **T9.02** Ora nella simulazione, nell'host e nelle viste
+- [x] **T9.02** Ora nella simulazione, nell'host e nelle viste
   - Req: TIME-001, TIME-002, PROTO-002 · Dip: T9.01
   - Orologio della `Simulation` con scostamento (P2); ora nello stato alle viste (P3); ora senza host; `/time` nel core, nel terminale e dalla vista che guida; ora nella percezione (P11).
   - Fatto quando: test di TIME-001.b, TIME-002.a, PROTO-002.a verdi.

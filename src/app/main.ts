@@ -217,6 +217,16 @@ async function main(): Promise<void> {
           const now = shownCharacters().find((c) => c.id === id);
           return start && characterDetails(start, now);
         },
+        clock: () => clockNow(),
+        // Only the view that drives the player sets the time (TIME-002.a).
+        ...(connection && connection.role !== 'driver'
+          ? {}
+          : {
+              setClock: (minutes: number) => {
+                if (connection) connection.setTime(minutes);
+                else local?.simulation.setClock(minutes);
+              },
+            }),
       };
     if (!controls || !playerView) {
       controls = new FlyCamera(camera, canvas, result.world.size);
@@ -387,6 +397,11 @@ async function main(): Promise<void> {
   }
 
   /** Characters as shown now: from the host, or from the simulation of this page. */
+  /** The hour of the world now, minutes after midnight (TIME-001): the host's, or this page's. */
+  const clockNow = (): number | undefined => {
+    const dayMinutes = current?.result.clock?.dayMinutes ?? 60;
+    return connection ? connection.clock(dayMinutes) : local?.simulation.clock.minutes;
+  };
   const shownCharacters = (): CharacterSnapshot[] =>
     connection ? connection.interpolatedCharacters(performance.now()) : (local?.characters() ?? []);
 

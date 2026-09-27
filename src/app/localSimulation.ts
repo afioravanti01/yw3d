@@ -85,7 +85,17 @@ export class LocalSimulation implements PlayerSource {
   recompose(result: ComposeResult & { readonly world: World }): void {
     const { x, y, z } = this.sim.player.state;
     const view = this.sim.view;
-    this.sim = new Simulation(result, { now: this.now, heard: this.heard, playerAt: { x, y, z } });
+    // The hour goes on, unless the clock of the file changed (TIME-001.b).
+    const before = this.sim;
+    const sameClock =
+      before.clockSettings.startMinutes === result.clock?.startMinutes &&
+      before.clockSettings.dayMinutes === result.clock?.dayMinutes;
+    this.sim = new Simulation(result, {
+      now: this.now,
+      heard: this.heard,
+      playerAt: { x, y, z },
+      ...(sameClock ? { clockAt: before.clock.minutes } : {}),
+    });
     this.programs = programsOf(result);
     this.agents = agentsOf(result);
     this.sim.view = view;

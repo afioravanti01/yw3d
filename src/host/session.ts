@@ -240,8 +240,15 @@ export class HostSession {
    */
   private startSimulation(world: SessionWorld): void {
     const previous = this.sim?.player.state;
+    // The hour goes on across a reload, unless the clock of the file changed (TIME-001.b, Q2).
+    const before = this.sim;
+    const sameClock =
+      before !== undefined &&
+      before.clockSettings.startMinutes === world.result.clock?.startMinutes &&
+      before.clockSettings.dayMinutes === world.result.clock?.dayMinutes;
     const sim = new Simulation(world.result, {
       playerAt: previous && { x: previous.x, y: previous.y, z: previous.z },
+      ...(sameClock ? { clockAt: before.clock.minutes } : {}),
       heard: (line) => this.heard(line),
       now: this.options.now,
     });
@@ -544,8 +551,19 @@ export class HostSession {
         player: this.snapshot()!,
         characters: this.characterSnapshots(),
         views: this.views.length,
+        clock: sim.clock.minutes,
       });
     }
+  }
+
+  /** The hour of the world, if there is one (TIME-001). */
+  get clock(): { readonly minutes: number; readonly part: string } | undefined {
+    return this.sim?.clock;
+  }
+
+  /** Brings the world to an hour, for every view (TIME-002.a). */
+  setClock(minutes: number): void {
+    this.sim?.setClock(minutes);
   }
 
   /** State of the player, or undefined before the first valid world. */
@@ -599,6 +617,7 @@ export class HostSession {
       player: this.snapshot() ?? null,
       characters: this.characterSnapshots(),
       views: this.views.length,
+      clock: this.sim?.clock.minutes ?? null,
     });
     const currentRole = () => this.roleOf(view);
     return {
@@ -633,6 +652,15 @@ export class HostSession {
     if (message.type === 'say' && this.roleOf(view) === 'driver') {
       const said = this.playerSays(message.text);
       if (!said.ok) view.send({ type: 'say_error', error: said.error });
+      return;
+    }
+    // Only the driver moves the clock (TIME-002.a).
+    if (
+      message.type === 'time' &&
+      this.roleOf(view) === 'driver' &&
+      Number.isFinite(message.minutes)
+    ) {
+      this.setClock(message.minutes);
       return;
     }
     if (message.type === 'intent' && this.roleOf(view) === 'driver') {
