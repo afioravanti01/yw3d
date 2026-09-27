@@ -110,7 +110,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `runtime.ts` (P8–P10), `brain.ts`, `brains/fake.ts` (P11); stato per l'overlay (P14).
   - Fatto quando: test di AGENT-003.c, AGENT-004.a–c, AGENT-005.a, AGENT-006.a–d verdi; un agente `fake` risponde nella console.
 
-- [ ] **T8.06** Cervello Claude Code
+- [x] **T8.06** Cervello Claude Code
   - Req: AGENT-001 · Dip: T8.05
   - `brains/claude.ts` (P5–P7): argomenti, stdin, schema, tempo limite, errori della CLI nel terminale.
   - Fatto quando: test di AGENT-001.b con una CLI finta verdi; un agente con Claude Code vero risponde (manuale).

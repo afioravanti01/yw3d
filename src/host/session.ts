@@ -388,7 +388,7 @@ export class HostSession {
   private startAgent(id: string, agent: AgentDecl): void {
     let brain: Brain;
     try {
-      brain = (this.options.brain ?? createBrain)(agent);
+      brain = this.options.brain ? this.options.brain(agent) : createBrain(agent, this.options.env);
     } catch (error) {
       this.terminal.line(`${PREFIX}  [${id}] cannot start the agent: ${(error as Error).message}`);
       return;
