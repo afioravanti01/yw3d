@@ -202,3 +202,29 @@ test('PY-003.a, DIALOG-005.a: a Python character of the world folder answers the
     'Lia',
   );
 });
+
+test('AGENT-002.a, AGENT-003.a, DEBUG-001.a: an agent of the world answers in the console, describes what it sees, and shows in the overlay', async ({
+  page,
+}) => {
+  await open(page);
+  const lines = () =>
+    page.evaluate(() =>
+      (globalThis as unknown as { __yw3d: { consoleLines(): string[] } }).__yw3d.consoleLines(),
+    );
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('@Eco cosa vedi?');
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(lines, { timeout: 20_000 })
+    .toContainEqual(expect.stringMatching(/^Eco → Tu: Vedo: .*viandante/));
+  // The overlay: the agent is the nearest character.
+  await expect(page.locator('#debug-overlay')).toContainText(
+    /Eco \(eco\).*agent fake · (idle|acting)/,
+  );
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/describe @eco');
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(lines)
+    .toContainEqual(expect.stringContaining('Driven by: LLM agent, fake (fake)'));
+});

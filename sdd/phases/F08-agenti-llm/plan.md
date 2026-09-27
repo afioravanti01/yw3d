@@ -147,7 +147,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `brains/anthropic.ts`, `brains/openai.ts` (P5, P7, P13): chiavi, indirizzo, effort, errori ripuliti.
   - Fatto quando: test di AGENT-001.c con il server locale verdi.
 
-- [ ] **T8.10** Overlay e terminale
+- [x] **T8.10** Overlay e terminale
   - Req: DEBUG-001, HOST-001 · Dip: T8.05
   - Stato e latenza dell'agente nell'overlay; righe del terminale per richieste fallite, scadute e parti scartate.
   - Fatto quando: test di HOST-001.c verdi; overlay provato nel browser.
@@ -162,7 +162,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `docs/agenti.md`: configurazione, un esempio per modalità e CLI, cosa sa l'agente, iniziativa, limiti, costi, errori frequenti; README e `worlds/README.md`.
   - Fatto quando: la guida copre ogni campo di `agent`; l'esempio minimo sta sotto le 10 righe.
 
-- [ ] **T8.13** Test end-to-end
+- [x] **T8.13** Test end-to-end
   - Req: AGENT-002, AGENT-003, CHAR-001 · Dip: T8.10
   - Un agente `fake` nel mondo dell'host risponde dalla console e descrive i dintorni.
   - Fatto quando: `npm run e2e` verde.

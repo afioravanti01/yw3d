@@ -486,13 +486,19 @@ function describeNearest(
   const command = start?.command;
   // A program shows its file and state (DEBUG-001.a): running, stopped, in error.
   const program = nearest.program;
-  const driver = program
-    ? `program ${program.file} · ${program.state === 'error' ? 'in error' : program.state}`
-    : nearest.controlled
-      ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
-      : command
-        ? `controller not running (${command})`
-        : 'no controller';
+  // An agent shows its brain, model, state and the duration of its last request (DEBUG-001.a).
+  const agent = nearest.agent;
+  const driver = agent
+    ? `agent ${agent.brain}${agent.model ? ` (${agent.model})` : ''} · ${agent.state}${
+        agent.last_ms !== null ? ` · last request ${(agent.last_ms / 1000).toFixed(1)} s` : ''
+      }`
+    : program
+      ? `program ${program.file} · ${program.state === 'error' ? 'in error' : program.state}`
+      : nearest.controlled
+        ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
+        : command
+          ? `controller not running (${command})`
+          : 'no controller';
   return {
     count: characters.length,
     nearest: `${start?.name ?? nearest.id} (${nearest.id}) · ${blocksToMeters(best).toFixed(1)} m · ${driver} · ${nearest.action ?? 'no action'}`,

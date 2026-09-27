@@ -174,4 +174,45 @@ characters:
     expect(s.agents!.time - before).toBeCloseTo(2, 1);
     expect(performance.now() - start).toBeLessThan(2000);
   });
+
+  it('HOST-001.c: the terminal says when a request of an agent fails, and what of a reply is set aside', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'yw3d-log-'));
+    writeFileSync(
+      path.join(root, WORLD_FILE),
+      `version: 2
+name: Borgo
+terrain: { seed: 5, generator: ${TERRAIN_GENERATOR_VERSION}, size: [64, 96, 64] }
+player: { at: [30, 26] }
+characters:
+  - { id: rotta, name: Rotta, at: [30, 30], agent: { mode: fake } }
+`,
+    );
+    const resolved = resolveWorldFolder(root);
+    if (!resolved.ok) throw new Error(resolved.message);
+    const lines: string[] = [];
+    let answer = (): Promise<unknown> => Promise.reject(new Error('HTTP 529: overloaded'));
+    const s = new HostSession(
+      resolved.folder,
+      noModules,
+      { line: (t) => lines.push(t) },
+      {
+        brain: () => ({ name: 'test', think: () => answer() }),
+      },
+    );
+    sessions.push(s);
+    await s.load();
+    const run = async () => {
+      for (let i = 0; i < 20; i++) s.advance(1 / 60);
+      await new Promise((r) => setTimeout(r, 10));
+    };
+    await run();
+    s.playerSays('@rotta ciao');
+    await run();
+    expect(lines).toContain('yw3d  [rotta] the request to test failed: HTTP 529: overloaded');
+    expect(s.agentOf('rotta')!.state).toBe('error');
+    answer = () => Promise.resolve({ say: null, actions: [{ type: 'teleport' }] });
+    s.playerSays('@rotta riprova');
+    await run();
+    expect(lines).toContain('yw3d  [rotta] reply set aside: actions[0]: unknown action "teleport"');
+  });
 });

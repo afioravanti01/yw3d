@@ -23,3 +23,8 @@ characters:
     name: Lia
     at: [62, 66]
     program: characters/lia.py
+  - id: eco
+    name: Eco
+    description: Un agente di prova, con il cervello finto.
+    at: [64, 60]
+    agent: { mode: fake }
