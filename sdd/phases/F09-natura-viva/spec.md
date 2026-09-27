@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | **draft** |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-27 |
 | Piano | plan.md (dopo G1) |
 
@@ -34,13 +34,13 @@ Il mondo ha un'**ora del giorno** che scorre: il sole attraversa il cielo, tramo
 Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico nel browser · `[manuale]` verificato dall'utente con la checklist di accettazione.
 
 ### TIME-001 — Orologio del mondo
-- **a** `[unit]` Il mondo ha un'ora del giorno che avanza con il tempo simulato: un giorno dura 60 minuti reali, o quanti ne dichiara il file del mondo; il file dichiara anche l'ora di partenza (Q1). Stessa ora di partenza e stesso tempo simulato danno sempre la stessa ora.
-- **b** `[unit]` Con l'host l'ora è una sola: la stessa per tutte le viste, per i personaggi e per il terminale. Alla ricarica del file del mondo l'ora continua, come la posizione del giocatore (Q2).
+- **a** `[unit]` Il mondo ha un'ora del giorno che avanza con il tempo simulato: un giorno dura 60 minuti reali, o quanti ne dichiara il file del mondo; il file dichiara anche l'ora di partenza, alle 08:00 se non la dichiara (Q1). Stessa ora di partenza e stesso tempo simulato danno sempre la stessa ora.
+- **b** `[unit]` Con l'host l'ora è una sola: la stessa per tutte le viste, per i personaggi e per il terminale. Alla ricarica del file del mondo l'ora continua, come la posizione del giocatore; riparte dall'ora del file al riavvio dell'host o se nel file cambia `time` (Q2).
 - **c** `[e2e]` Senza host, la pagina fa scorrere l'ora da sé, a partire da quella del file.
-- **d** `[unit]` L'ora determina la parte del giorno: alba, giorno, tramonto, notte (Q4).
+- **d** `[unit]` L'ora determina la parte del giorno: alba dalle 05:30 alle 07:00, giorno fino alle 18:30, tramonto fino alle 20:00, notte fino alle 05:30 (Q4).
 
 ### TIME-002 — Comando `/time`
-- **a** `[unit]` `/time` nella console mostra l'ora del mondo e la parte del giorno. `/time HH:MM` porta il mondo a quell'ora, per tutte le viste; lo può fare la vista che guida e il terminale dell'host, non le viste che guardano (Q3).
+- **a** `[unit]` `/time` nella console mostra l'ora del mondo e la parte del giorno. `/time HH:MM` porta il mondo a quell'ora, per tutte le viste; lo può fare la vista che guida e il terminale dell'host, non le viste che guardano. Non c'è pausa né accelerazione del tempo (Q3).
 
 ### RENDER-008 — Notte leggibile
 - **a** `[manuale]` Di notte il mondo si vede: una luce lunare fredda e debole, il cielo blu scuro con le stelle, le forme riconoscibili a qualche decina di metri.
@@ -116,16 +116,16 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Domande aperte
-Da chiudere con l'utente prima di G1. Per ognuna c'è una proposta.
+## Domande risolte
+Chiuse con l'utente il 2026-09-27, prima di G1: tutte sulla proposta.
 
-| # | Domanda | Proposta |
-|---|---|---|
-| Q1 | Ora di partenza predefinita | 08:00, del mattino |
-| Q2 | L'ora alla ricarica del file del mondo | Continua; riparte dall'ora del file solo al riavvio dell'host o se nel file cambia `time` |
-| Q3 | Chi può impostare l'ora | La vista che guida e il terminale dell'host, con `/time HH:MM`; niente pausa né accelerazione in F09 |
-| Q4 | Confini delle parti del giorno | alba 05:30–07:00, giorno 07:00–18:30, tramonto 18:30–20:00, notte 20:00–05:30 |
-| Q5 | Aggiornamento delle ombre | Si ricalcolano ogni poco (circa ogni 2 s di tempo reale) invece che a ogni frame: il sole si muove lentamente e il costo resta basso; da verificare che non si vedano scatti (TIME-003.a) |
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Ora di partenza predefinita | 08:00 | TIME-001.a |
+| Q2 | L'ora alla ricarica | Continua; riparte dal file al riavvio dell'host o se cambia `time` | TIME-001.b |
+| Q3 | Chi imposta l'ora | La vista che guida e il terminale, con `/time HH:MM`; niente pausa né accelerazione | TIME-002.a |
+| Q4 | Parti del giorno | alba 05:30–07:00, giorno 07:00–18:30, tramonto 18:30–20:00, notte 20:00–05:30 | TIME-001.d |
+| Q5 | Ombre | Ricalcolate circa ogni 2 s di tempo reale; nessuno scatto visibile (TIME-003.a) | piano |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
