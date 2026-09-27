@@ -1,5 +1,5 @@
 # Example world folder: the default valley with a crowd of 20 wandering characters, each
-# driven by its own process. Used to measure PERF-005.a. Run it with: yw3d examples/folla
+# running its own copy of a Python program. Used to measure PERF-005.a. Run it with: yw3d examples/folla
 # Coordinates are in blocks (1 block = 0.5 m); see worlds/README.md for the format.
 version: 2
 name: La valle affollata
@@ -85,123 +85,23 @@ scatter:
     minDistance: 22
 
 characters:
-  - {
-      id: p01,
-      name: Abitante 1,
-      at: [120, 40],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p02,
-      name: Abitante 2,
-      at: [140, 40],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p03,
-      name: Abitante 3,
-      at: [160, 40],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p04,
-      name: Abitante 4,
-      at: [180, 40],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p05,
-      name: Abitante 5,
-      at: [200, 40],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p06,
-      name: Abitante 6,
-      at: [120, 54],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p07,
-      name: Abitante 7,
-      at: [140, 54],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p08,
-      name: Abitante 8,
-      at: [160, 54],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p09,
-      name: Abitante 9,
-      at: [180, 54],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p10,
-      name: Abitante 10,
-      at: [200, 54],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p11,
-      name: Abitante 11,
-      at: [120, 68],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p12,
-      name: Abitante 12,
-      at: [140, 68],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p13,
-      name: Abitante 13,
-      at: [160, 68],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p14,
-      name: Abitante 14,
-      at: [180, 68],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p15,
-      name: Abitante 15,
-      at: [200, 68],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p16,
-      name: Abitante 16,
-      at: [120, 82],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p17,
-      name: Abitante 17,
-      at: [140, 82],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p18,
-      name: Abitante 18,
-      at: [160, 82],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p19,
-      name: Abitante 19,
-      at: [180, 82],
-      controller: { command: node controllers/passeggia.mjs },
-    }
-  - {
-      id: p20,
-      name: Abitante 20,
-      at: [200, 82],
-      controller: { command: node controllers/passeggia.mjs },
-    }
+  - { id: p01, name: Abitante 1, at: [120, 40], program: characters/passeggia.py }
+  - { id: p02, name: Abitante 2, at: [140, 40], program: characters/passeggia.py }
+  - { id: p03, name: Abitante 3, at: [160, 40], program: characters/passeggia.py }
+  - { id: p04, name: Abitante 4, at: [180, 40], program: characters/passeggia.py }
+  - { id: p05, name: Abitante 5, at: [200, 40], program: characters/passeggia.py }
+  - { id: p06, name: Abitante 6, at: [120, 54], program: characters/passeggia.py }
+  - { id: p07, name: Abitante 7, at: [140, 54], program: characters/passeggia.py }
+  - { id: p08, name: Abitante 8, at: [160, 54], program: characters/passeggia.py }
+  - { id: p09, name: Abitante 9, at: [180, 54], program: characters/passeggia.py }
+  - { id: p10, name: Abitante 10, at: [200, 54], program: characters/passeggia.py }
+  - { id: p11, name: Abitante 11, at: [120, 68], program: characters/passeggia.py }
+  - { id: p12, name: Abitante 12, at: [140, 68], program: characters/passeggia.py }
+  - { id: p13, name: Abitante 13, at: [160, 68], program: characters/passeggia.py }
+  - { id: p14, name: Abitante 14, at: [180, 68], program: characters/passeggia.py }
+  - { id: p15, name: Abitante 15, at: [200, 68], program: characters/passeggia.py }
+  - { id: p16, name: Abitante 16, at: [120, 82], program: characters/passeggia.py }
+  - { id: p17, name: Abitante 17, at: [140, 82], program: characters/passeggia.py }
+  - { id: p18, name: Abitante 18, at: [160, 82], program: characters/passeggia.py }
+  - { id: p19, name: Abitante 19, at: [180, 82], program: characters/passeggia.py }
+  - { id: p20, name: Abitante 20, at: [200, 82], program: characters/passeggia.py }

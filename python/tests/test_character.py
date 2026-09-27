@@ -5,7 +5,7 @@ import unittest
 from typing import Any, Awaitable, Callable, List
 
 from fake_host import HELLO, FakeHost, strip
-from yw3d import ActionFailed, Character, Message, Position
+from yw3d import ActionFailed, Character, Message, Position, WorldMap
 
 
 def scenario(character: Character, test: Callable[[FakeHost], Awaitable[None]]) -> None:
@@ -316,6 +316,16 @@ class TestPause(unittest.TestCase):
             self.assertNotEqual(again["id"], walk["id"])
 
         scenario(Listener(), host_side)
+
+
+class TestMap(unittest.TestCase):
+    def test_the_elements_a_text_names(self) -> None:
+        world = WorldMap(HELLO["map"])
+        ids = lambda text, kind=None: [e.id for e in world.find_in(text, kind)]
+        self.assertEqual(ids("vai da Tobia e poi al Pozzo vecchio"), ["tobia", "pozzo"])
+        self.assertEqual(ids("vai da Tobia e poi al pozzo", kind="character"), ["tobia"])
+        self.assertEqual(ids("l'ORTO è là"), ["orto"])
+        self.assertEqual(ids("niente di noto"), [])
 
 
 class TestState(unittest.TestCase):

@@ -50,7 +50,7 @@ export default defineStructure({
 });
 ```
 
-I personaggi si dichiarano nel `world.yaml` e si guidano con un programma in qualunque linguaggio, lanciato dall'host o collegato via WebSocket ([docs/controllori.md](docs/controllori.md)); in F07 arriva una libreria Python per scriverli in poche righe. Il giocatore parla con i personaggi: Invio nel browser apre la casella, e nel terminale di `yw3d` si scrive direttamente. Esempi: [examples/valle/](examples/valle/) (controllori in Python e JavaScript) ed [examples/folla/](examples/folla/) (venti personaggi con lo stesso programma):
+I personaggi si dichiarano nel `world.yaml` e si programmano in **Python** con la libreria `yw3d`: una classe con una routine e i gestori per i messaggi, le domande, chi si avvicina ([docs/python.md](docs/python.md)). Per altri linguaggi c'è il protocollo dei controllori ([docs/controllori.md](docs/controllori.md)). Il giocatore parla con i personaggi vicini dalla console sulla destra (`@nome messaggio`; `/world` elenca cosa c'è nel mondo e dove); nel terminale di `yw3d` si scrive allo stesso modo. Esempi: [examples/valle/](examples/valle/) (Tobia fa commissioni: «@Tobia vai da Marta e chiedile cosa si pesca») ed [examples/folla/](examples/folla/) (venti personaggi con lo stesso programma):
 
 ```sh
 yw3d examples/valle

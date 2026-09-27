@@ -19,3 +19,7 @@ characters:
     at: [66, 62]
     appearance: { shirt: '#3f6f9e', hair: '#c9b28a' }
     controller: { command: node controllers/pino.mjs }
+  - id: lia
+    name: Lia
+    at: [62, 66]
+    program: characters/lia.py

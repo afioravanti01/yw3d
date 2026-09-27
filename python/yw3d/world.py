@@ -1,6 +1,8 @@
 """What a character knows of the world: positions, entities nearby, the map, messages."""
 
 import math
+import re
+import unicodedata
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
@@ -111,6 +113,32 @@ class WorldMap:
         """The elements of one kind: `place`, `structure`, `scatter`, `character`, `player`."""
         return [e for e in self._entries.values() if e.kind == kind]
 
+    def find_in(self, text: str, kind: Optional[str] = None) -> List[MapEntry]:
+        """The elements a text names, by id or name, in the order they appear: whole words,
+        case and accents ignored, the longest name first (as DIALOG-003). `kind` keeps one
+        kind only, e.g. `character`."""
+        said = words(text)
+        found: List[Tuple[int, int, MapEntry]] = []
+        for entry in self._entries.values():
+            if kind is not None and entry.kind != kind:
+                continue
+            for phrase in {tuple(words(entry.id)), tuple(words(entry.name))}:
+                n = len(phrase)
+                for i in range(len(said) - n + 1):
+                    if n and tuple(said[i : i + n]) == phrase:
+                        found.append((i, i + n, entry))
+        # A match inside a longer one does not count.
+        kept = [
+            (start, end, e)
+            for start, end, e in found
+            if not any(s <= start and end <= t and t - s > end - start for s, t, _ in found)
+        ]
+        result: List[MapEntry] = []
+        for _, _, entry in sorted(kept, key=lambda m: m[0]):
+            if entry not in result:
+                result.append(entry)
+        return result
+
     def name_of(self, id: str) -> str:
         entry = self._entries.get(id)
         return entry.name if entry else id
@@ -145,3 +173,12 @@ class Message:
     @property
     def is_no(self) -> bool:
         return self.yes_no == "no"
+
+
+def words(text: str) -> List[str]:
+    """The words of a text: lower case, without accents; `#`, `_` and `-` inside a word keep it
+    whole, so that ids such as `pond#1` are one word (as the host does, DIALOG-003)."""
+    plain = "".join(
+        c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"
+    ).lower()
+    return re.findall(r"[^\W_]+(?:[#_-][^\W_]+)*", plain)

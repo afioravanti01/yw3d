@@ -185,3 +185,20 @@ test('DIALOG-001.a, DIALOG-002.a: through the host the driver speaks, spectators
   await driver.close();
   await spectator.close();
 });
+
+test('PY-003.a, DIALOG-005.a: a Python character of the world folder answers the player in the console', async ({
+  page,
+}) => {
+  await open(page);
+  const lines = () =>
+    page.evaluate(() =>
+      (globalThis as unknown as { __yw3d: { consoleLines(): string[] } }).__yw3d.consoleLines(),
+    );
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('@Lia ciao!');
+  await page.keyboard.press('Enter');
+  await expect.poll(lines, { timeout: 20_000 }).toContain('Lia → Tu: Ciao viandante, sono Lia!');
+  await expect(page.locator('#console > ol > li').last().locator('strong:not(.who)')).toHaveText(
+    'Lia',
+  );
+});

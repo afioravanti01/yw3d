@@ -1,5 +1,5 @@
-# Example world folder of yw3d: the default valley with four characters. The guard and the
-# fisherwoman are driven by programs in Python and JavaScript (docs/controllori.md).
+# Example world folder of yw3d: the default valley with four characters written in Python
+# (docs/python.md).
 # Run it with: yw3d examples/valle
 # Coordinates are in blocks (1 block = 0.5 m); see worlds/README.md for the format.
 version: 2
@@ -103,29 +103,35 @@ scatter:
     density: 0.15
     minDistance: 22
 
-# Characters: Tobia is a Python program with the yw3d library (docs/python.md); the guard and
-# the fisherwoman are driven by a program of this folder; Nina stands still until she gets her
-# Python program (phase F07).
+# Characters: each one is a Python program of characters/, written with the yw3d library
+# (docs/python.md). Stand near one and write to it with @name in the console on the right.
 characters:
+  # Tobia runs errands: «@Tobia vai da Marta e chiedile cosa si pesca».
   - id: tobia
     name: Tobia
     description: Il garzone del fabbro, sempre in cerca di commissioni.
     at: [154, 70]
     appearance: { shirt: '#8e4a3a', hair: '#3b2a1c' }
     program: characters/tobia.py
+  # Nina works in the fields and offers a courgette to whoever walks by.
   - id: nina
     name: Nina
     description: Contadina degli orti di ponente.
     at: [120, 88]
     appearance: { shirt: '#6f7f3a', hair: '#b07a3a' }
+    program: characters/nina.py
+  # Bruno keeps watch around the village and greets the player.
   - id: guardiano
     name: Bruno
+    description: Il guardiano del borgo.
     at: [160, 70]
     appearance: { shirt: '#4f6a5a', trousers: '#3f4b3c', hair: '#2e2118' }
-    controller: { command: python3 controllers/guardiano.py }
+    program: characters/bruno.py
+  # Marta fishes at the pond and knows every fish of the valley.
   - id: pescatrice
     name: Marta
+    description: La pescatrice del laghetto, esperta di pesci.
     at: [182, 108]
     yaw: 90
     appearance: { shirt: '#b38a3e', hair: '#8a8a86' }
-    controller: { command: node controllers/pescatrice.mjs }
+    program: characters/marta.py

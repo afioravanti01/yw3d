@@ -207,7 +207,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `ask` (P10), `on_interact`, `on_near`, `on_far`, `paused` e `resumed`, riga d'errore (P12), overlay con il programma (DEBUG-001.a); correzioni dalla prova d'uso.
   - Fatto quando: test di PY-002.e e PY-003.c verdi.
 
-- [ ] **T7.11** Esempi in Python
+- [x] **T7.11** Esempi in Python
   - Req: PY-004 · Dip: T7.10
   - P16: `examples/valle`, `examples/folla`, `e2e/host` con un personaggio Python.
   - Fatto quando: `yw3d examples/valle` e `yw3d examples/folla` partono e i personaggi fanno ciò che dicono i commenti.

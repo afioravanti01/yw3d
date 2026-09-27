@@ -1,6 +1,6 @@
 # Controllori dei personaggi
 
-Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Questa guida descrive il protocollo, versione 3. Per scrivere personaggi in Python c'è una libreria che parla il protocollo al posto tuo (vedi [python.md](python.md)); questa guida serve per gli altri linguaggi e per capire cosa succede sotto. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
+Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Questa guida descrive il protocollo, versione 3. Per scrivere personaggi in Python c'è una libreria che parla il protocollo al posto tuo (vedi [python.md](python.md)); questa guida serve per gli altri linguaggi e per capire cosa succede sotto. In fondo c'è lo scheletro di un controllore senza libreria; i personaggi d'esempio, in [examples/valle/characters](../examples/valle/characters), usano la libreria Python.
 
 ## Collegare un controllore
 
