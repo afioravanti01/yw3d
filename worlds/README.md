@@ -74,9 +74,10 @@ I luoghi non cambiano il mondo: danno un nome a un punto o a una zona.
 | `at` | sì | `[x, z]` della partenza. |
 | `yaw` | no | Orientamento in gradi (0 = nord, 90 = est). |
 | `appearance` | no | Colori: `skin`, `hair`, `shirt`, `trousers`, come `'#a55f3a'`. |
-| `controller` | no | `{ command: … }`, un programma della cartella che guida il personaggio (vedi [docs/controllori.md](../docs/controllori.md)). |
+| `program` | no | Un programma Python della cartella del mondo, per esempio `characters/tobia.py` (vedi [docs/python.md](../docs/python.md)). |
+| `controller` | no | In alternativa a `program`: `{ command: … }`, un programma in qualunque linguaggio (vedi [docs/controllori.md](../docs/controllori.md)). |
 
-Senza controllore il personaggio sta fermo.
+Senza programma né controllore il personaggio sta fermo. Le chiavi `behavior` e `behaviors` dei comportamenti in YAML non esistono più: sono un errore che rimanda ai programmi Python.
 
 ## Esempio
 

@@ -212,7 +212,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - P16: `examples/valle`, `examples/folla`, `e2e/host` con un personaggio Python.
   - Fatto quando: `yw3d examples/valle` e `yw3d examples/folla` partono e i personaggi fanno ciò che dicono i commenti.
 
-- [ ] **T7.12** Guida e template
+- [x] **T7.12** Guida e template
   - Req: PY-005 · Dip: T7.10
   - `docs/python.md`: struttura, ogni azione, mappa, messaggi, domande, errori frequenti, template commentato; README, `worlds/README.md`.
   - Fatto quando: il template copiato così com'è gira; il programma d'esempio di PY-005.b sta sotto le 40 righe.

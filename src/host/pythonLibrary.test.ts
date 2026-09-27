@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -75,10 +75,13 @@ afterEach(() => {
   for (const s of sessions.splice(0)) s.close();
 });
 
-async function world(program: string) {
+async function world(program: string, places = '') {
   const root = mkdtempSync(path.join(tmpdir(), 'yw3d-library-'));
   mkdirSync(root, { recursive: true });
-  writeFileSync(path.join(root, WORLD_FILE), WORLD);
+  writeFileSync(
+    path.join(root, WORLD_FILE),
+    WORLD.replace('places:\n', places ? `${places}` : 'places:\n'),
+  );
   writeFileSync(path.join(root, 'tobia.py'), program);
   const resolved = resolveWorldFolder(root);
   if (!resolved.ok) throw new Error(resolved.message);
@@ -183,6 +186,26 @@ run(Tobia)
     expect(lines).toContain('yw3d  [tobia] Traceback (most recent call last):');
     expect(lines).toContain('yw3d  [tobia] program ended (exit code 1): the character stops');
     expect(lines.filter((l) => l.includes('Exception in thread'))).toEqual([]);
+  });
+
+  it('PY-005.a, PY-005.b: the template of the guide runs as it is, in less than 40 lines', async () => {
+    const guide = readFileSync(path.join(LIBRARY_PATH, '..', 'docs', 'python.md'), 'utf8');
+    const template = /```python\n([\s\S]*?)```/.exec(guide)![1]!;
+    expect(template.trimEnd().split('\n').length).toBeLessThan(40);
+    const places = `places:
+  - { id: piazza, name: Piazza, at: [34, 34] }
+  - { id: orti, name: Orti, at: [40, 30] }
+  - { id: laghetto1, name: Laghetto, at: [36, 40] }
+`;
+    const { s, said } = await world(template, places);
+    // The player is within 8 blocks: Tobia greets; then goes where it is told.
+    await until(s, () => said.includes('tobia: Buongiorno, Ada!'));
+    expect(s.playerSays('@tobia vai agli orti').ok).toBe(true);
+    await until(s, () => said.includes('tobia: Vado a Orti!'));
+    await until(s, () => {
+      const t = s.agents!.stateOf('tobia')!;
+      return Math.hypot(t.x - 40.5, t.z - 30.5) <= 1.8;
+    });
   });
 
   it('PY-001.c, PY-002.a–d: a program written with the library drives its character through a real host', async () => {
