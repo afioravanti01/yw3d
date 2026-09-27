@@ -167,7 +167,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Un agente `fake` nel mondo dell'host risponde dalla console e descrive i dintorni.
   - Fatto quando: `npm run e2e` verde.
 
-- [ ] **T8.14** Verifica di accettazione e chiusura della fase
+- [x] **T8.14** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T8.11, T8.12, T8.13
   - `check`, `e2e`, `sdd:trace -- F08`; checklist con le misure a parte; spec vive (nuova `agents.md`); `retro.md`; `experiment.md`, `roadmap.md`.
   - Fatto quando: G3 approvato dall'utente.

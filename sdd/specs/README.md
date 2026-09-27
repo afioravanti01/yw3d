@@ -26,6 +26,6 @@ Ogni file riporta, per ogni requisito, il testo in vigore, i criteri di accettaz
 | MAP | [`map.md`](map.md) | identificatori, mappa del mondo, mete | F06 |
 | DIALOG | [`dialogue.md`](dialogue.md) | il giocatore parla con i personaggi: console dei messaggi, comprensione | F06 |
 | PY | [`python.md`](python.md) | libreria Python, programmi nella cartella del mondo, esempi e guida | F07 |
-| AGENT, MCP | — | agenti LLM, server MCP | F08 (prevista) |
+| AGENT | [`agents.md`](agents.md) | agenti LLM guidati dall'host: configurazione, conoscenza del mondo, risposte, iniziativa, conversazioni, limiti | F08 |
 
-*Aggiornate alla chiusura di F07 (2026-09-27). Il linguaggio dei comportamenti (BEHAV, F06) è stato rimosso in F07 (D-010).*
+*Aggiornate alla chiusura di F08 (2026-09-27). Il linguaggio dei comportamenti (BEHAV, F06) è stato rimosso in F07 (D-010).*

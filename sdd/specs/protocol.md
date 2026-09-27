@@ -32,8 +32,8 @@ Lo stesso modello su tutti i canali, in JSON; nomi di campi e azioni in `snake_c
 - **b** `[unit]` Alla chiusura del client il personaggio si ferma, oppure torna al suo programma, che riceve un evento che lo avvisa. Poi può essere guidato da un altro client.
 
 ### PROTO-005 — Consenso e verifica dei comandi
-*Introdotto in F05 · ultima modifica: F05.*
-- **a** `[unit]` Prima di lanciare i comandi dei controllori l'host li elenca nel terminale e chiede il consenso; senza consenso i personaggi restano fermi e l'host funziona comunque. L'opzione `--allow-commands` dà il consenso senza chiederlo.
+*Introdotto in F05 · ultima modifica: F08.*
+- **a** `[unit]` Prima di lanciare i comandi dei controllori e dei programmi, e prima di avviare gli agenti, l'host li elenca nel terminale (per gli agenti: CLI o fornitore e modello) e chiede il consenso; senza consenso i personaggi restano fermi e l'host funziona comunque. L'opzione `--allow-commands` dà il consenso senza chiederlo.
 - **b** `[unit]` All'avvio l'host verifica che il programma di ogni comando esista; un programma mancante è segnalato con il personaggio e il comando.
 - **c** `[unit]` Il consenso si ricorda per quella cartella finché i suoi comandi non cambiano; se un comando cambia o se ne aggiunge uno, l'host chiede di nuovo. Il consenso è salvato fuori dalla cartella del mondo, così una cartella ricevuta da altri non può portarlo con sé (Q1).
 
