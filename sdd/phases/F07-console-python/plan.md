@@ -100,6 +100,8 @@ Questa è la forma che la prova d'uso (T7.09) mette alla prova: nomi dei metodi 
 - **A7.2 — DIALOG-005.f** (prova d'uso, richiesta dell'utente). Comando `/world`: giocatore e personaggi dove sono ora, luoghi, strutture e gruppi di strutture con la posizione in blocchi. È nel core (`commands.ts`), con un contesto che dà la mappa e le posizioni; browser e terminale dell'host lo usano allo stesso modo.
 - **A7.4 — DIALOG-005.a, .b, .f** (prova d'uso, richiesta dell'utente). Console alta quanto la finestra, messaggi come testo libero selezionabile con il Markdown, risposta dei comandi in un unico blocco. Il Markdown si analizza nel core (`markdown.ts`) in un albero; le viste ne costruiscono i nodi DOM (`markdownDom.ts`), il terminale ne stampa il testo. Le scorciatoie con Ctrl e Cmd non arrivano più ai tasti del gioco (Cmd+C non apre la camera libera). L'overlay diagnostico si ferma prima della console.
 - **A7.5 — DIALOG-001.b, DIALOG-005.e, PROTO-002.b** (prova d'uso, richiesta dell'utente). Il giocatore parla con `@` solo ai personaggi entro 16 blocchi; altrimenti «Personaggio non in prossimità». La regola sta nella `Simulation`, quindi vale per la console del browser, il terminale e i client del giocatore. Con A7.6 la stessa regola vale per `say` con `to` tra personaggi: oltre 16 blocchi l'azione fallisce.
+- **A7.6 — PROTO-002.b** (richiesta dell'utente). `say` con `to` riesce solo se il destinatario è entro 16 blocchi.
+- **A7.7 — PY-002.e, PY-004.a** (richiesta dell'utente). `ask(testo, to=…)` verso il giocatore o un personaggio; esempio di Tobia che va da Marta a chiedere dei pesci e riferisce. Realizzato in T7.10 e T7.11.
 
 ## Strategia di test
 - **Unit (Vitest, Node).**
@@ -169,7 +171,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `python/yw3d` (P8, P9, P11, P13): `Character`, `run`, azioni attese, `ActionFailed`, stato, mappa, `on_message` con interruzione e ripresa; bozza del template.
   - Fatto quando: test di PY-001.b–c e PY-002.a–d verdi.
 
-- [ ] **T7.09** Prova d'uso con l'utente
+- [x] **T7.09** Prova d'uso con l'utente
   - Req: PY-005, DIALOG-005 · Dip: T7.04, T7.08
   - **Punto di controllo**: l'utente copia la bozza del template, scrive un personaggio suo in un mondo e gli parla dalla console. Si raccolgono le osservazioni su leggibilità della libreria e comodità della console; ciò che cambia la forma diventa una deviazione o un emendamento, prima di T7.10.
   - Fatto quando: l'utente ha scritto e fatto girare il suo personaggio e le osservazioni sono registrate nel piano.
@@ -200,7 +202,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Con A7.6 anche `say` con `to` tra personaggi richiede la vicinanza.
   - Fatto quando: test di DIALOG-001.b, DIALOG-004.b e PROTO-002.b verdi con la regola nuova.
 
-- [ ] **T7.10** Libreria: domande, altri gestori, errori
+- [x] **T7.10** Libreria: domande, altri gestori, errori
   - Req: PY-002, PY-003 · Dip: T7.09
   - `ask` (P10), `on_interact`, `on_near`, `on_far`, `paused` e `resumed`, riga d'errore (P12), overlay con il programma (DEBUG-001.a); correzioni dalla prova d'uso.
   - Fatto quando: test di PY-002.e e PY-003.c verdi.

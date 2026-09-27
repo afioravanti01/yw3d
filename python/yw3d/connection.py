@@ -2,9 +2,31 @@
 
 import asyncio
 import json
+import os
 import sys
 import threading
-from typing import Any, BinaryIO, Dict, Optional, TextIO
+from typing import Any, Dict, Optional, TextIO
+
+
+class _Lines:
+    """Lines read straight from a file descriptor. A thread blocked on the buffered
+    `sys.stdin` holds its lock, and Python aborts at exit if it still does: `os.read` holds
+    none."""
+
+    def __init__(self, fd: int) -> None:
+        self._fd = fd
+        self._rest = b""
+
+    def next(self) -> Optional[bytes]:
+        """The next line, or None at the end of the input."""
+        while b"\n" not in self._rest:
+            chunk = os.read(self._fd, 65536)
+            if not chunk:
+                line, self._rest = self._rest, b""
+                return line or None
+            self._rest += chunk
+        line, self._rest = self._rest.split(b"\n", 1)
+        return line
 
 
 class StdioConnection:
@@ -15,8 +37,8 @@ class StdioConnection:
     terminal: stdout belongs to the protocol.
     """
 
-    def __init__(self, stdin: Optional[BinaryIO] = None, stdout: Optional[TextIO] = None) -> None:
-        self._in = stdin if stdin is not None else sys.stdin.buffer
+    def __init__(self, stdin_fd: int = 0, stdout: Optional[TextIO] = None) -> None:
+        self._lines = _Lines(stdin_fd)
         self._out = stdout if stdout is not None else sys.stdout
         if stdout is None:
             sys.stdout = sys.stderr
@@ -24,7 +46,7 @@ class StdioConnection:
 
     def read_first(self) -> Dict[str, Any]:
         """The first message, read before the event loop starts: the `hello` of the host."""
-        line = self._in.readline()
+        line = self._lines.next()
         if not line:
             raise SystemExit("yw3d: no hello from the host; run this program with yw3d")
         return json.loads(line)
@@ -36,10 +58,17 @@ class StdioConnection:
         self._queue = queue
 
         def read() -> None:
-            for line in self._in:
-                if line.strip():
-                    loop.call_soon_threadsafe(queue.put_nowait, json.loads(line))
-            loop.call_soon_threadsafe(queue.put_nowait, None)
+            try:
+                while True:
+                    line = self._lines.next()
+                    if line is None:
+                        break
+                    if line.strip():
+                        loop.call_soon_threadsafe(queue.put_nowait, json.loads(line))
+                loop.call_soon_threadsafe(queue.put_nowait, None)
+            except (RuntimeError, OSError):
+                # The event loop is closed, or the input: the program is ending.
+                pass
 
         threading.Thread(target=read, name="yw3d-stdin", daemon=True).start()
 

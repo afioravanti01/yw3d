@@ -46,6 +46,9 @@ class Character:
     was doing. Start it with `run(MyCharacter)`.
     """
 
+    near_distance: float = 8
+    """Blocks within which an entity is near: `on_near` and `on_far` fire when it crosses them."""
+
     def __init__(self) -> None:
         self.id = ""
         self.name = ""
@@ -65,6 +68,10 @@ class Character:
         self._handler_waiting: Optional[asyncio.Event] = None
         self._handler_active = False
         self._routine_free: Optional[asyncio.Event] = None
+        self._running: Optional[asyncio.Event] = None
+        self._paused = False
+        self._near: Dict[str, Entity] = {}
+        self._questions: "List[Tuple[str, asyncio.Future[Message]]]" = []
 
     # What the author writes -------------------------------------------------------------
 
@@ -74,6 +81,15 @@ class Character:
 
     async def on_message(self, message: Message) -> None:
         """Someone said something the character heard: to it, or near it."""
+
+    async def on_interact(self) -> None:
+        """The player pressed E within 3 m of the character."""
+
+    async def on_near(self, entity: Entity) -> None:
+        """A character or the player came within `near_distance` blocks."""
+
+    async def on_far(self, entity: Entity) -> None:
+        """A character or the player went farther than `near_distance` blocks."""
 
     # Actions (PY-002.b) -----------------------------------------------------------------
 
@@ -138,6 +154,26 @@ class Character:
         """Stops the action in progress."""
         await self._act("stop", {})
 
+    async def ask(
+        self, question: str, to: Union[str, Entity] = "player", timeout: float = 30
+    ) -> Optional[Message]:
+        """Asks the player, or a character within 16 blocks, and waits for the answer: the
+        first message it says to this character, or aloud. Returns None if no answer comes
+        within `timeout` seconds. The answer does not go to `on_message` (PY-002.e, A7.7)."""
+        target = to if isinstance(to, str) else to.id
+        answer: "asyncio.Future[Message]" = asyncio.get_running_loop().create_future()
+        entry = (target, answer)
+        # Listen before speaking: a quick answer may come while the question is still said.
+        self._questions.append(entry)
+        try:
+            await self.say(question, to=target)
+            return await asyncio.wait_for(asyncio.shield(answer), timeout)
+        except asyncio.TimeoutError:
+            return None
+        finally:
+            if entry in self._questions:
+                self._questions.remove(entry)
+
     def log(self, *parts: Any) -> None:
         """Writes a line in the terminal of yw3d, with the character's id: for debugging."""
         print(*parts, file=sys.stderr, flush=True)
@@ -160,6 +196,8 @@ class Character:
         self._connection = connection
         self._routine_free = asyncio.Event()
         self._routine_free.set()
+        self._running = asyncio.Event()
+        self._running.set()
         self._handler_waiting = asyncio.Event()
         connection.start()
         reader = asyncio.ensure_future(self._read())
@@ -205,7 +243,7 @@ class Character:
                 await handler(*args)
             finally:
                 self._handler_active = False
-                if not self._handlers:
+                if not self._handlers and not self._paused:
                     self._resume_routine()
 
     def _resume_routine(self) -> None:
@@ -215,6 +253,27 @@ class Character:
         for action in parked:
             self._send(action)
         self._routine_free.set()
+
+    def _pause(self) -> None:
+        """A client drives the character (PROTO-004): the actions in progress wait for it."""
+        assert self._routine_free is not None and self._running is not None
+        self._paused = True
+        self._routine_free.clear()
+        self._running.clear()
+        # The host dropped them without an outcome: they are asked again on `resumed`.
+        self._parked.extend(self._pending.values())
+        self._pending.clear()
+
+    def _resume(self) -> None:
+        assert self._running is not None
+        self._paused = False
+        self._running.set()
+        handlers = [a for a in self._parked if a.role == "handler"]
+        self._parked = [a for a in self._parked if a.role != "handler"]
+        for action in handlers:
+            self._send(action)
+        if not self._handler_active and not self._handlers:
+            self._resume_routine()
 
     def _handle(self, handler: Callable[..., Awaitable[None]], *args: Any) -> None:
         assert self._handler_waiting is not None
@@ -231,6 +290,11 @@ class Character:
             # While a handler runs, the routine waits before its next action (PY-002.c).
             while not self._routine_free.is_set():
                 await self._routine_free.wait()
+        else:
+            # While a client drives the character, the handlers wait too (PROTO-004).
+            assert self._running is not None
+            while not self._running.is_set():
+                await self._running.wait()
         future: "asyncio.Future[None]" = asyncio.get_running_loop().create_future()
         self._send(_Action(kind, fields, role, future))
         await future
@@ -254,6 +318,13 @@ class Character:
             self._outcome(kind, message)
         elif kind == "heard":
             self._heard(message)
+        elif kind == "interacted":
+            if self._overrides("on_interact"):
+                self._handle(self.on_interact)
+        elif kind == "paused":
+            self._pause()
+        elif kind == "resumed":
+            self._resume()
         elif kind == "error":
             self.log(f"the host refused a message: {message.get('message')}")
 
@@ -263,6 +334,9 @@ class Character:
             return
         if kind == "action_done":
             action.future.set_result(None)
+        elif kind == "action_failed" and message.get("reason") == "paused":
+            # Asked while a client took the character: asked again when it leaves.
+            self._parked.append(action)
         elif kind == "action_failed":
             action.future.set_exception(ActionFailed(action.kind, message.get("reason", "")))
         elif action.role == "routine" and self._handler_active:
@@ -291,6 +365,15 @@ class Character:
             )
             for e in message["nearby"]
         ]
+        # Who came near and who went away since the last perception (on_near, on_far).
+        near = {e.id: e for e in self.nearby if e.distance <= self.near_distance}
+        for id, entity in near.items():
+            if id not in self._near and self._overrides("on_near"):
+                self._handle(self.on_near, entity)
+        for id, entity in self._near.items():
+            if id not in near and self._overrides("on_far"):
+                self._handle(self.on_far, entity)
+        self._near = near
 
     def _heard(self, message: Dict[str, Any]) -> None:
         mentions = message.get("mentions")
@@ -304,6 +387,11 @@ class Character:
             yes_no=message.get("yes_no"),
             distance=message.get("distance", 0.0),
         )
+        # An answer to a question goes to the question, not to on_message (PY-002.e).
+        for target, answer in self._questions:
+            if heard.sender == target and (heard.to_me or heard.to is None) and not answer.done():
+                answer.set_result(heard)
+                return
         if self._overrides("on_message"):
             self._handle(self.on_message, heard)
 

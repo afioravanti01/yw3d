@@ -185,6 +185,139 @@ class TestInterruptions(unittest.TestCase):
         scenario(Round(), host_side)
 
 
+class Asker(Character):
+    """Asks the player, then asks Marta, and says what it heard."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.answers: List[Any] = []
+        self.messages: List[Message] = []
+
+    async def routine(self) -> None:
+        answer = await self.ask("Dove vado?", timeout=5)
+        self.answers.append(answer.text if answer else None)
+        answer = await self.ask("Cosa si pesca?", to="marta", timeout=0.2)
+        self.answers.append(answer.text if answer else None)
+        await self.wait(100)
+
+    async def on_message(self, message: Message) -> None:
+        self.messages.append(message)
+
+
+class TestQuestions(unittest.TestCase):
+    def test_a_question_to_the_player_or_to_a_character_waits_for_its_answer(self) -> None:
+        character = Asker()
+
+        async def host_side(host: FakeHost) -> None:
+            say = await host.next()
+            self.assertEqual(strip(say), {"type": "say", "text": "Dove vado?", "to": "player"})
+            # Someone else speaks meanwhile: that is a message, not the answer.
+            host.heard("Buongiorno!", sender="marta", to=None)
+            # The answer may come while the question is still being said.
+            host.heard("al pozzo vecchio", mentions="pozzo")
+            host.done(say)
+            ask = await host.next()
+            self.assertEqual(strip(ask), {"type": "say", "text": "Cosa si pesca?", "to": "marta"})
+            host.done(ask)
+            # Marta does not answer in time.
+            self.assertEqual(strip(await host.next()), {"type": "wait", "seconds": 100})
+            self.assertEqual(character.answers, ["al pozzo vecchio", None])
+            self.assertEqual([m.text for m in character.messages], ["Buongiorno!"])
+
+        scenario(character, host_side)
+
+    def test_a_character_answers_a_question_aloud_or_to_the_asker(self) -> None:
+        class AskMarta(Character):
+            def __init__(self) -> None:
+                super().__init__()
+                self.answer: Any = None
+
+            async def routine(self) -> None:
+                self.answer = await self.ask("Cosa si pesca?", to="marta", timeout=5)
+                await self.wait(100)
+
+        character = AskMarta()
+
+        async def host_side(host: FakeHost) -> None:
+            ask = await host.next()
+            host.done(ask)
+            # To someone else: not the answer.
+            host.heard("Carpe, Nina.", sender="marta", to="nina")
+            host.heard("Tinche e carpe.", sender="marta", to=None, yes_no=None)
+            await host.next()
+            self.assertEqual(character.answer.text, "Tinche e carpe.")
+            self.assertEqual(character.answer.sender_name, "marta")
+
+        scenario(character, host_side)
+
+
+class Greeter(Round):
+    """The round; greets who comes near, says goodbye, answers E."""
+
+    near_distance = 6
+
+    async def on_near(self, entity: Any) -> None:
+        await self.say(f"Ciao {entity.name}")
+
+    async def on_far(self, entity: Any) -> None:
+        await self.say(f"Addio {entity.name}")
+
+    async def on_interact(self) -> None:
+        await self.say("Mi hai chiamato?")
+
+
+ADA = {"id": "player", "name": "Ada", "kind": "player", "x": 30, "y": 34, "z": 30}
+
+
+class TestOtherHandlers(unittest.TestCase):
+    def test_on_near_on_far_and_on_interact_interrupt_the_routine(self) -> None:
+        async def host_side(host: FakeHost) -> None:
+            walk = await host.next()
+            host.perception(time=1, nearby=[{**ADA, "distance": 10}])
+            await host.nothing()
+            host.perception(time=1.25, nearby=[{**ADA, "distance": 5}])
+            hello = await host.next()
+            self.assertEqual(hello["text"], "Ciao Ada")
+            host.replaced(walk)
+            # Still near: no new greeting.
+            host.perception(time=1.5, nearby=[{**ADA, "distance": 4}])
+            host.done(hello)
+            again = await host.next()
+            self.assertEqual(strip(again), {"type": "walk_to", "target": "pozzo"})
+            host.tell({"type": "interacted", "by": "player"})
+            called = await host.next()
+            self.assertEqual(called["text"], "Mi hai chiamato?")
+            host.replaced(again)
+            host.done(called)
+            third = await host.next()
+            self.assertEqual(strip(third), {"type": "walk_to", "target": "pozzo"})
+            host.perception(time=2, nearby=[])
+            bye = await host.next()
+            self.assertEqual(bye["text"], "Addio Ada")
+
+        scenario(Greeter(), host_side)
+
+
+class TestPause(unittest.TestCase):
+    def test_while_a_client_drives_the_actions_wait_and_then_go_on(self) -> None:
+        async def host_side(host: FakeHost) -> None:
+            walk = await host.next()
+            host.tell({"type": "paused"})
+            await host.nothing()
+            # A message meanwhile: its handler waits as well.
+            host.heard("ciao")
+            await host.nothing()
+            host.tell({"type": "resumed"})
+            say = await host.next()
+            self.assertEqual(say["text"], "Ho sentito: ciao")
+            host.done(say)
+            again = await host.next()
+            self.assertEqual(strip(again), strip(walk))
+            self.assertNotEqual(again["id"], walk["id"])
+
+        scenario(Listener(), host_side)
+
+
 class TestState(unittest.TestCase):
     def test_position_nearby_and_map_are_read_without_asking(self) -> None:
         seen: List[Any] = []

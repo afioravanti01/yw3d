@@ -149,6 +149,42 @@ sys.exit(1 if problems else 0)
     );
   });
 
+  it('PY-002.e: a question to the player or to a character waits for its answer, or for the time limit', () => {
+    unittest(
+      'TestQuestions.test_a_question_to_the_player_or_to_a_character_waits_for_its_answer',
+      'TestQuestions.test_a_character_answers_a_question_aloud_or_to_the_asker',
+    );
+  });
+
+  it('PY-002.a, PY-002.c, PROTO-004.a: on_near, on_far and on_interact interrupt the routine; a client driving the character pauses the program', () => {
+    unittest(
+      'TestOtherHandlers.test_on_near_on_far_and_on_interact_interrupt_the_routine',
+      'TestPause.test_while_a_client_drives_the_actions_wait_and_then_go_on',
+    );
+  });
+
+  it('PY-003.c: an uncaught error shows first the file, the line and the message, then the traceback', async () => {
+    const { s, lines } = await world(`from yw3d import Character, run
+
+
+class Tobia(Character):
+    async def routine(self):
+        await self.walk_to("pozzo")
+        await self.walk_to("fontana")
+
+
+run(Tobia)
+`);
+    await until(s, () => lines.some((l) => l.includes('program ended')));
+    expect(s.programOf('tobia')?.state).toBe('error');
+    expect(lines).toContain(
+      'yw3d  [tobia] tobia.py:7: ActionFailed: walk_to failed: there is no "fontana" in the map',
+    );
+    expect(lines).toContain('yw3d  [tobia] Traceback (most recent call last):');
+    expect(lines).toContain('yw3d  [tobia] program ended (exit code 1): the character stops');
+    expect(lines.filter((l) => l.includes('Exception in thread'))).toEqual([]);
+  });
+
   it('PY-001.c, PY-002.a–d: a program written with the library drives its character through a real host', async () => {
     const { s, lines, said } = await world(TOBIA);
     // stderr and stdout are two pipes: wait for both lines.

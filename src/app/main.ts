@@ -478,11 +478,15 @@ function describeNearest(
   if (!nearest) return { count: 0, nearest: null };
   const start = result.characters.find((c) => c.id === nearest!.id);
   const command = start?.command;
-  const driver = nearest.controlled
-    ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
-    : command
-      ? `controller not running (${command})`
-      : 'no controller';
+  // A program shows its file and state (DEBUG-001.a): running, stopped, in error.
+  const program = nearest.program;
+  const driver = program
+    ? `program ${program.file} · ${program.state === 'error' ? 'in error' : program.state}`
+    : nearest.controlled
+      ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
+      : command
+        ? `controller not running (${command})`
+        : 'no controller';
   return {
     count: characters.length,
     nearest: `${start?.name ?? nearest.id} (${nearest.id}) · ${blocksToMeters(best).toFixed(1)} m · ${driver} · ${nearest.action ?? 'no action'}`,
