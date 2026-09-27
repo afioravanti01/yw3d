@@ -152,7 +152,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Stato e latenza dell'agente nell'overlay; righe del terminale per richieste fallite, scadute e parti scartate.
   - Fatto quando: test di HOST-001.c verdi; overlay provato nel browser.
 
-- [ ] **T8.11** Esempi
+- [x] **T8.11** Esempi
   - Req: AGENT-007 · Dip: T8.08, T8.09
   - `examples/agenti`: la pescatrice agente con Claude Code, e nei commenti le varianti per Codex, opencode, Anthropic, OpenAI, Ollama e `fake`.
   - Fatto quando: `yw3d examples/agenti` fa la demo della roadmap; con `mode: fake` parte senza CLI né chiavi.
