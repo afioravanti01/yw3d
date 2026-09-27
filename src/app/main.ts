@@ -411,9 +411,6 @@ async function main(): Promise<void> {
 
   const overlay = new DebugOverlay();
   const fpsMeter = new FpsMeter();
-  /** Shadows are drawn again this often, milliseconds (Q5). */
-  const SHADOW_EVERY_MS = 2000;
-  let lastShadowAt = 0;
   let lastShadowMinutes: number | undefined;
   const timer = new THREE.Timer();
   timer.connect(document);
@@ -427,15 +424,13 @@ async function main(): Promise<void> {
     if (current.chunks.update() > 0) {
       renderer.shadowMap.needsUpdate = true;
     }
-    // The light of the hour (plan F09 P4–P7): shadows follow the sun every 2 s, or at once
-    // when the hour jumps (/time).
+    // The light of the hour (plan F09 P4–P7): while the hour flows the shadows are drawn
+    // again on every frame, so they follow the sun smoothly (redrawn every 2 s they jumped).
     const minutes = clockNow();
     if (minutes !== undefined) {
       current.scene.setDaylight(daylight(minutes));
-      const jumped = lastShadowMinutes === undefined || Math.abs(minutes - lastShadowMinutes) > 5;
-      if (jumped || time - lastShadowAt > SHADOW_EVERY_MS) {
+      if (minutes !== lastShadowMinutes) {
         renderer.shadowMap.needsUpdate = true;
-        lastShadowAt = time;
         lastShadowMinutes = minutes;
       }
     }

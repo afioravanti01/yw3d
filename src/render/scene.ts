@@ -32,7 +32,7 @@ export interface WorldScene {
 export function configureRenderer(renderer: THREE.WebGLRenderer): void {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
-  // The terrain is static: shadows are redrawn only after chunk rebuilds (needsUpdate).
+  // Shadows are redrawn on demand (needsUpdate): after chunk rebuilds and while the hour flows.
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
 }
