@@ -1,3 +1,4 @@
+import { CLOCK_PATTERN, DEFAULT_DAY_MINUTES, MINUTES_PER_DAY } from '../time/clock';
 import { insideFolder } from './paths';
 import {
   color,
@@ -257,6 +258,12 @@ const characterSchema = object(
   },
 );
 
+/** The clock of the world (TIME-001.a): starting hour and real minutes of a day. */
+const timeSchema = object({
+  start: optional(pattern(CLOCK_PATTERN, 'an hour as HH:MM, e.g. 08:00')),
+  day_minutes: number({ min: 1, max: MINUTES_PER_DAY, default: DEFAULT_DAY_MINUTES }),
+});
+
 /** Settings shared by the agents of a world (A8.6). */
 export const DEFAULT_CONVERSATION_TURNS = 12;
 const agentSettingsSchema = object({
@@ -276,6 +283,7 @@ const worldFileSchema = object(
     structures: optional(list(structureSchema)),
     scatter: optional(list(scatterSchema)),
     agents: optional(agentSettingsSchema),
+    time: optional(timeSchema),
     behaviors: optional(unknownValue()),
   },
   (world, path, issues) => {

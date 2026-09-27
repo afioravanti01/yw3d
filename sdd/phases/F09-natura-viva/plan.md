@@ -72,7 +72,7 @@ Nessuna.
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T9.01** Orologio nel core e nel file del mondo
+- [x] **T9.01** Orologio nel core e nel file del mondo
   - Req: TIME-001, YAML-001 · Dip: —
   - `clock.ts` (P1); sezione `time` con `start` e `day_minutes`.
   - Fatto quando: test di TIME-001.a e .d, YAML-001.a verdi.

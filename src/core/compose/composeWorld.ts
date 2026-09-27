@@ -1,3 +1,4 @@
+import { DEFAULT_DAY_MINUTES, DEFAULT_START, parseClock, type ClockSettings } from '../time/clock';
 import {
   cloneHeightmap,
   DEFAULT_TERRAIN_PARAMS,
@@ -104,6 +105,8 @@ export interface ComposeResult {
   readonly places: readonly PlaceDecl[];
   /** Lines of a conversation between agents without the player (AGENT-004.c, A8.6). */
   readonly conversationTurns?: number;
+  /** The clock of the world (TIME-001.a). */
+  readonly clock?: ClockSettings;
   /** The map of the world (MAP-002); undefined when the file has errors. */
   readonly map: WorldMap | undefined;
   /** Where a character goes for each id of the map (MAP-003). */
@@ -342,6 +345,10 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     playerDescription: decl.player?.description,
     places: decl.places ?? [],
     conversationTurns: decl.agents?.conversation_turns ?? DEFAULT_CONVERSATION_TURNS,
+    clock: {
+      startMinutes: parseClock(decl.time?.start ?? DEFAULT_START)!,
+      dayMinutes: decl.time?.day_minutes ?? DEFAULT_DAY_MINUTES,
+    },
     map: built.map,
     goals: built.goals,
     characters: (decl.characters ?? []).map((c) => ({
