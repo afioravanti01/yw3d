@@ -75,5 +75,8 @@ export function programEnv(base: NodeJS.ProcessEnv = process.env): NodeJS.Proces
     // Written bytecode would reload the world at every start (plan F07 P7).
     PYTHONDONTWRITEBYTECODE: '1',
     PYTHONIOENCODING: 'utf-8',
+    // Plain tracebacks: Python 3.13 colors them when FORCE_COLOR is set, and the host prefixes
+    // every line of the program in its own terminal (PY-003.c).
+    PYTHON_COLORS: '0',
   };
 }

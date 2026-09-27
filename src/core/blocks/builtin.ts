@@ -21,7 +21,7 @@ export const ROOF_TILES = 15;
 
 const solid = { solid: true, opaque: true } as const;
 /** Foliage hides what is behind it but can be walked through (F03 spec Q5). */
-const foliage = { solid: false, opaque: true } as const;
+const foliage = { solid: false, opaque: true, sways: true } as const;
 
 /** Built-in block types, with the warm, slightly desaturated palette (F01 spec Q4). */
 export const BUILTIN_BLOCKS: readonly BlockDef[] = [

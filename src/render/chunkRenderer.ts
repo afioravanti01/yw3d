@@ -175,6 +175,7 @@ export function createGeometry(data: MeshData): THREE.BufferGeometry {
   geometry.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
   geometry.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3, true));
   geometry.setAttribute('color', new THREE.BufferAttribute(data.colors, 3, true));
+  geometry.setAttribute('sway', new THREE.BufferAttribute(data.sway, 1, true));
   geometry.setIndex(new THREE.BufferAttribute(data.indices, 1));
   geometry.computeBoundingSphere();
   return geometry;

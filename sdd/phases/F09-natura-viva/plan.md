@@ -103,7 +103,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `lights` nel tipo di struttura e nelle case (P8); quad luminosi con l'intensità della notte.
   - Fatto quando: test delle luci delle case verdi; finestre accese di notte nel browser.
 
-- [ ] **T9.07** Vento sulle foglie
+- [x] **T9.07** Vento sulle foglie
   - Req: RENDER-009 · Dip: T9.05
   - Attributo delle foglie nel mesher e spostamento nel materiale (P9).
   - Fatto quando: test del mesher verdi; foglie che ondeggiano nel browser.
@@ -157,3 +157,4 @@ Task in ordine, fermandosi alla prova d'uso di T9.05. Commit a fine task con `np
 |---|---|---|---|
 | T9.12, T9.13 | Fatti prima di chiudere la prova d'uso di T9.05 | Richiesta dell'utente durante la prova: la scimmietta nel mondo degli agenti | Nessuno |
 | T9.03 (P7) | Ombre ridisegnate prima a ogni frame, poi solo a ogni decimo del giorno, con la direzione della luce ferma nel decimo | Prova d'uso di T9.05: ogni 2 s «scattano», a ogni frame «un continuo movimento» | Emendamento A9.2 |
+| T9.07 | Le foglie si riconoscono da una proprietà del tipo di blocco (`sways`), non dai nomi; corretto anche l'ambiente dei programmi Python (`PYTHON_COLORS=0`) | Un test dell'host falliva con `FORCE_COLOR` nell'ambiente: Python 3.13 colora gli errori e il terminale dell'host ne riceveva i codici | Nessuno |
