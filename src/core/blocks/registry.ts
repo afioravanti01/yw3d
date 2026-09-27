@@ -14,8 +14,6 @@ export interface BlockDef {
   readonly solid: boolean;
   /** Hides the faces of adjacent blocks. */
   readonly opaque: boolean;
-  /** Sways in the wind, like leaves (RENDER-009.a). */
-  readonly sways?: boolean;
 }
 
 /**

@@ -16,8 +16,6 @@ export interface MeshData {
   readonly normals: Int8Array;
   /** Linear RGB vertex colors, normalized Uint16. */
   readonly colors: Uint16Array;
-  /** 1 for the vertices of blocks that sway in the wind, 0 for the others (RENDER-009.a). */
-  readonly sway: Uint8Array;
   readonly indices: Uint16Array | Uint32Array;
   readonly faceCount: number;
 }
@@ -29,7 +27,6 @@ const UINT16_MAX = 65535;
 const scratchPositions = new Uint8Array(MAX_FACES * 4 * 3);
 const scratchNormals = new Int8Array(MAX_FACES * 4 * 3);
 const scratchColors = new Uint16Array(MAX_FACES * 4 * 3);
-const scratchSway = new Uint8Array(MAX_FACES * 4);
 const scratchFlips = new Uint8Array(MAX_FACES);
 const ao = new Uint8Array(4);
 const color = new Float32Array(3);
@@ -64,7 +61,7 @@ export function meshChunk(
           }
           blockColor(color, palette, block, origin[0] + x, origin[1] + y, origin[2] + z);
           faceAO(padded, palette.opaque, index, f, ao);
-          emitFace(faceCount++, f, x, y, z, palette.sways[block]!);
+          emitFace(faceCount++, f, x, y, z);
         }
       }
     }
@@ -98,7 +95,7 @@ export function meshTranslucent(
           }
           blockColor(color, palette, block, origin[0] + x, origin[1] + y, origin[2] + z);
           faceAO(padded, palette.opaque, index, f, ao);
-          emitFace(faceCount++, f, x, y, z, 0);
+          emitFace(faceCount++, f, x, y, z);
         }
       }
     }
@@ -107,21 +104,13 @@ export function meshTranslucent(
 }
 
 /** Writes one quad; reads the block color from `color` and the occlusion levels from `ao`. */
-function emitFace(
-  faceIndex: number,
-  f: number,
-  x: number,
-  y: number,
-  z: number,
-  sway: number,
-): void {
+function emitFace(faceIndex: number, f: number, x: number, y: number, z: number): void {
   const face = FACES[f]!;
   scratchFlips[faceIndex] = shouldFlip(ao) ? 1 : 0;
   for (let v = 0; v < 4; v++) {
     const light = AO_FACTORS[ao[v]! as 0 | 1 | 2 | 3];
     const corner = face.corners[v]!;
     const o = (faceIndex * 4 + v) * 3;
-    scratchSway[faceIndex * 4 + v] = sway;
     scratchPositions[o] = x + corner[0];
     scratchPositions[o + 1] = y + corner[1];
     scratchPositions[o + 2] = z + corner[2];
@@ -159,7 +148,6 @@ function buildMeshData(faceCount: number): MeshData {
     positions: scratchPositions.slice(0, vertexCount * 3),
     normals: scratchNormals.slice(0, vertexCount * 3),
     colors: scratchColors.slice(0, vertexCount * 3),
-    sway: scratchSway.slice(0, vertexCount),
     indices,
     faceCount,
   };

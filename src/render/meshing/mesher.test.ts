@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createDefaultRegistry,
-  OAK_LEAVES,
-  OAK_LOG,
-  STONE,
-  WATER,
-} from '../../core/blocks/builtin';
+import { createDefaultRegistry, STONE, WATER } from '../../core/blocks/builtin';
 import { World, type WorldSize } from '../../core/world/world';
 import { meshChunk, meshTranslucent, type MeshData } from './mesher';
 import { copyPaddedChunk } from './padded';
@@ -128,21 +122,5 @@ describe('mesher', () => {
     // Water faces never go into the opaque mesh, and vice versa.
     expect(mesh(worldWith(small, [[10, 10, 10]], WATER)).faceCount).toBe(0);
     expect(water(worldWith(small, [[10, 10, 10]])).faceCount).toBe(0);
-  });
-
-  it('RENDER-009.a: the vertices of leaves sway, those of trunks, stone and water do not', () => {
-    const world = new World(small);
-    world.setBlock(10, 10, 10, OAK_LEAVES);
-    world.setBlock(20, 10, 10, OAK_LOG);
-    world.setBlock(30, 10, 10, STONE);
-    world.setBlock(40, 10, 10, WATER);
-    const data = mesh(world);
-    expect(data.sway.length).toBe(data.positions.length / 3);
-    for (let v = 0; v < data.sway.length; v++) {
-      expect(data.sway[v]).toBe(data.positions[v * 3]! <= 11 ? 1 : 0);
-    }
-    const water = meshTranslucent(copyPaddedChunk(world, 1, 0, 0), palette);
-    expect(water.faceCount).toBeGreaterThan(0);
-    expect([...water.sway].every((s) => s === 0)).toBe(true);
   });
 });

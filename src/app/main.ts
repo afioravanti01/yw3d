@@ -22,7 +22,6 @@ import { PlayerControls } from './input';
 import { parseStartParams } from './params';
 import { MessageConsole } from './messageConsole';
 import { daylight, lightStep } from '../render/daylight';
-import { applyWind } from '../render/wind';
 import { WindowLights } from '../render/windows';
 import { characterDetails } from '../protocol/details';
 import { LocalSimulation } from './localSimulation';
@@ -81,7 +80,6 @@ async function main(): Promise<void> {
   const registry = createDefaultRegistry();
   const palette = createPalette(registry);
   const material = new THREE.MeshLambertMaterial({ vertexColors: true });
-  const wind = applyWind(material);
   // Water (RENDER-007): see-through near the shore, drawn after the opaque terrain.
   const waterMaterial = new THREE.MeshLambertMaterial({
     vertexColors: true,
@@ -427,7 +425,6 @@ async function main(): Promise<void> {
     timer.update(time);
     if (!current || !playerView) return;
     const dt = timer.getDelta();
-    wind.update(time / 1000);
     playerView.update(dt, camera);
     const characters = shownCharacters();
     characterViews.update(characters, dt);
