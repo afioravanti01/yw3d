@@ -85,7 +85,7 @@ Nessuna in npm: HTTP con `fetch` di Node, processi con `child_process`. Le CLI e
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T8.01** Verifica delle CLI e delle API
+- [x] **T8.01** Verifica delle CLI e delle API
   - Req: AGENT-001 · Dip: —
   - Nessun codice di prodotto. Per Claude Code e Codex (con l'utente, che esegue i comandi dove il sandbox non arriva): opzioni per modello, effort, risposta strutturata, strumenti disattivati, una chiamata vera con un contesto di prova. Per opencode le opzioni documentate. Per le API il parametro dell'effort. Esiti nella tabella «Cervelli» di questo piano.
   - Fatto quando: la tabella dice, per ogni cervello, come si passano modello, effort e schema, e la chiamata di prova ha risposto.
@@ -156,17 +156,17 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Fatto quando: G3 approvato dall'utente.
 
 ## Cervelli
-Opzioni lette dall'aiuto delle versioni installate (2026-09-27); le chiamate vere si fanno in T8.01.
+Esiti di T8.01 (2026-09-27): opzioni lette dall'aiuto delle versioni installate e una chiamata vera per CLI, con lo stesso contesto di prova (la pescatrice a cui si chiede dove pescare).
 
-| Cervello | Chiamata | Modello | Effort | Risposta strutturata | Senza strumenti né sessione |
-|---|---|---|---|---|---|
-| Claude Code 2.1.283 | `claude -p` con il contesto sullo stdin | `--model` | `--effort low\|medium\|high` | `--output-format json --json-schema <schema>` | `--tools ""`, `--no-session-persistence` |
-| Codex 0.157.1 | `codex exec -` con il contesto sullo stdin | `-m` | `-c model_reasoning_effort=…` (chiave di `config.toml`, da provare) | `--output-schema <file>`, `-o <file>` per l'ultimo messaggio | `-s read-only`, `--ephemeral`, `--skip-git-repo-check`, `-C <cartella temporanea>` |
-| opencode 2.0.18 | `opencode run <messaggio>` | `-m provider/modello` | variante del modello `#…`, solo con un modello indicato (da provare) | `--format json` per gli eventi; il JSON della risposta si estrae dal testo | da verificare: nessuna opzione per disattivare gli strumenti |
-| Anthropic API | `POST /v1/messages` | `model` | da verificare in T8.01 | strumento obbligato con lo schema | — |
-| Compatibile OpenAI | `POST <indirizzo>/chat/completions` | `model` | `reasoning_effort` (da verificare) | `response_format` `json_schema`, o estrazione dal testo | — |
+| Cervello | Chiamata | Modello | Effort | Risposta strutturata | Senza strumenti né sessione | Chiamata di prova |
+|---|---|---|---|---|---|---|
+| Claude Code 2.1.283 | `claude -p`, contesto sullo stdin | `--model` | `--effort low\|medium\|high` | `--output-format json --json-schema <schema>`: la risposta è in `structured_output` | `--tools ""`, `--no-session-persistence` | ✓ 4,5 s (3 s di API), 0,046 $ con il modello predefinito (Opus); risposta conforme |
+| Codex 0.157.1 | `codex exec -`, contesto sullo stdin | `-m` | `-c model_reasoning_effort=low\|medium\|high` | `--output-schema <file>`, `-o <file>` con l'ultimo messaggio | `-s read-only`, `--ephemeral`, `--skip-git-repo-check`, `-C <cartella temporanea>` | ✓ 5,3 s con effort `low`; risposta conforme |
+| opencode 2.0.18 | `opencode run --agent plan <messaggio>` | `-m provider/modello` | variante del modello `#…`, solo con un modello indicato (non provato) | nessuna: il JSON si estrae dal testo (arriva anche in un blocco di codice) | agente `plan`, senza strumenti di modifica | ✓ 22,6 s con l'agente predefinito, 3,5 s con `plan` (modello `longcat-2.5-preview-free`); una volta un'azione inesistente (`move`) |
+| Anthropic API | `POST /v1/messages` | `model` | da definire in T8.09 | strumento obbligato con lo schema | — | non provata: nessuna chiave nell'ambiente |
+| Compatibile OpenAI | `POST <indirizzo>/chat/completions` | `model` | `reasoning_effort` | `response_format` `json_schema`, o estrazione dal testo | — | non provata: nessuna chiave nell'ambiente |
 
-Nel `PATH` di questa macchina c'è anche una Codex 0.125.0 installata con npm (`/usr/local/bin/codex`), che viene trovata prima della 0.157.1 in `~/.local/bin`: l'host usa la CLI del `PATH`, quindi va tolta o messa dopo.
+Osservazioni: le istruzioni devono elencare le azioni ammesse (opencode ha inventato `move`); con il modello predefinito di Claude Code una richiesta costa circa 5 centesimi, quindi la guida consiglierà un modello più economico per gli agenti. Nel `PATH` di questa macchina c'è anche una Codex 0.125.0 installata con npm (`/usr/local/bin/codex`), trovata prima della 0.157.1 in `~/.local/bin`: l'host usa la CLI del `PATH`, quindi va tolta o messa dopo.
 
 ## Ordine e parallelismo
 
