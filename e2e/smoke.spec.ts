@@ -237,7 +237,7 @@ test('DIALOG-005.b, DIALOG-005.c: the console is a block always there; it leaves
   expect(await at(block.x + block.width / 2, line.y + line.height + 60)).toBe('world');
 });
 
-test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help answers in the console', async ({
+test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help and /world answer in the console', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
@@ -259,6 +259,10 @@ test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab
   await expect
     .poll(() => talk(page, 'consoleLines'))
     .toContainEqual(expect.stringContaining('/help: this help.'));
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/world');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => talk(page, 'consoleLines')).toContain('  Anna (anna) · 61, 61');
   // Commands are not said in the world.
   expect((await talk(page, 'consoleLines')).some((l) => l.includes('Tu: /help'))).toBe(false);
 });

@@ -58,7 +58,11 @@ export function startConsole(session: HostSession, input: LineInput, terminal: T
   input.onLine((text) => {
     if (text.trim() === '') return;
     if (isCommand(text)) {
-      const result = runCommand(text);
+      const map = session.world?.result.map;
+      const result = runCommand(
+        text,
+        map && { map, position: (id) => session.agents?.stateOf(id) },
+      );
       if (result.ok) for (const line of result.lines) terminal.line(`${PREFIX}  ${line}`);
       else terminal.line(`${PREFIX}  ${result.error}`);
       return;

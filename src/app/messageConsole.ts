@@ -1,5 +1,5 @@
 import { suggest } from '../core/dialogue/address';
-import { isCommand, runCommand } from '../core/dialogue/commands';
+import { isCommand, runCommand, type CommandContext } from '../core/dialogue/commands';
 import type { Nameable } from '../core/dialogue/understand';
 import { words } from '../core/dialogue/understand';
 
@@ -20,6 +20,8 @@ export type LineKind = 'line' | 'error' | 'info';
 export class MessageConsole {
   /** The characters of the world, for the suggestions after `@`. */
   characters: readonly Nameable[] = [];
+  /** The world now running, for commands such as `/world` (A7.2). */
+  context: () => CommandContext | undefined = () => undefined;
   private readonly list: HTMLOListElement;
   private readonly input: HTMLInputElement;
   private readonly suggestions: HTMLUListElement;
@@ -146,7 +148,7 @@ export class MessageConsole {
       this.close();
       if (text === '') return;
       if (isCommand(text)) {
-        const result = runCommand(text);
+        const result = runCommand(text, this.context());
         if (result.ok) for (const line of result.lines) this.add(line, 'info');
         else this.add(result.error, 'error');
       } else {

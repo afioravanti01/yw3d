@@ -205,6 +205,14 @@ async function main(): Promise<void> {
     current?.chunks.dispose();
     current = { world: result.world, scene, chunks, result, composeMs, meshingMs };
     messageConsole.characters = result.characters.map((c) => ({ id: c.id, name: c.name }));
+    messageConsole.context = () =>
+      result.map && {
+        map: result.map,
+        position: (id) => {
+          if (id === 'player') return playerView?.source.state();
+          return shownCharacters().find((c) => c.id === id);
+        },
+      };
     if (!controls || !playerView) {
       controls = new FlyCamera(camera, canvas, result.world.size);
       playerView = new PlayerView(
