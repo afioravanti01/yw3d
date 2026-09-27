@@ -57,6 +57,7 @@ Verifica automatica: `npm run check` verde (297 test, compresi i test della libr
 - **Una misura manuale mancante.** Gli fps della folla, ora in Python, non sono stati misurati alla verifica.
 
 ## Modifiche al processo proposte
+Approvate dall'utente il 2026-09-27 e applicate a `process.md` e allo strumento di commit.
 - **Commit con gli e2e quando serve.** `npm run commit` esegue anche `npm run e2e` quando il commit tocca l'interfaccia (`src/app`, `index.html`, `e2e/`), o con un'opzione esplicita.
 - **Le regole d'interazione si provano prima di scriverle.** Per regole come «a chi arriva un messaggio», la spec le propone ma il piano le mette alla prova d'uso prima di costruirci sopra.
 - **Le misure della verifica si chiedono una per una.** La checklist di G3 separa le misure da riportare (fps, tempi) dai controlli sì/no, e la chiusura registra esplicitamente quelle mancanti.

@@ -9,7 +9,7 @@ Mondo 3D a blocchi programmabile (vedi [README.md](README.md)). È anche un **es
 
 ## Regole
 - Niente codice di prodotto se spec e piano della fase non sono `approved`.
-- Un task alla volta, rispettando le dipendenze del piano. A fine task: checkbox spuntata, commit `T<n>.<nn>: <descrizione>` con `npm run commit -- -m "…"`, che lo registra solo con `npm run check` verde (solo se l'utente ha autorizzato i commit).
+- Un task alla volta, rispettando le dipendenze del piano. A fine task: checkbox spuntata, commit `T<n>.<nn>: <descrizione>` con `npm run commit -- -m "…"`, che lo registra solo con `npm run check` verde (e `npm run e2e`, se il commit tocca viste, host, protocollo o test e2e) (solo se l'utente ha autorizzato i commit).
 - Il titolo di ogni test inizia con i criteri che verifica: `it('WORLD-003.b: …')`.
 - Spec sbagliata o ambigua: fermati, proponi un emendamento nel registro della spec, attendi l'approvazione. Non correggere la spec in silenzio col codice.
 - Scostamento dal piano: registralo nella tabella "Deviazioni" e prosegui.
@@ -25,4 +25,4 @@ Mondo 3D a blocchi programmabile (vedi [README.md](README.md)). È anche un **es
 | `npm run check` | typecheck + lint + test unitari |
 | `npm run e2e` | test Playwright |
 | `npm run sdd:trace -- F01` | matrice requisiti → task → test |
-| `npm run commit -- -m "…"` | `check`, poi `git commit` solo se verde |
+| `npm run commit -- [--e2e] -m "…"` | `check` (ed `e2e` se servono), poi `git commit` solo se verde |

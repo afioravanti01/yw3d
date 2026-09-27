@@ -50,10 +50,10 @@ Stati dei documenti: `draft` → `approved`. Una spec approvata che riceve emend
 - Si scrive dopo G1. (Per F01 spec e piano sono stati scritti insieme: la spec si approva comunque per prima.)
 - Contiene struttura del codice, decisioni tecniche con alternative scartate, dipendenze nuove, strategia di test, rischi, **task**.
 - Un task è piccolo (circa una sessione di lavoro di un agente), ha un ID `T<fase>.<nn>`, cita i requisiti che copre, le dipendenze e un criterio di "fatto".
-- **Prova d'uso presto.** Se la fase introduce un linguaggio, un'interazione o un'API per gli autori, il piano mette subito, dopo il primo nucleo funzionante, un punto di controllo in cui l'utente scrive o usa qualcosa di vero; libreria completa, esempi e guida vengono dopo. (Dalla retro di F06.)
+- **Prova d'uso presto.** Se la fase introduce un linguaggio, un'interazione o un'API per gli autori, il piano mette subito, dopo il primo nucleo funzionante, un punto di controllo in cui l'utente scrive o usa qualcosa di vero; libreria completa, esempi e guida vengono dopo. (Dalla retro di F06.) Le **regole d'interazione** (a chi arriva un messaggio, a quale distanza, cosa vede chi guarda) si mettono alla prova d'uso prima di costruirci sopra: la spec le propone, l'uso le conferma. (Dalla retro di F07: «@nome a qualunque distanza», deciso a tavolino, è stato rovesciato usandolo.)
 
 ### 3. Implementazione
-- Un task alla volta, rispettando le dipendenze. A fine task: checkbox spuntata nel piano e commit `T1.05: <descrizione>` con `npm run commit -- -m "…"`, che esegue `npm run check` e registra il commit solo se è verde (da F07).
+- Un task alla volta, rispettando le dipendenze. A fine task: checkbox spuntata nel piano e commit `T1.05: <descrizione>` con `npm run commit -- -m "…"`, che esegue `npm run check`, e anche `npm run e2e` se il commit tocca ciò che gli e2e verificano (viste, host, protocollo, test e2e; oppure con `--e2e`), e registra il commit solo se tutto è verde (da F07).
 - Il titolo di ogni test inizia con i criteri che verifica: `it('WORLD-002.c: out-of-bounds read returns air', ...)`.
 - **Scostarsi dal piano** (il *come*) è consentito: si registra nella tabella "Deviazioni" del piano e si prosegue.
 - **Scostarsi dalla spec** (il *cosa*) non è consentito: ci si ferma, si propone un emendamento nel "Registro emendamenti" della spec e si attende l'approvazione.
@@ -61,7 +61,7 @@ Stati dei documenti: `draft` → `approved`. Una spec approvata che riceve emend
 
 ### 4. Verifica
 - `npm run check`, `npm run e2e` e `npm run sdd:trace -- FNN` verdi.
-- I criteri `[manuale]` si verificano con l'utente tramite una checklist; l'esito va nella retro.
+- I criteri `[manuale]` si verificano con l'utente tramite una checklist; l'esito va nella retro. La checklist elenca a parte le **misure da riportare** (fps, tempi, conteggi) e i controlli sì/no; alla chiusura, una misura non riportata si registra come mancante. (Dalla retro di F07.)
 
 ### 5. Chiusura
 - Fondere il delta della spec nelle spec vive.
