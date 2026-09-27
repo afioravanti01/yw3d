@@ -17,8 +17,6 @@ export interface WorldMessage {
   readonly text: string;
   /** URLs of the author's structure modules, in registration order. */
   readonly structures: readonly string[];
-  /** Texts of the files the world file names, e.g. behaviors, by path in the folder (F06 P14). */
-  readonly files: Readonly<Record<string, string>>;
   readonly seedOverride: number | undefined;
   /** Hash of the world composed by the host. */
   readonly hash: number;
@@ -59,8 +57,6 @@ export interface CharacterSnapshot {
   /** Whether a controller drives it now, and its running action (DEBUG-001.a). */
   readonly controlled: boolean;
   readonly action: string | null;
-  /** State and instruction of its behavior, if it has one (DEBUG-001.a). */
-  readonly activity: string | null;
 }
 
 export type HostMessage =

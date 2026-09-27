@@ -120,7 +120,7 @@ async function main(): Promise<void> {
   });
   const characterViews = new CharacterViews();
   const bubbles = new SpeechBubbles(required<HTMLElement>('#bubbles'));
-  /** The simulation of the browser-only mode (APP-003.a, BEHAV-001.f). */
+  /** The simulation of the browser-only mode (APP-003.a). */
   let local: LocalSimulation | undefined;
   let reloadMs = 0;
   let worldName = params.world;
@@ -260,7 +260,6 @@ async function main(): Promise<void> {
       registry: createDefaultStructures(),
       seedOverride: params.seedOverride,
       now: () => performance.now(),
-      readFile: (relative) => worlds.readWorldFile(file.path, relative),
     });
     if (params.seedOverride !== undefined && result.world) {
       messages.push({
@@ -274,7 +273,7 @@ async function main(): Promise<void> {
       return;
     }
     const composed = result as ComposeResult & { world: World };
-    // A reload keeps the player where it is; characters and behaviors start over (BEHAV-001.g).
+    // A reload keeps the player where it is; characters start over.
     local?.recompose(composed);
     show(composed, performance.now() - start, () => {
       local = new LocalSimulation(
@@ -316,8 +315,6 @@ async function main(): Promise<void> {
         registry: structures,
         seedOverride: world.seedOverride,
         now: () => performance.now(),
-        // The files the world names, as the host read them: the same world (plan F06 P14).
-        readFile: (relative) => world.files[relative],
       });
       if (!result.world || result.world.hash() !== world.hash) {
         messages.push({
@@ -474,11 +471,9 @@ function describeNearest(
   const command = start?.command;
   const driver = nearest.controlled
     ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
-    : nearest.activity
-      ? `behavior ${nearest.activity}`
-      : command
-        ? `controller not running (${command})`
-        : 'no controller';
+    : command
+      ? `controller not running (${command})`
+      : 'no controller';
   return {
     count: characters.length,
     nearest: `${start?.name ?? nearest.id} (${nearest.id}) · ${blocksToMeters(best).toFixed(1)} m · ${driver} · ${nearest.action ?? 'no action'}`,

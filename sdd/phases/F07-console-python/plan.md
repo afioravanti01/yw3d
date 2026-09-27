@@ -131,7 +131,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `scripts/commit.ts` e script `commit` (P1); process.md e `CLAUDE.md` indicano di usarlo a fine task.
   - Fatto quando: con un test rosso il commit non parte, con `check` verde parte; da qui ogni task si registra con lo strumento.
 
-- [ ] **T7.02** Rimozione del linguaggio dei comportamenti
+- [x] **T7.02** Rimozione del linguaggio dei comportamenti
   - Req: YAML-001, CHAR-001, MAP-001, MAP-002 · Dip: T7.01
   - P2: `src/core/behaviors`, `behaviors.test.ts`, PERF-006, lettore di file esterni, `examples/paese`, e2e con comportamenti, `docs/comportamenti.md`; errore per `behaviors` e `behavior` con rimando a `docs/python.md`. Tobia e Nina restano fermi fino a T7.11.
   - Fatto quando: test di YAML-001.a e .f, CHAR-001.a e .c, MAP-001.c, MAP-002.d verdi; `check` ed `e2e` verdi; nessun riferimento ai comportamenti nel codice.
@@ -212,3 +212,4 @@ Task in ordine senza fermarsi fino alla prova d'uso di T7.09, poi fino a T7.14. 
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T7.02 | Nel file del mondo non resta alcun campo che riferisce un id: la parte «file» di MAP-001.c non ha più casi, e il test verifica l'altra parte, gli id generati accettati dal protocollo. Nei test e2e senza host nessun personaggio parla: il registro si prova con le frasi del giocatore e CHAR-002.d con il fumetto del giocatore. Il mondo di prova `test-behaviors` diventa `test-dialogue` | I comportamenti erano l'unico campo con riferimenti e l'unica fonte di frasi senza host | Nessuno |

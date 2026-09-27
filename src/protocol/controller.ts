@@ -1,4 +1,9 @@
-import type { ActionRequest, AgentEvent, Perception } from '../core/agents/agentWorld';
+import {
+  MAX_SAY_LENGTH,
+  type ActionRequest,
+  type AgentEvent,
+  type Perception,
+} from '../core/agents/agentWorld';
 import type { WorldMap } from '../core/map/worldMap';
 import { MAX_CHARACTER_SPEED_MPS, MIN_CHARACTER_SPEED_MPS } from '../core/physics/constants';
 import {
@@ -121,8 +126,11 @@ const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
     pointOrTarget,
   ),
   say: object({ type: oneOf(['say']), id: actionId(), text: str() }, (m, path, issues) => {
-    if (m.text.length === 0 || m.text.length > 500) {
-      issues.push({ path: [...path, 'text'], message: 'the text must have 1 to 500 characters' });
+    if (m.text.length === 0 || m.text.length > MAX_SAY_LENGTH) {
+      issues.push({
+        path: [...path, 'text'],
+        message: `the text must have 1 to ${MAX_SAY_LENGTH} characters`,
+      });
     }
   }),
   follow: object({

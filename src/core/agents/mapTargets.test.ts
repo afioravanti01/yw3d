@@ -23,6 +23,7 @@ places:
 structures:
   - { type: wooden_hut, id: capanno, name: Capanno, at: [64, 64], rotation: 90 }
   - { type: pond, id: laghetto, name: Laghetto, at: [64, 100], params: { radius: 8 } }
+  - { type: birch, name: Betulla, at: [20, 60] }
 characters:
   - { id: tobia, name: Tobia, at: [40, 40] }
   - { id: marta, name: Marta, at: [50, 44] }
@@ -90,6 +91,13 @@ describe('elements of the map as destinations', () => {
       id: 'w2',
       reason: 'there is no "nessuno" in the map',
     });
+  });
+
+  it('MAP-001.c: the protocol takes the generated ids too', () => {
+    const { agents, run, outcome } = setup();
+    agents.request('tobia', { kind: 'walk_to', id: 'w1', target: 'birch#1' });
+    run(30);
+    expect(outcome('w1')).toEqual({ type: 'action_done', id: 'w1' });
   });
 
   it('MAP-003.b: towards a house the character arrives in front of the door, outside', () => {

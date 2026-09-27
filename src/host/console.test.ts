@@ -23,11 +23,6 @@ characters:
   - id: tobia
     name: Tobia
     at: [30, 34]
-    behavior:
-      repeat: false
-      routine:
-        - wait: 1s
-        - say: Dove devo andare?
   - { id: marta, name: Marta, at: [26, 30] }
   - { id: lontana, name: Lontana, at: [60, 60] }
 `;
@@ -57,8 +52,9 @@ async function consoleOf() {
 
 describe('the console of the host', () => {
   it('DIALOG-004.a: the terminal shows what the player hears, with names; the player reads «Tu»', async () => {
-    const { lines, type, run } = await consoleOf();
-    run(2);
+    const { session, lines, type, run } = await consoleOf();
+    session.agents!.request('tobia', { kind: 'say', id: 's1', text: 'Dove devo andare?' });
+    run(0.1);
     type('@tobia al laghetto');
     run(0.1);
     expect(lines).toContain('yw3d  Tobia: Dove devo andare?');

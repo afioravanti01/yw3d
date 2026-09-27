@@ -2,7 +2,6 @@ import type { ComposeResult } from '../core/compose/composeWorld';
 import type { Intent } from '../core/physics/entity';
 import type { EntityState } from '../core/physics/entity';
 import { FixedStepper } from '../core/physics/fixedStep';
-import { activityOf } from '../core/sim/activity';
 import { Simulation, type SayResult, type SpokenLine } from '../core/sim/simulation';
 import type { World } from '../core/world/world';
 import type { CharacterSnapshot } from '../protocol/messages';
@@ -13,8 +12,8 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /**
  * The browser-only mode (APP-003.a) with the simulation the host runs (plan F06 P1): the
- * player, the characters and their behaviors, the dialogue. Characters with a behavior act as
- * with the host (BEHAV-001.f); characters with a controller stand still (CHAR-001.d).
+ * player, the characters and the dialogue. Without the host no program or controller runs, so
+ * characters stand still (CHAR-001.d).
  */
 export class LocalSimulation implements PlayerSource {
   lastStepMs = 0;
@@ -75,7 +74,7 @@ export class LocalSimulation implements PlayerSource {
 
   /**
    * A new composition after a hot reload (YAML-007.a): the player keeps its place, the
-   * characters and their behaviors start over (BEHAV-001.g).
+   * characters start over.
    */
   recompose(result: ComposeResult & { readonly world: World }): void {
     const { x, y, z } = this.sim.player.state;
@@ -103,7 +102,6 @@ export class LocalSimulation implements PlayerSource {
         speech: c.speech,
         controlled: false,
         action: this.sim.agents.perceive(c.id).action?.kind ?? null,
-        activity: activityOf(this.sim, c.id),
       };
     });
   }

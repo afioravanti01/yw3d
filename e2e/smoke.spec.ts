@@ -132,36 +132,6 @@ test('APP-003.a: without the host the app runs on its own with the worlds of the
   expect(await hookValue(page, 'status')).toBe('ready');
 });
 
-type Shown = { id: string; x: number; z: number; speech: string | null };
-const shownCharacters = (page: Page) =>
-  page.evaluate(() =>
-    (globalThis as unknown as { __yw3d: { characters(): Shown[] } }).__yw3d.characters(),
-  );
-
-test('BEHAV-001.f, CHAR-001.d: without the host characters with a behavior act; with a controller they stand still', async ({
-  page,
-}) => {
-  await open(page, '?world=test-behaviors');
-  // The behavior of Anna is in an external file: the browser composes the same world as Node.
-  const file = 'e2e/worlds/test-behaviors.yaml';
-  const node = composeWorld(readFileSync(file, 'utf8'), file, {
-    registry: createDefaultStructures(),
-    readFile: (relative) => readFileSync(`e2e/worlds/${relative}`, 'utf8'),
-  });
-  expect(await worldHash(page)).toBe(node.world!.hash());
-  await page.waitForFunction(
-    () =>
-      (globalThis as unknown as { __yw3d: { characters(): Shown[] } }).__yw3d
-        .characters()
-        .some((c) => c.speech === 'Eccomi alla fonte.'),
-    undefined,
-    { timeout: 30_000 },
-  );
-  const [anna, bruno] = await shownCharacters(page);
-  expect(Math.hypot(anna!.x - 70.5, anna!.z - 60.5)).toBeLessThanOrEqual(1.8);
-  expect([bruno!.x, bruno!.z]).toEqual([64.5, 66.5]);
-});
-
 type Talk = { chatLines(): string[]; chatOpen(): boolean; player(): { x: number; z: number } };
 const talk = <K extends keyof Talk>(page: Page, key: K) =>
   page.evaluate((k) => (globalThis as unknown as { __yw3d: Talk }).__yw3d[k](), key) as Promise<
@@ -171,7 +141,7 @@ const talk = <K extends keyof Talk>(page: Page, key: K) =>
 test('DIALOG-001.a: Enter opens a text box; while it is open keys do not move the player; Esc cancels', async ({
   page,
 }) => {
-  await open(page, '?world=test-behaviors');
+  await open(page, '?world=test-dialogue');
   await page.waitForTimeout(500);
   expect(await talk(page, 'chatOpen')).toBe(false);
   await page.keyboard.press('Enter');
@@ -199,11 +169,8 @@ test('DIALOG-001.a: Enter opens a text box; while it is open keys do not move th
 test('DIALOG-002.a: the log shows the sentences the player hears, with who speaks and to whom', async ({
   page,
 }) => {
-  await open(page, '?world=test-behaviors');
-  // Anna speaks 5 blocks from the player: the player hears her.
-  await expect
-    .poll(() => talk(page, 'chatLines'), { timeout: 20_000 })
-    .toContain('Anna: Vado alla fonte.');
+  await open(page, '?world=test-dialogue');
+  await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
   await page.keyboard.type('@anna ciao!');
   await page.keyboard.press('Enter');
@@ -218,27 +185,30 @@ test('DIALOG-002.a: the log shows the sentences the player hears, with who speak
 test('CHAR-002.d: names over the characters, the bubble above the name; the player named where its figure shows', async ({
   page,
 }) => {
-  await open(page, '?world=test-behaviors');
+  await open(page, '?world=test-dialogue');
   const names = () => page.locator('#bubbles .label .name').allTextContents();
   // Third person: the characters in view and the player's figure, each with its name.
   await page.keyboard.press('KeyV');
   await expect.poll(names).toEqual(expect.arrayContaining(['Anna', 'Bruno', 'viandante']));
-  // When Anna speaks, her bubble is in her label, above her name.
-  const anna = page.locator('#bubbles .label[data-id="anna"]');
-  await expect(anna.locator('.bubble')).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('#bubbles .label[data-id="anna"] .name')).toHaveText('Anna');
+  // When the player speaks, its bubble is in its label, above its name.
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('@anna ciao!');
+  await page.keyboard.press('Enter');
+  const player = page.locator('#bubbles .label[data-id="player"]');
+  await expect(player.locator('.bubble')).toBeVisible();
   const [bubble, name] = await Promise.all([
-    anna.locator('.bubble').boundingBox(),
-    anna.locator('.name').boundingBox(),
+    player.locator('.bubble').boundingBox(),
+    player.locator('.name').boundingBox(),
   ]);
   expect(bubble!.y + bubble!.height).toBeLessThanOrEqual(name!.y + 1);
-  await expect(anna.locator('.name')).toHaveText('Anna');
   // First person: no label over the player itself.
   await page.keyboard.press('KeyV');
   await expect.poll(names).not.toContain('viandante');
 });
 
 test('YAML-009.c: the title of the page is the name of the world', async ({ page }) => {
-  await open(page, '?world=test-behaviors');
+  await open(page, '?world=test-dialogue');
   await expect(page).toHaveTitle('Borgo dei test');
   await open(page);
   await expect(page).toHaveTitle('La valle');

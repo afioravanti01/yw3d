@@ -1,6 +1,6 @@
 /**
  * Understanding sentences without an LLM (DIALOG-003, plan F06 P11): deterministic rules on
- * whole words, the same for behaviors and for the protocol.
+ * whole words, the same for every channel of the protocol.
  */
 
 /** Something a sentence can name: an element of the map. */

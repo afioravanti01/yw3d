@@ -1,6 +1,6 @@
 # Controllori dei personaggi
 
-Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Per molti personaggi basta un [comportamento](comportamenti.md) scritto nel file del mondo, senza programmi; il controllore serve per ciò che il linguaggio dei comportamenti non esprime. Questa guida descrive il protocollo, versione 2. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
+Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Questa guida descrive il protocollo, versione 2. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
 
 ## Collegare un controllore
 
@@ -24,7 +24,7 @@ La prima volta che una cartella vuole lanciare dei comandi, yw3d li elenca e chi
 { "type": "control", "character": "guardiano" }
 ```
 
-Da lì in poi i messaggi sono gli stessi di stdio, uno per frame. Il client può prendere anche un personaggio che ha un **comportamento**: il comportamento si sospende e il personaggio si ferma; quando il client si scollega, il comportamento riprende da dov'era, con la sua memoria.
+Da lì in poi i messaggi sono gli stessi di stdio, uno per frame.
 
 ## Messaggi dall'host
 
@@ -119,8 +119,6 @@ Poi il client dice frasi, con un destinatario facoltativo (o `@id` all'inizio de
 { "type": "say", "text": "Portami al laghetto1", "to": "tobia" }
 { "type": "heard", "from": "tobia", "from_name": "Tobia", "to": null, "to_name": null, "text": "Vado subito a Laghetto del borgo!" }
 ```
-
-Una frase senza destinatario vale come risposta per il personaggio più vicino che sta aspettando una risposta (vedi le domande dei [comportamenti](comportamenti.md#domande-al-giocatore)).
 
 ## Uno scheletro in Python
 

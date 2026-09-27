@@ -25,12 +25,6 @@ characters:
     name: Tobia
     description: Il garzone del fabbro.
     at: [30, 34]
-    behavior:
-      routine:
-        - say: uno
-        - walk_to: pozzo
-        - say: arrivato
-        - wait: 100
   - { id: marta, name: Marta, at: [26, 30] }
 `;
 
@@ -109,32 +103,6 @@ describe('controller protocol, version 2', () => {
     expect(speech(s, 'marta')).toBe('Ancora qui');
   });
 
-  it('PROTO-004.a, PROTO-004.b: a client drives a character with a behavior, which waits and then goes on from where it was', async () => {
-    const { s, lines } = await session();
-    const heard: string[] = [];
-    const unsubscribe = s.listen((line) => heard.push(`${line.from}: ${line.text}`));
-    run(s, 2);
-    expect(heard).toEqual(['tobia: uno']);
-    // Tobia is walking to the well: a client takes it, and it stops.
-    const tobia = client(s, lines);
-    tobia.say({ type: 'control', character: 'tobia' });
-    expect(tobia.sent[0]).toMatchObject({ type: 'hello', character: { id: 'tobia' } });
-    run(s, 0.5);
-    const held = { ...s.agents!.stateOf('tobia')! };
-    run(s, 3);
-    expect(
-      Math.hypot(s.agents!.stateOf('tobia')!.x - held.x, s.agents!.stateOf('tobia')!.z - held.z),
-    ).toBeLessThan(0.3);
-    tobia.say({ type: 'say', id: 'c', text: 'Ora comando io' });
-    run(s, 3);
-    tobia.close();
-    expect(lines).toContain('yw3d  [tobia] the WebSocket client left: its behavior goes on');
-    // It goes on with the walk it was doing, not from the start of the routine.
-    run(s, 20);
-    expect(heard).toEqual(['tobia: uno', 'tobia: Ora comando io', 'tobia: arrivato']);
-    unsubscribe();
-  });
-
   it('PROTO-007.a: a client speaks as the player, with an addressee, and hears what the player hears', async () => {
     const { s, lines } = await session();
     const marta = client(s);
@@ -154,7 +122,8 @@ describe('controller protocol, version 2', () => {
       expect.objectContaining({ from: 'player', text: 'Buongiorno Marta!', to: 'marta' }),
     );
     // The client hears its own sentence and the characters near the player.
-    run(s, 2);
+    s.agents!.request('tobia', { kind: 'say', id: 's1', text: 'uno' });
+    run(s, 0.1);
     expect(voice.of('heard')).toEqual(
       expect.arrayContaining([
         {

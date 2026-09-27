@@ -1,6 +1,0 @@
-# Behavior of Anna in the test world test-behaviors.yaml.
-routine:
-  - say: Vado alla fonte.
-  - walk_to: fonte
-  - say: Eccomi alla fonte.
-  - wait: 100

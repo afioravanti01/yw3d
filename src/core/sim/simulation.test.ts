@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { AgentEvent, Perception } from '../agents/agentWorld';
 import { composeWorld } from '../compose/composeWorld';
 import { TERRAIN_GENERATOR_VERSION } from '../gen/terrain';
-import { IDLE } from '../physics/entity';
 import { createDefaultStructures } from '../structures/builtin';
 import type { World } from '../world/world';
 import { Simulation, type SpokenLine } from './simulation';
@@ -15,15 +14,7 @@ places:
   - { id: pozzo, name: Pozzo vecchio, at: [50, 44] }
   - { id: prato, name: Prato, at: [30, 50] }
 characters:
-  - id: tobia
-    name: Tobia
-    at: [44, 40]
-    behavior:
-      routine:
-        - walk_to: [pozzo, prato]
-        - say: Tutto bene al pozzo vecchio.
-        - if: { chance: 0.5 }
-          then: [{ wait: 1s }]
+  - { id: tobia, name: Tobia, at: [44, 40] }
   - { id: marta, name: Marta, at: [40, 46] }
   - { id: lontano, name: Lontano, at: [100, 100] }
 `;
@@ -49,31 +40,6 @@ function sink() {
 }
 
 describe('the shared simulation', () => {
-  it('BEHAV-001.d: the same world, start, intents and sentences give the same actions at the same steps', () => {
-    const run = () => {
-      const lines: SpokenLine[] = [];
-      const sim = simulation({ heard: (line) => lines.push(line) });
-      const trace: string[] = [];
-      for (let i = 0; i < 60 * 25; i++) {
-        sim.intent = i > 120 && i < 240 ? { ...IDLE, moveX: 1 } : IDLE;
-        if (i === 300) sim.playerSays('@tobia ciao, come va?');
-        sim.step();
-        if (i % 30 === 0) {
-          trace.push(
-            sim.agents
-              .views()
-              .map((v) => `${v.id} ${v.state.x.toFixed(6)} ${v.state.z.toFixed(6)} ${v.speech}`)
-              .join(' | '),
-          );
-        }
-      }
-      return { trace, lines: lines.map((l) => `${l.time} ${l.from}: ${l.text}`) };
-    };
-    const a = run();
-    expect(run()).toEqual(a);
-    expect(a.lines.some((l) => l.endsWith('player: ciao, come va?'))).toBe(true);
-  });
-
   it('DIALOG-001.b: a sentence of the player is heard by the characters within 16 blocks', () => {
     const lines: SpokenLine[] = [];
     const sim = simulation({ heard: (line) => lines.push(line) });
@@ -83,7 +49,7 @@ describe('the shared simulation', () => {
     sim.attach('marta', marta.listener);
     sim.attach('lontano', lontano.listener);
     const said = sim.playerSays('Buongiorno a tutti!');
-    expect(said).toMatchObject({ ok: true, answeredBy: undefined });
+    expect(said).toMatchObject({ ok: true });
     expect(marta.events).toEqual([
       expect.objectContaining({
         type: 'heard',
@@ -149,55 +115,10 @@ describe('the shared simulation', () => {
       to: 'tobia',
       mentions: 'pozzo',
     });
-    // The sentences of the characters too: Tobia says it at the well, 16 blocks from Marta?
-    const heardFromTobia = () =>
-      marta.events.filter((e) => e.type === 'heard' && e.from === 'tobia');
-    for (let i = 0; i < 60 * 30 && heardFromTobia().length === 0; i++) sim.step();
-    expect(heardFromTobia()[0]).toMatchObject({ to: null, mentions: 'pozzo' });
-  });
-
-  it('PROTO-004.a: a character with a behavior driven by a controller: the behavior waits, then goes on', () => {
-    const sim = simulation();
+    // The sentences of the characters too.
+    sim.agents.request('tobia', { kind: 'say', id: 's1', text: 'Tutto bene al pozzo vecchio.' });
     sim.step();
-    const tobia = sink();
-    sim.attach('tobia', tobia.listener);
-    expect(sim.isControlled('tobia')).toBe(true);
-    const before = { ...sim.agents.stateOf('tobia')! };
-    for (let i = 0; i < 120; i++) sim.step();
-    // Nobody asked it to move: the behavior is waiting.
-    expect(
-      Math.hypot(
-        sim.agents.stateOf('tobia')!.x - before.x,
-        sim.agents.stateOf('tobia')!.z - before.z,
-      ),
-    ).toBeLessThan(0.5);
-    sim.detach('tobia', tobia.listener);
-    for (let i = 0; i < 120; i++) sim.step();
-    expect(
-      Math.hypot(
-        sim.agents.stateOf('tobia')!.x - before.x,
-        sim.agents.stateOf('tobia')!.z - before.z,
-      ),
-    ).toBeGreaterThan(1);
-  });
-
-  it('DIALOG-001.b: the sentence of the player comes in the log before the replies it causes', () => {
-    const text = WORLD.replace(
-      '      routine:\n        - walk_to: [pozzo, prato]\n        - say: Tutto bene al pozzo vecchio.\n        - if: { chance: 0.5 }\n          then: [{ wait: 1s }]',
-      '      routine:\n        - ask: Dove vado?\n          then: [{ say: "Vado a {answer}." }]',
-    );
-    const result = composeWorld(text, 'w.yaml', { registry: createDefaultStructures() });
-    const lines: string[] = [];
-    const sim = new Simulation(result as typeof result & { world: World }, {
-      heard: (line) => lines.push(`${line.from}: ${line.text}`),
-    });
-    for (let i = 0; i < 120; i++) sim.step();
-    sim.playerSays('al pozzo vecchio');
-    for (let i = 0; i < 10; i++) sim.step();
-    expect(lines).toEqual([
-      'tobia: Dove vado?',
-      'player: al pozzo vecchio',
-      'tobia: Vado a Pozzo vecchio.',
-    ]);
+    const fromTobia = marta.events.filter((e) => e.type === 'heard' && e.from === 'tobia');
+    expect(fromTobia[0]).toMatchObject({ to: null, mentions: 'pozzo' });
   });
 });

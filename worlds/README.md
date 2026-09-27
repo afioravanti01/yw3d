@@ -19,7 +19,6 @@ Coordinate in **blocchi** (1 blocco = 0,5 m); x verso est, z verso sud, y verso 
 | `structures` | no | Strutture posate una per una. |
 | `scatter` | no | Strutture distribuite su un'area. |
 | `characters` | no | Personaggi (vedi sotto). |
-| `behaviors` | no | Libreria di comportamenti, usabili da più personaggi (vedi [docs/comportamenti.md](../docs/comportamenti.md)). |
 
 Ogni struttura, distribuzione, luogo e personaggio ha un **nome** (`name`, 1–60 caratteri, obbligatorio) e una **descrizione** (`description`, al più 1000 caratteri, facoltativa). Personaggi, luoghi, strutture e distribuzioni condividono gli **id**: lettere minuscole, cifre, `_` e `-`, al più 32 caratteri, mai ripetuti.
 
@@ -75,10 +74,9 @@ I luoghi non cambiano il mondo: danno un nome a un punto o a una zona.
 | `at` | sì | `[x, z]` della partenza. |
 | `yaw` | no | Orientamento in gradi (0 = nord, 90 = est). |
 | `appearance` | no | Colori: `skin`, `hair`, `shirt`, `trousers`, come `'#a55f3a'`. |
-| `behavior` | no | Cosa fa, in YAML: vedi [docs/comportamenti.md](../docs/comportamenti.md). |
-| `controller` | no | In alternativa al comportamento: `{ command: … }`, un programma della cartella (vedi [docs/controllori.md](../docs/controllori.md)). |
+| `controller` | no | `{ command: … }`, un programma della cartella che guida il personaggio (vedi [docs/controllori.md](../docs/controllori.md)). |
 
-Senza comportamento né controllore il personaggio sta fermo.
+Senza controllore il personaggio sta fermo.
 
 ## Esempio
 

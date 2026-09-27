@@ -12,7 +12,7 @@ export const RELOAD_DELAY_MS = 150;
 
 /**
  * Whether a file change concerns the world: `world.yaml`, any other YAML file of the folder
- * (behaviors, plan F06 P15), or a file under `structures/`.
+ * (plan F06 P15), or a file under `structures/`.
  */
 export function affectsWorld(folder: WorldFolder, file: string): boolean {
   const relative = path.relative(folder.root, path.resolve(file));

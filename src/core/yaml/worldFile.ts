@@ -151,9 +151,13 @@ const playerSchema = object({
 });
 
 /**
- * A character (CHAR-001.a), driven by a behavior (BEHAV-001, checked when compiled) or by a
- * command (PROTO-003), not both (BEHAV-001.b).
+ * Behaviors in YAML were replaced by Python programs (D-010): a file that still uses them gets
+ * an error that says so (YAML-001.f).
  */
+export const BEHAVIORS_REMOVED =
+  'behaviors in YAML were replaced by Python programs: see docs/python.md';
+
+/** A character (CHAR-001.a), driven by a command (PROTO-003) or standing still. */
 const characterSchema = object(
   {
     id: identifier(),
@@ -166,28 +170,31 @@ const characterSchema = object(
     controller: optional(object({ command: str() })),
   },
   (character, path, issues) => {
-    if (character.behavior !== undefined && character.controller !== undefined) {
-      issues.push({
-        path: [...path, 'controller'],
-        message: 'a character has either a behavior or a controller, not both',
-      });
+    if (character.behavior !== undefined) {
+      issues.push({ path: [...path, 'behavior'], message: BEHAVIORS_REMOVED });
     }
   },
 );
 
-const worldFileSchema = object({
-  version: versionSchema,
-  name: name(),
-  description: description(),
-  terrain: terrainSchema,
-  player: optional(playerSchema),
-  places: optional(list(placeSchema)),
-  characters: optional(list(characterSchema)),
-  structures: optional(list(structureSchema)),
-  scatter: optional(list(scatterSchema)),
-  /** Library of behaviors (BEHAV-006), checked when compiled. */
-  behaviors: optional(list(unknownValue())),
-});
+const worldFileSchema = object(
+  {
+    version: versionSchema,
+    name: name(),
+    description: description(),
+    terrain: terrainSchema,
+    player: optional(playerSchema),
+    places: optional(list(placeSchema)),
+    characters: optional(list(characterSchema)),
+    structures: optional(list(structureSchema)),
+    scatter: optional(list(scatterSchema)),
+    behaviors: optional(unknownValue()),
+  },
+  (world, path, issues) => {
+    if (world.behaviors !== undefined) {
+      issues.push({ path: [...path, 'behaviors'], message: BEHAVIORS_REMOVED });
+    }
+  },
+);
 
 export type WorldFile = Infer<typeof worldFileSchema>;
 export type StructureDecl = Infer<typeof structureSchema>;

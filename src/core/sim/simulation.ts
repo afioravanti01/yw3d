@@ -1,14 +1,13 @@
 import {
   AgentWorld,
   HEARING_DISTANCE,
+  MAX_SAY_LENGTH,
   sayDuration,
   type AgentEvent,
   type AgentListener,
   type Perception,
 } from '../agents/agentWorld';
 import { createDefaultRegistry } from '../blocks/builtin';
-import { MAX_SAY_LENGTH } from '../behaviors/builtin';
-import { agentBehaviorWorld, Behaviors } from '../behaviors/runner';
 import { spawnCharacters } from '../characters/characters';
 import type { ComposeResult } from '../compose/composeWorld';
 import { understandElement } from '../dialogue/understand';
@@ -22,8 +21,7 @@ import type { World } from '../world/world';
 
 /**
  * The simulation of a composed world (plan F06 P1): physics, player, characters with their
- * behaviors and controllers, and the dialogue. The host and the browser without a host run
- * the same one, so that characters act the same way in both (BEHAV-001.d, BEHAV-001.f).
+ * controllers, and the dialogue. The host and the browser without a host run the same one.
  */
 
 /** A sentence said in the world, as the conversation log shows it (DIALOG-002). */
@@ -45,14 +43,11 @@ export const LOOK_ANGLE = (10 * Math.PI) / 180;
 const BODY_CENTER = PLAYER_SIZE.height / 2;
 
 export type SayResult =
-  | { readonly ok: true; readonly line: SpokenLine; readonly answeredBy: string | undefined }
-  | { readonly ok: false; readonly error: string };
+  { readonly ok: true; readonly line: SpokenLine } | { readonly ok: false; readonly error: string };
 
 export interface SimulationOptions {
   /** Where the player is: kept across reloads (HOST-003.a); the start of the file otherwise. */
   readonly playerAt?: { readonly x: number; readonly y: number; readonly z: number };
-  /** Lines for the terminal of the host: failures of behaviors (BEHAV-002.f, BEHAV-002.g). */
-  readonly log?: (characterId: string, message: string) => void;
   /** The sentences the player hears, as they are said (DIALOG-002, DIALOG-004). */
   readonly heard?: (line: SpokenLine) => void;
   /** Clock for the duration of a step, e.g. `performance.now`. */
@@ -63,7 +58,6 @@ export class Simulation {
   readonly physics: PhysicsWorld;
   readonly player: EntityHandle;
   readonly agents: AgentWorld;
-  readonly behaviors: Behaviors;
   /** View direction of the player, radians: set by the view that drives it. */
   view: { yaw: number; pitch: number };
   /** Intent of the player for the next steps. */
@@ -97,8 +91,6 @@ export class Simulation {
     this.elements = map.entries.map((e) => ({ id: e.id, name: e.name }));
     const characters = spawnCharacters(this.physics, result.characters);
     const finder = new Pathfinder(new NavGrid(result.world, registry.solid));
-    // The agent world sends events to the behaviors, which are made after it.
-    const route: { behaviors?: Behaviors } = {};
     this.agents = new AgentWorld(
       this.physics,
       characters,
@@ -106,22 +98,13 @@ export class Simulation {
       finder,
       {
         event: (id, event) => {
-          const enriched = this.enrich(event);
-          this.sinks.get(id)?.event(id, enriched);
-          route.behaviors?.event(id, enriched);
+          this.sinks.get(id)?.event(id, this.enrich(event));
         },
         perception: (id, perception) => this.sinks.get(id)?.perception(id, this.named(perception)),
         said: (id, text) => this.spoken({ from: id, to: null, text }, this.agents.stateOf(id)!),
       },
       result.goals,
     );
-    this.behaviors = new Behaviors(
-      new Map(result.characters.flatMap((c) => (c.behavior ? [[c.id, c.behavior] as const] : []))),
-      agentBehaviorWorld(this.agents, map, result.goals, result.seed!, (id, message) =>
-        options.log?.(id, message),
-      ),
-    );
-    route.behaviors = this.behaviors;
   }
 
   /** Simulated seconds since the world started. */
@@ -129,10 +112,9 @@ export class Simulation {
     return this.agents.time;
   }
 
-  /** One fixed step: behaviors, the player's intent, the agent world and the physics. */
+  /** One fixed step: the player's intent, the agent world and the physics. */
   step(): void {
     const start = this.options.now?.();
-    this.behaviors.step();
     this.player.intent = this.intent;
     this.agents.step();
     if (this.playerSpeech && this.time >= this.playerSpeech.until) this.playerSpeech = undefined;
@@ -151,23 +133,17 @@ export class Simulation {
 
   /**
    * An external controller drives a character (PROTO-003, PROTO-004): its events and
-   * perception go to it, and the character's behavior, if any, waits (F06 Q2).
+   * perception go to it.
    */
   attach(characterId: string, sink: AgentListener): void {
     this.sinks.set(characterId, sink);
-    if (this.behaviors.has(characterId)) {
-      // The client starts from a character standing still, not from the behavior's action.
-      this.behaviors.suspend(characterId);
-      this.agents.release(characterId);
-    }
   }
 
-  /** The controller went away: the character stops, or its behavior goes on (PROTO-004.b). */
+  /** The controller went away: the character stops (PROTO-004.b). */
   detach(characterId: string, sink: AgentListener): void {
     if (this.sinks.get(characterId) !== sink) return;
     this.sinks.delete(characterId);
     this.agents.release(characterId);
-    this.behaviors.resume(characterId);
   }
 
   isControlled(characterId: string): boolean {
@@ -176,8 +152,7 @@ export class Simulation {
 
   /**
    * The player says a sentence (DIALOG-001.b–c): to the character named by `@id` at the
-   * start, or given by the channel, or looked at; heard by the characters within 16 blocks;
-   * first an answer to a question (BEHAV-005.a), then a sentence for the others.
+   * start, or given by the channel, or looked at; heard by the characters within 16 blocks.
    */
   playerSays(
     text: string,
@@ -206,10 +181,8 @@ export class Simulation {
     // The sentence is in the log before the replies it causes.
     this.playerSpeech = { text: body, until: this.time + sayDuration(body) };
     const line = this.spoken({ from: PLAYER_ID, to, text: body }, p);
-    const answeredBy = this.behaviors.answer(body, to, hearers);
     const mentions = understandElement(body, this.elements) ?? null;
     for (const { id, distance } of hearers) {
-      if (id === answeredBy) continue;
       const event: AgentEvent = {
         type: 'heard',
         from: PLAYER_ID,
@@ -219,9 +192,8 @@ export class Simulation {
         mentions,
       };
       this.sinks.get(id)?.event(id, event);
-      this.behaviors.event(id, event);
     }
-    return { ok: true, line, answeredBy };
+    return { ok: true, line };
   }
 
   /**

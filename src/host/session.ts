@@ -1,14 +1,12 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { AgentListener, AgentWorld } from '../core/agents/agentWorld';
-import { insideFolder } from '../core/behaviors/compile';
 import { composeWorld, type ComposeResult } from '../core/compose/composeWorld';
 import { STEP_SECONDS } from '../core/physics/constants';
 import { IDLE, type Intent } from '../core/physics/entity';
 import { FixedStepper } from '../core/physics/fixedStep';
 import { Simulation, type SayResult, type SpokenLine } from '../core/sim/simulation';
 import type { WorldMap } from '../core/map/worldMap';
-import { activityOf } from '../core/sim/activity';
 import { createDefaultStructures } from '../core/structures/builtin';
 import type { StructureRegistry, StructureType } from '../core/structures/registry';
 import type { World } from '../core/world/world';
@@ -35,8 +33,6 @@ export interface SessionWorld {
   readonly text: string;
   /** Absolute paths of the author's structure files, in registration order. */
   readonly structureFiles: readonly string[];
-  /** Texts of the other files the world file names (behaviors), by path in the folder. */
-  readonly files: Readonly<Record<string, string>>;
   readonly hash: number;
 }
 
@@ -138,21 +134,10 @@ export class HostSession {
       );
       return this.finish(diagnostics, undefined);
     }
-    // Files named by the world file (behaviors, BEHAV-001.a), read inside the folder only.
-    const read: Record<string, string> = {};
     const result = composeWorld(text, file, {
       registry,
       seedOverride: this.options.seedOverride,
       now: this.options.now,
-      readFile: (relative) => {
-        const inside = insideFolder(relative);
-        if (!inside) return undefined;
-        try {
-          return (read[inside] = readFileSync(path.join(this.folder.root, inside), 'utf8'));
-        } catch {
-          return undefined;
-        }
-      },
     });
     diagnostics.push(...result.diagnostics);
     const world =
@@ -161,7 +146,6 @@ export class HostSession {
             result: result as SessionWorld['result'],
             text,
             structureFiles: files,
-            files: read,
             hash: result.world.hash(),
           }
         : undefined;
@@ -207,14 +191,13 @@ export class HostSession {
 
   /**
    * A new world: the player keeps its place when there was one before (HOST-003.a), otherwise
-   * it starts where the world file says (PLAYER-001.c). Characters and their behaviors start
-   * over (BEHAV-001.g); controllers on the WebSocket stay attached.
+   * it starts where the world file says (PLAYER-001.c). Characters start over; controllers on
+   * the WebSocket stay attached.
    */
   private startSimulation(world: SessionWorld): void {
     const previous = this.sim?.player.state;
     const sim = new Simulation(world.result, {
       playerAt: previous && { x: previous.x, y: previous.y, z: previous.z },
-      log: (id, message) => this.terminal.line(`${PREFIX}  [${id}] ${message}`),
       heard: (line) => this.heard(line),
       now: this.options.now,
     });
@@ -228,7 +211,7 @@ export class HostSession {
     if (world.result.characters.length > 0) {
       this.terminal.line(
         `${PREFIX}  characters: ${world.result.characters
-          .map((c) => `${c.id} (${c.behavior ? 'behavior' : (c.command ?? 'no controller')})`)
+          .map((c) => `${c.id} (${c.command ?? 'no controller'})`)
           .join(', ')}`,
       );
     }
@@ -304,8 +287,7 @@ export class HostSession {
   }
 
   /**
-   * The controller of a character went away: it stops, or its behavior goes on (PROTO-003.b,
-   * PROTO-004.b).
+   * The controller of a character went away: it stops (PROTO-003.b, PROTO-004.b).
    */
   detachController(characterId: string, sink: ControllerSink): void {
     if (this.controllerSinks.get(characterId) !== sink) return;
@@ -332,7 +314,6 @@ export class HostSession {
       speech: c.speech,
       controlled: this.controllerSinks.has(c.id),
       action: this.agents?.perceive(c.id).action?.kind ?? null,
-      activity: this.sim ? activityOf(this.sim, c.id) : null,
     }));
   }
 
@@ -391,7 +372,6 @@ export class HostSession {
       file: this.display(this.folder.worldFile),
       text: world.text,
       structures: world.structureFiles.map(url),
-      files: world.files,
       seedOverride: this.options.seedOverride,
       hash: world.hash,
     };

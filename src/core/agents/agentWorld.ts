@@ -19,6 +19,8 @@ import { metersToBlocks } from '../world/units';
 export const PERCEPTION_HZ = 4;
 /** Entities within this distance are perceived (PROTO-002.a). */
 export const SIGHT_DISTANCE = 32;
+/** Longest sentence a character or the player can say, in characters (PROTO-001.b). */
+export const MAX_SAY_LENGTH = 500;
 /** Sentences said within this distance are heard (PROTO-002.b). */
 export const HEARING_DISTANCE = 16;
 /** The player interacts with the nearest character within 3 m (PROTO-002.c). */

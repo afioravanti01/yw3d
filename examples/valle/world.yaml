@@ -1,6 +1,5 @@
-# Example world folder of yw3d: the default valley with four characters. Tobia and Nina follow
-# behaviors written here in YAML (docs/comportamenti.md); the guard and the fisherwoman are
-# driven by programs in Python and JavaScript (docs/controllori.md).
+# Example world folder of yw3d: the default valley with four characters. The guard and the
+# fisherwoman are driven by programs in Python and JavaScript (docs/controllori.md).
 # Run it with: yw3d examples/valle
 # Coordinates are in blocks (1 block = 0.5 m); see worlds/README.md for the format.
 version: 2
@@ -104,76 +103,19 @@ scatter:
     density: 0.15
     minDistance: 22
 
-# Characters: Tobia and Nina follow a behavior in YAML; the guard and the fisherwoman are driven
-# by a program of this folder.
+# Characters: the guard and the fisherwoman are driven by a program of this folder; Tobia and
+# Nina stand still until they get their Python program (phase F07).
 characters:
-  # Tobia asks where to go: write a place of the valley, e.g. «laghetto1» or «vai in piazza».
   - id: tobia
     name: Tobia
     description: Il garzone del fabbro, sempre in cerca di commissioni.
     at: [154, 70]
     appearance: { shirt: '#8e4a3a', hair: '#3b2a1c' }
-    behavior:
-      memory: { counters: [commissioni] }
-      routine:
-        - wait: 3s
-        - ask: Buongiorno! Dove devo andare?
-          timeout: 40s
-          then:
-            - say: Vado subito a {answer}!
-            - walk_to: answer
-              on_fail:
-                - say: Da qui non riesco ad arrivarci.
-            - count: commissioni
-            - say: Eccomi a {answer}.
-            - wait: 5s
-            - walk_to: piazza
-          not_understood:
-            - say: Non conosco quel posto. Prova con un nome della valle, come laghetto1.
-          no_answer:
-            - wait: 20s
-      reactions:
-        - on: interacted
-          do:
-            - look_at: player
-            - say: Ciao {player}! Scrivimi dove andare, con Invio.
-
-  # Nina works in the fields and takes a break in the square: two states.
   - id: nina
     name: Nina
     description: Contadina degli orti di ponente.
     at: [120, 88]
     appearance: { shirt: '#6f7f3a', hair: '#b07a3a' }
-    behavior:
-      start: lavoro
-      states:
-        lavoro:
-          routine:
-            - walk_to: orti
-            - wait: 8s
-            - say: Queste zucchine crescono bene.
-            - walk_to: [124, 92]
-            - wait: 8s
-          reactions:
-            - on: { after: 90s }
-              do: [{ goto: riposo }]
-        riposo:
-          routine:
-            - walk_to: piazza
-            - say: Una pausa in piazza ci vuole.
-            - wait: 20s
-            - goto: lavoro
-      reactions:
-        - on: { near: player, within: 6 }
-          every: 60s
-          do:
-            - look_at: player
-            - say: Salve, {player}!
-        - on: { heard: { from: player, to_me: true } }
-          do:
-            - look_at: player
-            - say: Scusa, ho da fare. Chiedi a Tobia.
-
   - id: guardiano
     name: Bruno
     at: [160, 70]

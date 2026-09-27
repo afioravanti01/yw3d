@@ -89,11 +89,7 @@ export function attachControllerSocket(
     if (!link) return;
     link.close();
     terminal.line(
-      `${PREFIX}  [${link.characterId}] the WebSocket client left: ${
-        session.world?.result.characters.find((c) => c.id === link!.characterId)?.behavior
-          ? 'its behavior goes on'
-          : 'the character stops'
-      }`,
+      `${PREFIX}  [${link.characterId}] the WebSocket client left: the character stops`,
     );
   });
 }

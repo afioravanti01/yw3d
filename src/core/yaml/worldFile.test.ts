@@ -56,7 +56,7 @@ describe('world file', () => {
     ).toEqual([]);
   });
 
-  it('YAML-001.a: version 2 declares name, description, player, places, characters and behaviors', () => {
+  it('YAML-001.a: version 2 declares name, description, player, places and characters', () => {
     const { world, diagnostics } = load(`version: 2
 name: La valle
 description: Una valle con un borgo.
@@ -65,9 +65,7 @@ player: { at: [10, 10], name: Ada }
 places:
   - { id: piazza, name: Piazza, at: [20, 20] }
 characters:
-  - { id: tobia, name: Tobia, at: [30, 30], behavior: { routine: [] } }
-behaviors:
-  - { name: giro, routine: [] }
+  - { id: tobia, name: Tobia, at: [30, 30], controller: { command: node tobia.mjs } }
 `);
     expect(diagnostics).toEqual([]);
     expect(world).toMatchObject({
@@ -75,8 +73,7 @@ behaviors:
       description: 'Una valle con un borgo.',
       player: { name: 'Ada' },
       places: [{ id: 'piazza', name: 'Piazza', at: [20, 20] }],
-      characters: [{ id: 'tobia', name: 'Tobia', behavior: { routine: [] } }],
-      behaviors: [{ name: 'giro', routine: [] }],
+      characters: [{ id: 'tobia', name: 'Tobia', controller: { command: 'node tobia.mjs' } }],
     });
   });
 
@@ -252,18 +249,16 @@ structures:
     expect(errors(`${header}  - { name: Piazza, at: [5, 5] }\n`)[0]?.path).toBe('places[0].id');
   });
 
-  it('BEHAV-001.b: a character has either a behavior or a controller, not both', () => {
-    const header = 'version: 2\nname: T\nterrain: { seed: 1, generator: 1 }\ncharacters:\n';
+  it('YAML-001.f: behaviors in YAML are an error that points to the Python programs', () => {
+    const header = 'version: 2\nname: T\nterrain: { seed: 1, generator: 1 }\n';
+    const message = 'behaviors in YAML were replaced by Python programs: see docs/python.md';
     expect(
       errors(
-        `${header}  - id: tobia\n    name: Tobia\n    at: [1, 1]\n    behavior: { routine: [] }\n    controller: { command: node t.mjs }\n`,
+        `${header}characters:\n  - id: tobia\n    name: Tobia\n    at: [1, 1]\n    behavior: { routine: [] }\n`,
       ),
-    ).toEqual([
-      {
-        line: 9,
-        path: 'characters[0].controller',
-        message: 'a character has either a behavior or a controller, not both',
-      },
+    ).toEqual([{ line: 8, path: 'characters[0].behavior', message }]);
+    expect(errors(`${header}behaviors:\n  - { name: giro, routine: [] }\n`)).toEqual([
+      { line: 4, path: 'behaviors', message },
     ]);
   });
 });
