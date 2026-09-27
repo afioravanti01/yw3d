@@ -142,7 +142,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `brains/codex.ts`, `brains/opencode.ts` secondo la tabella «Cervelli».
   - Fatto quando: test con CLI finte verdi; Codex provato dal vivo dall'utente.
 
-- [ ] **T8.09** Cervelli API: Anthropic e compatibile OpenAI
+- [x] **T8.09** Cervelli API: Anthropic e compatibile OpenAI
   - Req: AGENT-001 · Dip: T8.07
   - `brains/anthropic.ts`, `brains/openai.ts` (P5, P7, P13): chiavi, indirizzo, effort, errori ripuliti.
   - Fatto quando: test di AGENT-001.c con il server locale verdi.
@@ -182,6 +182,8 @@ Esiti di T8.01 (2026-09-27): opzioni lette dall'aiuto delle versioni installate 
 | opencode 2.0.18 | `opencode run --agent plan <messaggio>` | `-m provider/modello` | variante del modello `#…`, solo con un modello indicato (non provato) | nessuna: il JSON si estrae dal testo (arriva anche in un blocco di codice) | agente `plan`, senza strumenti di modifica | ✓ 22,6 s con l'agente predefinito, 3,5 s con `plan` (modello `longcat-2.5-preview-free`); una volta un'azione inesistente (`move`) |
 | Anthropic API | `POST /v1/messages` | `model` | da definire in T8.09 | strumento obbligato con lo schema | — | non provata: nessuna chiave nell'ambiente |
 | Compatibile OpenAI | `POST <indirizzo>/chat/completions` | `model` | `reasoning_effort` | `response_format` `json_schema`, o estrazione dal testo | — | non provata: nessuna chiave nell'ambiente |
+
+In T8.09 le API: Anthropic con lo strumento obbligato `reply`, oppure, con un effort, con il ragionamento (`thinking`, budget 1024/4096/16000 token) e lo strumento facoltativo, perché il ragionamento non ammette uno strumento obbligato; compatibile OpenAI con lo schema rigoroso e `reasoning_effort`, e una seconda richiesta senza schema se il servizio lo rifiuta (HTTP 400). Provate con un server locale: dal vivo non ancora, per mancanza di chiavi.
 
 In T8.08, con il contesto vero della valle e la domanda «Cosa vedi? E poi accompagnami al laghetto.»: Codex (effort `low`) 10,2 s, risposta con nomi, direzioni, distanze e `walk_to player`; opencode (modello predefinito `longcat-2.5-preview-free`) 43,3 s, risposta valida ma lenta, vicina al tempo limite di 60 s.
 
