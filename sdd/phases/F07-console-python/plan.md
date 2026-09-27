@@ -203,7 +203,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Fatto quando: test di DIALOG-001.b, DIALOG-004.b e PROTO-002.b verdi con la regola nuova.
 
 - [x] **T7.10** Libreria: domande, altri gestori, errori
-  - Req: PY-002, PY-003 · Dip: T7.09
+  - Req: PY-002, PY-003, DEBUG-001 · Dip: T7.09
   - `ask` (P10), `on_interact`, `on_near`, `on_far`, `paused` e `resumed`, riga d'errore (P12), overlay con il programma (DEBUG-001.a); correzioni dalla prova d'uso.
   - Fatto quando: test di PY-002.e e PY-003.c verdi.
 
@@ -217,7 +217,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `docs/python.md`: struttura, ogni azione, mappa, messaggi, domande, errori frequenti, template commentato; README, `worlds/README.md`.
   - Fatto quando: il template copiato così com'è gira; il programma d'esempio di PY-005.b sta sotto le 40 righe.
 
-- [ ] **T7.13** Test end-to-end
+- [x] **T7.13** Test end-to-end
   - Req: DIALOG-005, DIALOG-001, DIALOG-002, CHAR-001 · Dip: T7.04, T7.11
   - Suite completa nei due progetti, con il personaggio Python dell'host.
   - Fatto quando: `npm run e2e` verde.
