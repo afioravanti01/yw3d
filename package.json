@@ -21,7 +21,8 @@
     "check": "npm run typecheck && npm run lint && npm run test",
     "e2e": "playwright test",
     "sdd:trace": "tsx scripts/sdd-trace.ts",
-    "world:check": "tsx scripts/world-check.ts"
+    "world:check": "tsx scripts/world-check.ts",
+    "commit": "tsx scripts/commit.ts"
   },
   "dependencies": {
     "simplex-noise": "^4.0.3",

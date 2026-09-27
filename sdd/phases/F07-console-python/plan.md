@@ -126,7 +126,7 @@ Nessuna in npm. Python ≥ 3.10 sulla macchina per eseguire i programmi e i test
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T7.01** Commit con verifica
+- [x] **T7.01** Commit con verifica
   - Req: — · Dip: —
   - `scripts/commit.ts` e script `commit` (P1); process.md e `CLAUDE.md` indicano di usarlo a fine task.
   - Fatto quando: con un test rosso il commit non parte, con `check` verde parte; da qui ogni task si registra con lo strumento.

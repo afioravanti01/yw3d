@@ -53,7 +53,7 @@ Stati dei documenti: `draft` → `approved`. Una spec approvata che riceve emend
 - **Prova d'uso presto.** Se la fase introduce un linguaggio, un'interazione o un'API per gli autori, il piano mette subito, dopo il primo nucleo funzionante, un punto di controllo in cui l'utente scrive o usa qualcosa di vero; libreria completa, esempi e guida vengono dopo. (Dalla retro di F06.)
 
 ### 3. Implementazione
-- Un task alla volta, rispettando le dipendenze. A fine task: `npm run check` verde, checkbox spuntata nel piano, commit `T1.05: <descrizione>`.
+- Un task alla volta, rispettando le dipendenze. A fine task: checkbox spuntata nel piano e commit `T1.05: <descrizione>` con `npm run commit -- -m "…"`, che esegue `npm run check` e registra il commit solo se è verde (da F07).
 - Il titolo di ogni test inizia con i criteri che verifica: `it('WORLD-002.c: out-of-bounds read returns air', ...)`.
 - **Scostarsi dal piano** (il *come*) è consentito: si registra nella tabella "Deviazioni" del piano e si prosegue.
 - **Scostarsi dalla spec** (il *cosa*) non è consentito: ci si ferma, si propone un emendamento nel "Registro emendamenti" della spec e si attende l'approvazione.
