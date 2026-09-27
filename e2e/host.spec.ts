@@ -177,11 +177,11 @@ test('DIALOG-001.a, DIALOG-002.a: through the host the driver speaks, spectators
   expect(await isOpen(spectator)).toBe(false);
   await driver.keyboard.press('Enter');
   expect(await isOpen(driver)).toBe(true);
-  await driver.keyboard.type('@pino buongiorno');
+  await driver.keyboard.type('buongiorno a tutti');
   await driver.keyboard.press('Enter');
   // The driver is the player: «Tu»; the spectator reads the name of the player (A6.2).
-  await expect.poll(() => lines(driver)).toContain('Tu → Pino: buongiorno');
-  await expect.poll(() => lines(spectator)).toContain('viandante → Pino: buongiorno');
+  await expect.poll(() => lines(driver)).toContain('Tu: buongiorno a tutti');
+  await expect.poll(() => lines(spectator)).toContain('viandante: buongiorno a tutti');
   await driver.close();
   await spectator.close();
 });
