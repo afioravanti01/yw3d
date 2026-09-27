@@ -162,6 +162,59 @@ test('BEHAV-001.f, CHAR-001.d: without the host characters with a behavior act; 
   expect([bruno!.x, bruno!.z]).toEqual([64.5, 66.5]);
 });
 
+type Talk = { chatLines(): string[]; chatOpen(): boolean; player(): { x: number; z: number } };
+const talk = <K extends keyof Talk>(page: Page, key: K) =>
+  page.evaluate((k) => (globalThis as unknown as { __yw3d: Talk }).__yw3d[k](), key) as Promise<
+    ReturnType<Talk[K]>
+  >;
+
+test('DIALOG-001.a: Enter opens a text box; while it is open keys do not move the player; Esc cancels', async ({
+  page,
+}) => {
+  await open(page, '?world=test-behaviors');
+  await page.waitForTimeout(500);
+  expect(await talk(page, 'chatOpen')).toBe(false);
+  await page.keyboard.press('Enter');
+  expect(await talk(page, 'chatOpen')).toBe(true);
+  await expect(page.locator('#chat input')).toBeFocused();
+  const before = await talk(page, 'player');
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(700);
+  await page.keyboard.up('KeyW');
+  await page.keyboard.type('dddd ssss');
+  const after = await talk(page, 'player');
+  expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.05);
+  await expect(page.locator('#chat input')).toHaveValue('wdddd ssss');
+  await page.keyboard.press('Escape');
+  expect(await talk(page, 'chatOpen')).toBe(false);
+  // Nothing was said; the keys move the player again.
+  expect((await talk(page, 'chatLines')).some((l) => l.startsWith('Tu'))).toBe(false);
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(700);
+  await page.keyboard.up('KeyW');
+  const moved = await talk(page, 'player');
+  expect(Math.hypot(moved.x - after.x, moved.z - after.z)).toBeGreaterThan(0.5);
+});
+
+test('DIALOG-002.a: the log shows the sentences the player hears, with who speaks and to whom', async ({
+  page,
+}) => {
+  await open(page, '?world=test-behaviors');
+  // Anna speaks 5 blocks from the player: the player hears her.
+  await expect
+    .poll(() => talk(page, 'chatLines'), { timeout: 20_000 })
+    .toContain('Anna: Vado alla fonte.');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('@anna ciao!');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => talk(page, 'chatLines')).toContain('Tu → Anna: ciao!');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('@nessuno ciao');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => talk(page, 'chatLines')).toContain('there is no character "nessuno"');
+  await expect(page.locator('#chat li').first()).toBeVisible();
+});
+
 test('YAML-009.c: the title of the page is the name of the world', async ({ page }) => {
   await open(page, '?world=test-behaviors');
   await expect(page).toHaveTitle('Borgo dei test');

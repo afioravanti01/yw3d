@@ -237,7 +237,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `localSimulation.ts` al posto del solo giocatore locale; file esterni (P14) nella modalità solo browser e nel messaggio del mondo; titolo della pagina.
   - Fatto quando: senza host un personaggio con comportamento cammina e parla; stesso hash della vista collegata con file esterni.
 
-- [ ] **T6.14** Dialogo nelle viste
+- [x] **T6.14** Dialogo nelle viste
   - Req: DIALOG-001, DIALOG-002, DEBUG-001 · Dip: T6.10, T6.13
   - `chat.ts` (P17): casella, registro, spettatori; fumetto del giocatore; messaggi tra viste e host; overlay con nome, stato e istruzione.
   - Fatto quando: si parla con un personaggio dal browser, con e senza host.

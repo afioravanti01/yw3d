@@ -80,6 +80,54 @@
         box-shadow: 0 2px 6px rgb(0 0 0 / 0.18);
         white-space: pre-wrap;
       }
+      #chat {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        width: min(560px, calc(100% - 32px));
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
+        pointer-events: none;
+      }
+      #chat ol {
+        margin: 0 0 6px;
+        padding: 0;
+        list-style: none;
+      }
+      #chat li {
+        width: fit-content;
+        max-width: 100%;
+        margin-top: 3px;
+        padding: 3px 9px;
+        background: rgb(20 28 34 / 0.55);
+        color: #f3f6f4;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        transition: opacity 1.2s;
+      }
+      #chat li.error {
+        color: #ffd0c4;
+      }
+      #chat li.faded {
+        opacity: 0;
+      }
+      #chat.open li {
+        opacity: 1;
+      }
+      #chat input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid rgb(255 255 255 / 0.6);
+        border-radius: 6px;
+        background: rgb(20 28 34 / 0.78);
+        color: #fff;
+        font: inherit;
+        pointer-events: auto;
+        outline: none;
+      }
       [hidden] {
         display: none !important;
       }
@@ -89,6 +137,17 @@
     <canvas id="world"></canvas>
     <div id="loading">Generating the world…</div>
     <div id="bubbles"></div>
+    <div id="chat">
+      <ol aria-live="polite"></ol>
+      <input
+        type="text"
+        maxlength="500"
+        autocomplete="off"
+        aria-label="Parla"
+        placeholder="Scrivi… (@id per rivolgerti a qualcuno, Invio per dire, Esc per annullare)"
+        hidden
+      />
+    </div>
     <div id="notice" role="alert" hidden></div>
     <script type="module" src="/src/app/main.ts"></script>
   </body>

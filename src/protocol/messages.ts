@@ -1,4 +1,5 @@
 import type { Intent } from '../core/physics/entity';
+import type { SpokenLine } from '../core/sim/simulation';
 import type { Diagnostic } from '../core/yaml/report';
 
 /**
@@ -38,6 +39,8 @@ export interface PlayerSnapshot {
   /** View direction of the driver, radians. */
   readonly yaw: number;
   readonly pitch: number;
+  /** What the player is saying, for its speech bubble (DIALOG-001.d). */
+  readonly speech: string | null;
 }
 
 /** A character as views draw it (plan F05 P15). */
@@ -87,7 +90,11 @@ export type HostMessage =
       readonly views: number;
     }
   | { readonly type: 'role'; readonly role: Role }
-  | { readonly type: 'pong'; readonly id: number };
+  | { readonly type: 'pong'; readonly id: number }
+  /** A sentence the player hears (DIALOG-002.a). */
+  | { readonly type: 'line'; readonly line: SpokenLine }
+  /** A sentence of the driving view that could not be said, e.g. an unknown `@id`. */
+  | { readonly type: 'say_error'; readonly error: string };
 
 export type ViewMessage =
   | {
@@ -98,4 +105,6 @@ export type ViewMessage =
     }
   | { readonly type: 'ping'; readonly id: number }
   /** The player pressed E near a character (PROTO-002.c). */
-  | { readonly type: 'interact' };
+  | { readonly type: 'interact' }
+  /** The player says a sentence, from the driving view (DIALOG-001). */
+  | { readonly type: 'say'; readonly text: string };

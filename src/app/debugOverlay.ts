@@ -95,7 +95,7 @@ export class DebugOverlay {
       ``,
       d.mode === 'free'
         ? `F3 hide · C player · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`
-        : `F3 hide · click to look · WASD/↑↓ walk · ←→ turn · Shift run · Space jump/swim up · X swim down · E talk · V view · C free camera`,
+        : `F3 hide · click to look · WASD/↑↓ walk · ←→ turn · Shift run · Space jump/swim up · X swim down · E talk · Enter speak · V view · C free camera`,
     ].join('\n');
   }
 }

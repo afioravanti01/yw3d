@@ -243,6 +243,7 @@ export class HostSession {
   private heard(line: SpokenLine): void {
     this.options.heard?.(line);
     for (const listener of this.listeners) listener(line);
+    this.broadcast({ type: 'line', line });
   }
 
   /** Hears what the player hears, until the returned function is called (PROTO-007). */
@@ -366,7 +367,18 @@ export class HostSession {
   snapshot(): PlayerSnapshot | undefined {
     if (!this.sim) return undefined;
     const { x, y, z, vx, vy, vz, onGround, submerged } = this.sim.player.state;
-    return { x, y, z, vx, vy, vz, onGround, submerged, ...this.view };
+    return {
+      x,
+      y,
+      z,
+      vx,
+      vy,
+      vz,
+      onGround,
+      submerged,
+      ...this.view,
+      speech: this.sim.playerSaying,
+    };
   }
 
   /** What views need to compose the current world (plan F04 P7). */
@@ -430,7 +442,13 @@ export class HostSession {
     }
     // Only the driver moves the player; spectators' intents are ignored.
     if (message.type === 'interact' && this.roleOf(view) === 'driver') {
-      this.agents?.interact();
+      this.sim?.interact();
+      return;
+    }
+    // Only the driver speaks as the player (DIALOG-001.a), to whom it looks at or `@id`.
+    if (message.type === 'say' && this.roleOf(view) === 'driver') {
+      const said = this.playerSays(message.text, { lookAt: true });
+      if (!said.ok) view.send({ type: 'say_error', error: said.error });
       return;
     }
     if (message.type === 'intent' && this.roleOf(view) === 'driver') {

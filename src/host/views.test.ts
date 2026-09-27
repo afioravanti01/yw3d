@@ -129,4 +129,32 @@ describe('host simulation and views', () => {
     expect(hello.player).toEqual(s.snapshot());
     expect(hello.player!.yaw).toBe(-Math.PI / 2);
   });
+
+  it('DIALOG-001.b: the driving view speaks through the host; every view gets the line, spectators do not speak', async () => {
+    const { s } = await session();
+    const driver = view(s);
+    const spectator = view(s);
+    driver.handle.receive({ type: 'say', text: 'Buongiorno!' });
+    const line = {
+      from: 'player',
+      fromName: 'viandante',
+      to: null,
+      toName: null,
+      text: 'Buongiorno!',
+    };
+    expect(driver.last('line')).toMatchObject({ type: 'line', line });
+    expect(spectator.last('line')).toMatchObject({ type: 'line', line });
+    run(s, 0.1);
+    expect(driver.last('state')!.player.speech).toBe('Buongiorno!');
+    // A spectator only watches (DIALOG-001.a).
+    spectator.handle.receive({ type: 'say', text: "Ci sono anch'io" });
+    expect(driver.received.filter((m) => m.type === 'line')).toHaveLength(1);
+    // An error goes back to the view that wrote.
+    driver.handle.receive({ type: 'say', text: '@nessuno ciao' });
+    expect(driver.last('say_error')).toEqual({
+      type: 'say_error',
+      error: 'there is no character "nessuno"',
+    });
+    expect(spectator.last('say_error')).toBeUndefined();
+  });
 });

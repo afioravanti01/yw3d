@@ -19,6 +19,9 @@ export interface TestHook {
   player(): { x: number; y: number; z: number; onGround: boolean } | null;
   /** Characters as shown by this view (CHAR-001.d). */
   characters(): { id: string; x: number; y: number; z: number; speech: string | null }[];
+  /** Lines of the conversation log (DIALOG-002.a) and whether the text box is open. */
+  chatLines(): string[];
+  chatOpen(): boolean;
   loadTimeMs: number;
   frames: number;
   worldHash(): number;

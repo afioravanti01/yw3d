@@ -20,6 +20,8 @@ import { DiagnosticsPanel, type PanelMessage } from './diagnosticsPanel';
 import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
+import { describeLine } from '../core/dialogue/lines';
+import { Chat } from './chat';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
 import { installTestHook, type TestHook } from './testHook';
@@ -92,6 +94,9 @@ async function main(): Promise<void> {
   let current: Loaded | undefined;
   let connection: HostConnection | undefined;
   const playerControls = new PlayerControls(canvas, (code) => {
+    // Enter opens the box to speak (DIALOG-001.a); while it is open, keys are for the text.
+    if (chat.isOpen) return;
+    if (code === 'Enter' || code === 'NumpadEnter') chat.open();
     if (code === 'KeyV') playerView?.toggleThirdPerson();
     if (code === 'KeyC') playerView?.toggleFree(camera);
     // E: the nearest character within 3 m reacts through its controller (PROTO-002.c).
@@ -99,6 +104,19 @@ async function main(): Promise<void> {
       if (connection) connection.interact();
       else local?.interact();
     }
+  });
+  /** Says a sentence of the player, from this page or through the host (DIALOG-001.b). */
+  const speak = (text: string) => {
+    if (connection) return connection.say(text);
+    const said = local?.say(text);
+    if (said && !said.ok) chat.add(said.error, 'error');
+  };
+  const chat = new Chat(required<HTMLElement>('#chat'), {
+    send: speak,
+    toggled: (open) => {
+      playerControls.enabled = !open;
+      playerControls.keys.clear();
+    },
   });
   const characterViews = new CharacterViews();
   const bubbles = new SpeechBubbles(required<HTMLElement>('#bubbles'));
@@ -136,6 +154,8 @@ async function main(): Promise<void> {
     }),
     player: () => playerView?.source.state() ?? null,
     characters: () => shownCharacters(),
+    chatLines: () => chat.lines(),
+    chatOpen: () => chat.isOpen,
     nextFrame: () => new Promise((resolve) => frameWaiters.push(resolve)),
     setView: (x, y, z, yaw, pitch) => {
       if (playerView && playerView.mode !== 'free') playerView.toggleFree(camera);
@@ -260,7 +280,8 @@ async function main(): Promise<void> {
       local = new LocalSimulation(
         composed,
         () => performance.now(),
-        () => {},
+        // In this page the reader is always the player (A6.2).
+        (line) => chat.add(describeLine(line, true)),
       );
       playerControls.yaw = local.startYaw;
       return local;
@@ -322,6 +343,7 @@ async function main(): Promise<void> {
       {
         hello: (message) => {
           hook.connection = { role: message.role };
+          chat.canWrite = message.role === 'driver';
           if (message.player) playerControls.yaw = message.player.yaw;
           if (message.world) void receiveWorld(message.world, message.diagnostics);
           else showMessages(toMessages(message.diagnostics), 'error');
@@ -329,8 +351,12 @@ async function main(): Promise<void> {
         world: (world, diagnostics) => void receiveWorld(world, diagnostics),
         diagnostics: (diagnostics) =>
           showMessages(toMessages(diagnostics), current ? 'ready' : 'error'),
+        line: (line) => chat.add(describeLine(line, connection!.role === 'driver')),
+        sayError: (error) => chat.add(error, 'error'),
         role: (role) => {
           hook.connection = { role };
+          chat.canWrite = role === 'driver';
+          if (role !== 'driver') chat.close();
           playerView?.setSpectator(role === 'spectator', camera);
         },
         closed: () =>
@@ -368,7 +394,15 @@ async function main(): Promise<void> {
     }
     current.scene.update(camera);
     renderer.render(current.scene.scene, camera);
-    bubbles.update(characters, camera);
+    // The player's bubble shows where its figure shows: third person, free camera, spectators.
+    const playerSpeech = connection
+      ? (connection.latest()?.speech ?? null)
+      : (local?.playerSpeech ?? null);
+    const bubbleOwners =
+      playerSpeech && playerView.mode !== 'first'
+        ? [...characters, { id: 'player', ...playerView.source.render(), speech: playerSpeech }]
+        : characters;
+    bubbles.update(bubbleOwners, camera);
 
     hook.frames++;
     if (!hook.ready) {
@@ -433,15 +467,18 @@ function describeNearest(
     }
   }
   if (!nearest) return { count: 0, nearest: null };
-  const command = result.characters.find((c) => c.id === nearest!.id)?.command;
-  const controller = nearest.controlled
+  const start = result.characters.find((c) => c.id === nearest!.id);
+  const command = start?.command;
+  const driver = nearest.controlled
     ? `controller active${command ? ` (${command})` : ' (WebSocket)'}`
-    : command
-      ? `controller not running (${command})`
-      : 'no controller';
+    : nearest.activity
+      ? `behavior ${nearest.activity}`
+      : command
+        ? `controller not running (${command})`
+        : 'no controller';
   return {
     count: characters.length,
-    nearest: `${nearest.id} · ${blocksToMeters(best).toFixed(1)} m · ${controller} · ${nearest.action ?? 'no action'}`,
+    nearest: `${start?.name ?? nearest.id} (${nearest.id}) · ${blocksToMeters(best).toFixed(1)} m · ${driver} · ${nearest.action ?? 'no action'}`,
   };
 }
 

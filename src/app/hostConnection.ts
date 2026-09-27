@@ -1,5 +1,6 @@
 import type { Intent } from '../core/physics/entity';
 import type { Diagnostic } from '../core/yaml/report';
+import type { SpokenLine } from '../core/sim/simulation';
 import type {
   CharacterSnapshot,
   HostMessage,
@@ -30,6 +31,10 @@ export interface HostHandlers {
   world(world: WorldMessage, diagnostics: readonly Diagnostic[]): void;
   diagnostics(diagnostics: readonly Diagnostic[]): void;
   role(role: Role): void;
+  /** A sentence the player hears (DIALOG-002.a). */
+  line(line: SpokenLine): void;
+  /** A sentence of this view that could not be said. */
+  sayError(error: string): void;
   closed(): void;
 }
 
@@ -118,6 +123,11 @@ export class HostConnection {
   }
 
   /** The player pressed E (PROTO-002.c). */
+  /** The player says a sentence (DIALOG-001.b). */
+  say(text: string): void {
+    this.send({ type: 'say', text });
+  }
+
   interact(): void {
     this.send({ type: 'interact' });
   }
@@ -169,6 +179,12 @@ export class HostConnection {
       case 'role':
         this.role = message.role;
         this.handlers.role(message.role);
+        break;
+      case 'line':
+        this.handlers.line(message.line);
+        break;
+      case 'say_error':
+        this.handlers.sayError(message.error);
         break;
       case 'pong': {
         const sent = this.pings.get(message.id);

@@ -17,7 +17,10 @@ export class SpeechBubbles {
 
   constructor(private readonly container: HTMLElement) {}
 
-  update(characters: readonly CharacterSnapshot[], camera: THREE.PerspectiveCamera): void {
+  update(
+    characters: readonly Pick<CharacterSnapshot, 'id' | 'x' | 'y' | 'z' | 'speech'>[],
+    camera: THREE.PerspectiveCamera,
+  ): void {
     const seen = new Set<string>();
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;

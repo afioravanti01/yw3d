@@ -157,3 +157,31 @@ test('CHAR-001.d: the view shows the characters where the host simulates them', 
   const shown = (await hook(page, 'characters')).find((c) => c.id === 'pino')!;
   expect(Math.hypot(shown.x - host.x, shown.z - host.z)).toBeLessThan(1);
 });
+
+test('DIALOG-001.a, DIALOG-002.a: through the host the driver speaks, spectators cannot; each reads its own log', async ({
+  browser,
+}) => {
+  const driver = await browser.newPage();
+  await open(driver);
+  const spectator = await browser.newPage();
+  await open(spectator);
+  const lines = (page: Page) =>
+    page.evaluate(() =>
+      (globalThis as unknown as { __yw3d: { chatLines(): string[] } }).__yw3d.chatLines(),
+    );
+  const isOpen = (page: Page) =>
+    page.evaluate(() =>
+      (globalThis as unknown as { __yw3d: { chatOpen(): boolean } }).__yw3d.chatOpen(),
+    );
+  await spectator.keyboard.press('Enter');
+  expect(await isOpen(spectator)).toBe(false);
+  await driver.keyboard.press('Enter');
+  expect(await isOpen(driver)).toBe(true);
+  await driver.keyboard.type('@pino buongiorno');
+  await driver.keyboard.press('Enter');
+  // The driver is the player: «Tu»; the spectator reads the name of the player (A6.2).
+  await expect.poll(() => lines(driver)).toContain('Tu → Pino: buongiorno');
+  await expect.poll(() => lines(spectator)).toContain('viandante → Pino: buongiorno');
+  await driver.close();
+  await spectator.close();
+});
