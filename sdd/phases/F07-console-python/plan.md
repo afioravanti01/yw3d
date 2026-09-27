@@ -161,7 +161,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `program` nel file del mondo; `python.ts` (P7) con `--python`; consenso; ricarica per i `.py`; stato dei programmi (P15) nel terminale.
   - Fatto quando: test di PY-001.a, PY-003.a–b, HOST-001.c verdi; un programma Python minimo parte, riceve `hello` e muove il personaggio.
 
-- [ ] **T7.08** Libreria Python: struttura, azioni, stato e messaggi
+- [x] **T7.08** Libreria Python: struttura, azioni, stato e messaggi
   - Req: PY-001, PY-002 · Dip: T7.07
   - `python/yw3d` (P8, P9, P11, P13): `Character`, `run`, azioni attese, `ActionFailed`, stato, mappa, `on_message` con interruzione e ripresa; bozza del template.
   - Fatto quando: test di PY-001.b–c e PY-002.a–d verdi.
