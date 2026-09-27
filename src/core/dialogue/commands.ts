@@ -10,11 +10,40 @@ import { address } from './address';
 export type CommandResult =
   { readonly ok: true; readonly text: string } | { readonly ok: false; readonly error: string };
 
+/** What drives a character, for `/describe` (A8.3): the world is a simulation to inspect. */
+export type Driver =
+  | {
+      readonly kind: 'agent';
+      readonly mode: string;
+      readonly brain: string;
+      readonly model: string | null;
+      readonly effort: string | null;
+      readonly answers: string;
+      readonly initiative: string;
+      readonly every: number | null;
+      readonly state: string | null;
+      readonly lastMs: number | null;
+    }
+  | { readonly kind: 'program'; readonly file: string; readonly state: string | null }
+  | { readonly kind: 'controller'; readonly command: string | null; readonly active: boolean }
+  | { readonly kind: 'none' };
+
+/** The technical data of a character (A8.3). */
+export interface CharacterDetails {
+  readonly driver: Driver;
+  /** The action it is doing now, e.g. `walk_to`. */
+  readonly action: string | null;
+  readonly persona?: string;
+  readonly goals?: readonly string[];
+}
+
 /** What the commands may read of the world now running. */
 export interface CommandContext {
   readonly map: WorldMap;
   /** Where a character or the player is now, in blocks; undefined when unknown. */
   position(id: string): { readonly x: number; readonly z: number } | undefined;
+  /** What drives a character and what it is doing; undefined when unknown. */
+  details?(id: string): CharacterDetails | undefined;
 }
 
 export const HELP = [
@@ -24,7 +53,7 @@ export const HELP = [
   '- `@name message`: to one character within 16 blocks of you (id or name; Tab completes it).',
   '- Esc goes back to the game; the × at the top of the console reduces it.',
   '- `/world`: the characters and the player where they are now, the places and the structures.',
-  '- `/describe @name`: the description of a character.',
+  '- `/describe @name`: the description of a character and its technical data: what drives it, model or program, state, action, position.',
   '- `/help`: this help.',
 ].join('\n');
 
@@ -41,22 +70,66 @@ export function runCommand(text: string, context?: CommandContext): CommandResul
   }
   if (name === 'describe') {
     if (!context) return { ok: false, error: 'there is no world yet' };
-    return describeCharacter(text.trim().slice('/describe'.length).trim(), context.map);
+    return describeCharacter(text.trim().slice('/describe'.length).trim(), context);
   }
   return { ok: false, error: `unknown command "/${name}": write /help` };
 }
 
-/** `/describe @name`: who a character is, as the world file describes it (A8.2). */
-function describeCharacter(written: string, map: WorldMap): CommandResult {
+/**
+ * `/describe @name`: who a character is, as the world file describes it (A8.2), and its
+ * technical data: what drives it, with which model or program, its state, action and position
+ * (A8.3).
+ */
+function describeCharacter(written: string, context: CommandContext): CommandResult {
   if (written === '') return { ok: false, error: 'write /describe @name' };
-  const characters = map.entries.filter((e) => e.kind === 'character');
+  const characters = context.map.entries.filter((e) => e.kind === 'character');
   const addressed = address(written.startsWith('@') ? written : `@${written}`, characters);
   if (!addressed.ok) return addressed;
   const who = characters.find((c) => c.id === addressed.to)!;
-  return {
-    ok: true,
-    text: `**${who.name}** (\`${who.id}\`)\n\n${who.description ?? '*No description.*'}`,
-  };
+  const lines = [`**${who.name}** (\`${who.id}\`)`, '', who.description ?? '*No description.*', ''];
+  const at = context.position(who.id);
+  if (at) lines.push(`- **Position:** ${round(at.x)}, ${round(at.z)} blocks`);
+  const details = context.details?.(who.id);
+  if (details) {
+    lines.push(...driverLines(details.driver));
+    lines.push(`- **Action:** ${details.action ? `\`${details.action}\`` : 'none'}`);
+    if (details.persona) lines.push(`- **Persona:** ${details.persona}`);
+    if (details.goals?.length) lines.push(`- **Goals:** ${details.goals.join('; ')}`);
+  }
+  return { ok: true, text: lines.join('\n').trimEnd() };
+}
+
+function driverLines(driver: Driver): string[] {
+  switch (driver.kind) {
+    case 'agent': {
+      const settings = [
+        driver.model ? `model \`${driver.model}\`` : 'default model',
+        driver.effort ? `effort ${driver.effort}` : 'default effort',
+        `${driver.answers} answers`,
+      ];
+      const state = driver.state
+        ? `${driver.state}${driver.lastMs !== null ? ` · last request ${(driver.lastMs / 1000).toFixed(1)} s` : ''}`
+        : 'unknown';
+      return [
+        `- **Driven by:** LLM agent, ${driver.mode} (\`${driver.brain}\`)`,
+        `- **Settings:** ${settings.join(' · ')}`,
+        `- **Initiative:** ${driver.initiative}${driver.every !== null ? `, every ${driver.every} s` : ''}`,
+        `- **State:** ${state}`,
+      ];
+    }
+    case 'program':
+      return [
+        `- **Driven by:** Python program \`${driver.file}\``,
+        `- **State:** ${driver.state ?? 'unknown'}`,
+      ];
+    case 'controller':
+      return [
+        `- **Driven by:** ${driver.command ? `controller \`${driver.command}\`` : 'a client on the WebSocket'}`,
+        `- **State:** ${driver.active ? 'active' : 'not running'}`,
+      ];
+    case 'none':
+      return ['- **Driven by:** nothing: it stands still'];
+  }
 }
 
 const round = (v: number) => String(Math.round(v));

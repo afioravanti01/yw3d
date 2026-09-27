@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { TERRAIN_GENERATOR_VERSION } from '../../core/gen/terrain';
 import type { DeclaredCommand } from '../consent';
 import type { ModuleLoader } from '../moduleLoader';
+import { startConsole } from '../console';
 import { HostSession } from '../session';
 import { resolveWorldFolder, WORLD_FILE } from '../worldFolder';
 
@@ -125,6 +126,19 @@ characters:
     for (let i = 0; i < 30; i++) s.advance(1 / 60);
     expect(s.agentOf('prova')).toMatchObject({ mode: 'fake', brain: 'fake', state: 'idle' });
     expect(s.characterSnapshots()[0]!.agent).toMatchObject({ brain: 'fake' });
+    // Its technical data, as /describe shows them in the terminal (A8.3).
+    const typed: ((line: string) => void)[] = [];
+    startConsole(
+      s,
+      { onLine: (l) => typed.push(l), question: () => Promise.resolve(''), close: () => {} },
+      { line: (t) => lines.push(t) },
+    );
+    typed.forEach((listener) => listener('/describe @prova'));
+    expect(lines).toContain('yw3d  - Driven by: LLM agent, fake (fake)');
+    expect(lines).toContain('yw3d  - Settings: default model · default effort · short answers');
+    expect(lines).toContainEqual(
+      expect.stringMatching(/^yw3d {2}- State: idle · last request \d+\.\d s$/),
+    );
   });
 
   it('AGENT-006.a: the world does not wait for a brain that does not answer', async () => {

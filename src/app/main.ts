@@ -21,6 +21,7 @@ import { HostConnection, hostConfig } from './hostConnection';
 import { PlayerControls } from './input';
 import { parseStartParams } from './params';
 import { MessageConsole } from './messageConsole';
+import { characterDetails } from '../protocol/details';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
 import { installTestHook, type TestHook } from './testHook';
@@ -210,6 +211,11 @@ async function main(): Promise<void> {
         position: (id) => {
           if (id === 'player') return playerView?.source.state();
           return shownCharacters().find((c) => c.id === id);
+        },
+        details: (id) => {
+          const start = result.characters.find((c) => c.id === id);
+          const now = shownCharacters().find((c) => c.id === id);
+          return start && characterDetails(start, now);
         },
       };
     if (!controls || !playerView) {

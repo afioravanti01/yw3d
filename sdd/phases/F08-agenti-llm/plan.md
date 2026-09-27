@@ -125,6 +125,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: AGENT-001, AGENT-003, CHAR-002, DIALOG-005 · Dip: T8.07
   - Nato alla prova d'uso. `answers: short | long`; istruzioni per le risposte lunghe; 2000 caratteri; vignetta con l'inizio del testo (`bubbleText`); durata della vignetta limitata; comando `/describe` nel core, per browser e terminale.
   - Fatto quando: test di AGENT-001.a, AGENT-003.a, CHAR-002.c e DIALOG-005.f verdi; risposta lunga provata dal vivo.
+  - Con A8.3 `/describe` mostra anche i dati tecnici, costruiti da `src/protocol/details.ts` allo stesso modo nell'host e nelle viste.
 
 - [ ] **T8.08** Cervelli Codex e opencode
   - Req: AGENT-001 · Dip: T8.07

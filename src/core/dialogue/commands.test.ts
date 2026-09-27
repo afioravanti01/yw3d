@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WorldMap } from '../map/worldMap';
+import type { CharacterDetails } from './commands';
 import { HELP, isCommand, runCommand } from './commands';
 
 describe('commands of the console', () => {
@@ -157,5 +158,78 @@ describe('commands of the console', () => {
       error: 'no character is called "piazza"; the characters are: Marta (pescatrice), Nina (nina)',
     });
     expect(HELP).toMatch(/\/describe @name/);
+  });
+
+  it('DIALOG-005.f: /describe also gives the technical data: what drives it, with which model or program, state, action, position (A8.3)', () => {
+    const map: WorldMap = {
+      name: 'Valle',
+      description: null,
+      size: [64, 96, 64],
+      entries: ['marta', 'tobia', 'bruno', 'nina'].map((id) => ({
+        id,
+        kind: 'character' as const,
+        name: id[0]!.toUpperCase() + id.slice(1),
+        description: `Chi è ${id}.`,
+        shape: { kind: 'point' as const, x: 1, z: 1 },
+      })),
+    };
+    const details: Record<string, CharacterDetails> = {
+      marta: {
+        driver: {
+          kind: 'agent',
+          mode: 'headless',
+          brain: 'claude',
+          model: 'sonnet',
+          effort: 'low',
+          answers: 'long',
+          initiative: 'reactive',
+          every: null,
+          state: 'idle',
+          lastMs: 7103,
+        },
+        action: 'walk_to',
+        persona: 'Biologa marina.',
+        goals: ['pescare'],
+      },
+      tobia: {
+        driver: { kind: 'program', file: 'characters/tobia.py', state: 'running' },
+        action: null,
+      },
+      bruno: {
+        driver: { kind: 'controller', command: 'node bruno.mjs', active: false },
+        action: null,
+      },
+      nina: { driver: { kind: 'none' }, action: null },
+    };
+    const context = {
+      map,
+      position: (id: string) => (id === 'marta' ? { x: 182.4, z: 108.6 } : undefined),
+      details: (id: string) => details[id],
+    };
+    const text = (name: string) =>
+      (runCommand(`/describe ${name}`, context) as { text: string }).text;
+    expect(text('marta')).toBe(
+      [
+        '**Marta** (`marta`)',
+        '',
+        'Chi è marta.',
+        '',
+        '- **Position:** 182, 109 blocks',
+        '- **Driven by:** LLM agent, headless (`claude`)',
+        '- **Settings:** model `sonnet` · effort low · long answers',
+        '- **Initiative:** reactive',
+        '- **State:** idle · last request 7.1 s',
+        '- **Action:** `walk_to`',
+        '- **Persona:** Biologa marina.',
+        '- **Goals:** pescare',
+      ].join('\n'),
+    );
+    expect(text('tobia')).toContain(
+      '- **Driven by:** Python program `characters/tobia.py`\n- **State:** running',
+    );
+    expect(text('bruno')).toContain(
+      '- **Driven by:** controller `node bruno.mjs`\n- **State:** not running',
+    );
+    expect(text('nina')).toContain('- **Driven by:** nothing: it stands still');
   });
 });

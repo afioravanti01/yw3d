@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline';
 import { isCommand, runCommand } from '../core/dialogue/commands';
 import { describeLine } from '../core/dialogue/lines';
+import { characterDetails } from '../protocol/details';
 import { markdownToText } from '../core/dialogue/markdown';
 import type { HostSession } from './session';
 import { PREFIX, type Terminal } from './terminal';
@@ -60,9 +61,18 @@ export function startConsole(session: HostSession, input: LineInput, terminal: T
     if (text.trim() === '') return;
     if (isCommand(text)) {
       const map = session.world?.result.map;
+      const world = session.world?.result;
       const result = runCommand(
         text,
-        map && { map, position: (id) => session.agents?.stateOf(id) },
+        map && {
+          map,
+          position: (id) => session.agents?.stateOf(id),
+          details: (id) => {
+            const start = world?.characters.find((c) => c.id === id);
+            const now = session.characterSnapshots().find((c) => c.id === id);
+            return start && characterDetails(start, now);
+          },
+        },
       );
       if (result.ok) {
         for (const line of markdownToText(result.text)) terminal.line(`${PREFIX}  ${line}`);
