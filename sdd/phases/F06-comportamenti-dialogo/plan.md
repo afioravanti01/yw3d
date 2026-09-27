@@ -252,7 +252,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - **Punto di controllo con l'utente**: la demo della roadmap.
   - Fatto quando: `yw3d examples/valle` mostra la demo; la guida copre ogni istruzione, evento e condizione.
 
-- [ ] **T6.16** Test end-to-end
+- [x] **T6.16** Test end-to-end
   - Req: DIALOG-001, DIALOG-002, BEHAV-001, CHAR-001, YAML-009 · Dip: T6.14
   - Mondi di prova con comportamenti in `e2e/worlds` e `e2e/host`.
   - Fatto quando: `npm run e2e` verde, con DIALOG-001.a, DIALOG-002.a, BEHAV-001.f, CHAR-001.d, YAML-009.c.
@@ -285,3 +285,4 @@ Come nelle fasi precedenti: task in ordine senza fermarsi fino al punto di contr
 | T6.03 | Verso un'area il personaggio si ferma su un posto che sta tutto dentro l'area (le 4 colonne che occupa), verso una struttura su un posto che tocca le sue colonne d'arrivo | Con il solo «tocca» il personaggio poteva fermarsi sul bordo, fuori dall'area, e un secondo `walk_to` non risultava «già dentro» (MAP-003.c) | Nessuno |
 | T6.04 | Le misure di tempo di una ricerca del percorso presero per un momento la migliore di più ripetizioni invece della media; con T6.19+ sono tornate alla media, misurata da sola | Con la suite cresciuta, la media superava i 50 ms solo per il carico degli altri test in parallelo (54 ms; 14 ms da sola, uguale al codice di F05). Il commit di T6.04 è partito con questo test rosso: la catena di comandi controllava l'esito di `grep`, non di `npm run check`; corretto con un commit esplicito, e da lì i commit passano da uno script che si ferma se il check fallisce | Nessuno |
 | T6.09 | BEHAV-001.e (niente programmi né consenso per i comportamenti) si verifica in T6.10, nell'host, dove esiste il consenso; la `Simulation` ferma il personaggio quando un client lo prende, oltre a sospenderne il comportamento | Nel core non c'è niente da consentire; senza fermarlo, il personaggio continuava l'azione del comportamento finché il client non chiedeva altro | Nessuno |
+| T6.16 | I test e2e di F06 sono nati con T6.13 e T6.14, invece che in un task a sé; T6.16 è l'esecuzione completa della suite (25 test) | Verificare subito nel browser la simulazione locale e il dialogo, prima di costruirci sopra gli esempi | Nessuno |
