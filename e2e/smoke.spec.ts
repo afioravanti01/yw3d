@@ -143,7 +143,7 @@ const talk = <K extends keyof Talk>(page: Page, key: K) =>
     ReturnType<Talk[K]>
   >;
 
-test('DIALOG-005.c, DIALOG-001.a: Enter opens the box of the console; while it is open keys do not move the player; Esc closes it', async ({
+test('DIALOG-005.c, DIALOG-001.a: Enter moves to the box of the console; while writing keys do not move the player; Esc goes back to the game', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
@@ -201,7 +201,7 @@ test('DIALOG-005.a, DIALOG-002.a: the console on the right shows every message, 
   expect(last.y).toBeGreaterThan(first.y);
 });
 
-test('DIALOG-005.b: the console leaves the mouse to the scene, except on the messages and the box', async ({
+test('DIALOG-005.b, DIALOG-005.c: the console is a block always there; it leaves the mouse to the scene, except on the messages and the box', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
@@ -218,16 +218,23 @@ test('DIALOG-005.b: the console leaves the mouse to the scene, except on the mes
       },
       [x, y],
     );
-  // Without messages, the corner of the console is the scene.
-  const { width, height } = page.viewportSize()!;
-  expect(await at(width - 60, height - 40)).toBe('world');
+  // The block is always there, with its box at the bottom, before anything is written (A7.1).
+  const block = (await page.locator('#console').boundingBox())!;
+  const box = (await page.locator('#console input').boundingBox())!;
+  await expect(page.locator('#console input')).toBeVisible();
+  expect(box.y + box.height).toBeGreaterThan(block.y + block.height - 20);
+  expect(await at(box.x + box.width / 2, box.y + box.height / 2)).toBe('INPUT');
+  // The empty part of the block is the scene.
+  expect(await at(block.x + block.width / 2, block.y + 40)).toBe('world');
   await page.keyboard.press('Enter');
   await page.keyboard.type('Buongiorno a tutti');
   await page.keyboard.press('Enter');
+  // The messages are at the top, and take the mouse to scroll them.
   const line = (await page.locator('#console ol li').first().boundingBox())!;
+  expect(line.y).toBeLessThan(block.y + 60);
   expect(await at(line.x + line.width / 2, line.y + line.height / 2)).toBe('LI');
-  // Above the messages, still the scene.
-  expect(await at(line.x + line.width / 2, line.y - 30)).toBe('world');
+  // Below the messages, still the scene.
+  expect(await at(block.x + block.width / 2, line.y + line.height + 60)).toBe('world');
 });
 
 test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab completes; /help answers in the console', async ({

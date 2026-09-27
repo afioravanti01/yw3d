@@ -169,3 +169,4 @@ Chiuse con l'utente il 2026-09-27, prima di G1.
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
 |---|---|---|---|---|---|
+| A7.1 | 2026-09-27 | DIALOG-005.a, .c | a: la console è un blocco trasparente sempre presente sulla destra, con i messaggi in alto, che si accumulano, e la casella del giocatore in basso. c: la casella c'è sempre; Invio vi porta il cursore, Invio manda il messaggio, Esc torna al gioco; mentre si scrive i tasti non muovono il giocatore né la visuale. La × resta come in g | Alla prova d'uso la casella che compariva solo con Invio e i messaggi sparsi sulla destra non davano l'idea di una console | Utente, alla prova d'uso (richiesta diretta) |

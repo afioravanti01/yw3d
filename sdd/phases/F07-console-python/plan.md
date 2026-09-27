@@ -96,7 +96,7 @@ run(Guardiano)
 Questa è la forma che la prova d'uso (T7.09) mette alla prova: nomi dei metodi e dei gestori possono cambiare dopo il riscontro dell'utente, con una deviazione registrata.
 
 ## Emendamenti alla spec
-Nessuno per ora.
+- **A7.1 — DIALOG-005.a, .c** (prova d'uso, richiesta dell'utente). La console è un blocco trasparente sempre presente: messaggi in alto, casella del giocatore sempre visibile in basso; Invio porta il cursore nella casella, Esc torna al gioco. Nel blocco prendono il mouse solo le righe dei messaggi (per scorrerle con la rotella) e la casella. Nelle viste che guardano la casella c'è ma è disattivata.
 
 ## Strategia di test
 - **Unit (Vitest, Node).**
@@ -170,6 +170,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: PY-005, DIALOG-005 · Dip: T7.04, T7.08
   - **Punto di controllo**: l'utente copia la bozza del template, scrive un personaggio suo in un mondo e gli parla dalla console. Si raccolgono le osservazioni su leggibilità della libreria e comodità della console; ciò che cambia la forma diventa una deviazione o un emendamento, prima di T7.10.
   - Fatto quando: l'utente ha scritto e fatto girare il suo personaggio e le osservazioni sono registrate nel piano.
+
+- [x] **T7.15+** Console sempre presente (A7.1)
+  - Req: DIALOG-005 · Dip: T7.04
+  - Nato alla prova d'uso: blocco trasparente fisso sulla destra, messaggi in alto, casella sempre visibile in basso; il fuoco della casella sostituisce l'apertura.
+  - Fatto quando: e2e di DIALOG-005.a–c verdi con il testo nuovo; verificato dall'utente.
 
 - [ ] **T7.10** Libreria: domande, altri gestori, errori
   - Req: PY-002, PY-003 · Dip: T7.09

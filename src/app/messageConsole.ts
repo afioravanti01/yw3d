@@ -18,8 +18,6 @@ export type LineKind = 'line' | 'error' | 'info';
  * and from programs.
  */
 export class MessageConsole {
-  /** Whether this view may write: the one that drives the player (DIALOG-001.a). */
-  canWrite = true;
   /** The characters of the world, for the suggestions after `@`. */
   characters: readonly Nameable[] = [];
   private readonly list: HTMLOListElement;
@@ -56,6 +54,18 @@ export class MessageConsole {
     this.input.addEventListener('keydown', (e) => this.key(e));
     this.input.addEventListener('keyup', (e) => e.stopPropagation());
     this.input.addEventListener('input', () => this.suggest());
+    // The box is always there (A7.1): writing starts when it takes the focus, by Enter or a
+    // click, and ends when it loses it.
+    this.input.addEventListener('focus', () => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      this.root.classList.add('open');
+      this.callbacks.toggled(true);
+    });
+    this.input.addEventListener('blur', () => {
+      this.hideSuggestions();
+      this.root.classList.remove('open');
+      this.callbacks.toggled(false);
+    });
     this.suggestions.addEventListener('mousedown', (e) => {
       // A click on a suggestion completes it; the box keeps the focus.
       e.preventDefault();
@@ -66,33 +76,38 @@ export class MessageConsole {
     });
   }
 
+  /** Whether this view may write: the one that drives the player (DIALOG-001.a). */
+  get canWrite(): boolean {
+    return !this.input.disabled;
+  }
+
+  set canWrite(value: boolean) {
+    this.input.disabled = !value;
+    this.input.placeholder = value
+      ? 'Enter to write… (@name to someone, /help)'
+      : 'Only the view that drives the player writes here';
+    if (!value) this.input.blur();
+  }
+
+  /** Whether the player is writing in the box. */
   get isOpen(): boolean {
-    return !this.input.hidden;
+    return document.activeElement === this.input;
   }
 
   get isCollapsed(): boolean {
     return this.root.classList.contains('collapsed');
   }
 
-  /** Enter in the scene: opens the box, and the console if it was reduced (DIALOG-005.c). */
+  /** Enter in the scene: to the box, opening the console if it was reduced (DIALOG-005.c). */
   open(): void {
     if (!this.canWrite || this.isOpen) return;
     if (this.isCollapsed) this.collapse(false);
-    if (document.pointerLockElement) document.exitPointerLock();
-    this.input.hidden = false;
-    this.input.value = '';
-    this.root.classList.add('open');
     this.input.focus();
-    this.callbacks.toggled(true);
   }
 
+  /** Back to the game; what was written stays in the box. */
   close(): void {
-    if (!this.isOpen) return;
-    this.input.hidden = true;
-    this.input.blur();
-    this.hideSuggestions();
-    this.root.classList.remove('open');
-    this.callbacks.toggled(false);
+    if (this.isOpen) this.input.blur();
   }
 
   /** A line of the console: a message, an error of this view, or the answer to a command. */
@@ -127,6 +142,7 @@ export class MessageConsole {
     const suggesting = this.shown.length > 0;
     if (e.key === 'Enter') {
       const text = this.input.value.trim();
+      this.input.value = '';
       this.close();
       if (text === '') return;
       if (isCommand(text)) {

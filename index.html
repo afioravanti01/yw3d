@@ -139,38 +139,48 @@
         box-shadow: 0 2px 6px rgb(0 0 0 / 0.18);
         white-space: pre-wrap;
       }
-      /* The message console (DIALOG-005, plan F07 P14): on the right, see-through; only the list
-         and the box take the mouse, the rest of the scene keeps it. */
+      /* The message console (DIALOG-005, A7.1): a see-through block on the right, always there,
+         with the messages at the top and the box of the player at the bottom. Only the messages
+         and the box take the mouse; the rest of the block leaves it to the scene. */
       #console {
         position: fixed;
         right: 16px;
         bottom: 16px;
-        width: min(420px, calc(100% - 32px));
+        width: min(400px, calc(100% - 32px));
+        height: min(70vh, 640px);
+        box-sizing: border-box;
+        padding: 6px 8px 8px;
         display: flex;
         flex-direction: column;
-        align-items: stretch;
+        background: rgb(20 28 34 / 0.22);
+        border: 1px solid rgb(232 240 242 / 0.25);
+        border-radius: 8px;
         font:
           14px/1.4 system-ui,
           sans-serif;
         pointer-events: none;
       }
+      #console.open {
+        background: rgb(20 28 34 / 0.34);
+      }
       #console ol {
-        max-height: 60vh;
+        flex: 1;
+        min-height: 0;
         margin: 0;
         padding: 0 2px 0 0;
         overflow-y: auto;
         list-style: none;
-        pointer-events: auto;
+        pointer-events: none;
         scrollbar-width: thin;
         scrollbar-color: rgb(232 240 242 / 0.4) transparent;
       }
-      #console ol:empty {
-        pointer-events: none;
+      #console ol li {
+        pointer-events: auto;
       }
       #console li {
         width: fit-content;
         max-width: 100%;
-        margin: 3px 0 0 auto;
+        margin: 3px 0 0;
         padding: 3px 9px;
         box-sizing: border-box;
         background: rgb(20 28 34 / 0.45);
@@ -249,6 +259,15 @@
       #console.collapsed > :not(.reopen) {
         display: none;
       }
+      #console.collapsed {
+        height: auto;
+        padding: 0;
+        background: none;
+        border: none;
+      }
+      #console input:disabled {
+        opacity: 0.6;
+      }
       [hidden] {
         display: none !important;
       }
@@ -267,8 +286,7 @@
         maxlength="520"
         autocomplete="off"
         aria-label="Message"
-        placeholder="Write… (@name to someone, /help)"
-        hidden
+        placeholder="Enter to write… (@name to someone, /help)"
       />
       <button type="button" class="reopen" title="Open the console">Messages</button>
     </div>
