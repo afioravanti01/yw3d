@@ -187,6 +187,8 @@ In T8.09 le API: Anthropic con lo strumento obbligato `reply`, oppure, con un ef
 
 In T8.08, con il contesto vero della valle e la domanda «Cosa vedi? E poi accompagnami al laghetto.»: Codex (effort `low`) 10,2 s, risposta con nomi, direzioni, distanze e `walk_to player`; opencode (modello predefinito `longcat-2.5-preview-free`) 43,3 s, risposta valida ma lenta, vicina al tempo limite di 60 s.
 
+Poi nel mondo, con l'host (richiesta dell'utente): Marta con Codex e Anselmo con opencode rispondono in 8–9 s e tengono da soli una conversazione di 12 battute tra due CLI diverse, chiusa con naturalezza; l'esempio `examples/agenti` è rimasto con questa configurazione.
+
 Osservazioni: le istruzioni devono elencare le azioni ammesse (opencode ha inventato `move`); con il modello predefinito di Claude Code una richiesta costa circa 5 centesimi, quindi la guida consiglierà un modello più economico per gli agenti. Nel `PATH` di questa macchina c'è anche una Codex 0.125.0 installata con npm (`/usr/local/bin/codex`), trovata prima della 0.157.1 in `~/.local/bin`: l'host usa la CLI del `PATH`, quindi va tolta o messa dopo.
 
 ## Ordine e parallelismo

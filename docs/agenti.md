@@ -15,7 +15,7 @@ characters:
     agent: { mode: headless, cli: claude, model: sonnet }
 ```
 
-Avvia il mondo, avvicinati a Marta (entro 16 blocchi, 8 m) e scrivile nella console: `@Marta dove si pesca meglio?`. L'esempio completo è [examples/agenti](../examples/agenti), con Marta, Anselmo il saggio e Nina (cervello finto).
+Avvia il mondo, avvicinati a Marta (entro 16 blocchi, 8 m) e scrivile nella console: `@Marta dove si pesca meglio?`. L'esempio completo è [examples/agenti](../examples/agenti): Marta guidata da Codex, Anselmo il saggio da opencode, Nina dal cervello finto; nei commenti, la stessa configurazione per ogni altro cervello.
 
 ## Modalità
 
