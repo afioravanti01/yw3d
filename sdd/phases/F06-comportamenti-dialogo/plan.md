@@ -227,7 +227,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - P13: `hello` con nome e mappa, `map` alla ricarica, client su un personaggio con comportamento (sospensione e ripresa, Q2), client come giocatore.
   - Fatto quando: test di PROTO-001.a e .e, PROTO-004.a–b, PROTO-007.a verdi.
 
-- [ ] **T6.12** Console dell'host
+- [x] **T6.12** Console dell'host
   - Req: DIALOG-004 · Dip: T6.10
   - `console.ts` e `readline` condiviso con il consenso (P16).
   - Fatto quando: test di DIALOG-004.a–c verdi.
