@@ -64,6 +64,8 @@ Verifica automatica: `npm run check` verde, `npm run e2e` verde (30 test, con un
 - **Battute sovrapposte**: in una conversazione due agenti parlano talvolta quasi insieme, perché una battuta arriva mentre l'altro sta ancora pensando.
 
 ## Modifiche al processo proposte
+Nessuna adottata: l'utente ha preferito non aggiungere regole a un processo che finora ha funzionato («perché imporre un processo troppo rigido?»). Restano qui come note.
+
 - **Scene di prova per gli agenti nel repository.** Le scene usate per le prove dal vivo (commissione, «Cosa vedi?», conversazione tra agenti) diventano uno script del progetto, da lanciare quando cambiano le istruzioni: una regressione manuale, con costi dichiarati.
 - **L'host segnala il proprio codice cambiato.** In sviluppo, se cambia il codice di yw3d mentre l'host gira, il terminale dice di riavviarlo.
 - **Le decisioni che toccano l'architettura si rileggono con l'utente prima di scrivere costituzione e roadmap.**
