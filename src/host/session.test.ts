@@ -60,7 +60,7 @@ describe('host session', () => {
     });
     expect(await session.load()).toBe(true);
     const out = lines.join('\n');
-    expect(out).toContain('world world.yaml · seed 5');
+    expect(out).toContain('world Test (world.yaml) · seed 5');
     expect(out).toContain('2 structures (oak 1, tower 1) · 1 warning');
     expect(out).toContain('world.yaml:3  warning  terrain.generator');
   });

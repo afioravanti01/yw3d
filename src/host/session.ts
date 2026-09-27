@@ -1,16 +1,12 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { createDefaultRegistry } from '../core/blocks/builtin';
+import type { AgentListener, AgentWorld } from '../core/agents/agentWorld';
+import { insideFolder } from '../core/behaviors/compile';
 import { composeWorld, type ComposeResult } from '../core/compose/composeWorld';
 import { STEP_SECONDS } from '../core/physics/constants';
 import { IDLE, type Intent } from '../core/physics/entity';
 import { FixedStepper } from '../core/physics/fixedStep';
-import { PhysicsWorld, type EntityHandle } from '../core/physics/physicsWorld';
-import { AgentWorld, type AgentListener } from '../core/agents/agentWorld';
-import { spawnCharacters } from '../core/characters/characters';
-import { NavGrid } from '../core/nav/navGrid';
-import { Pathfinder } from '../core/nav/pathfinding';
-import { PLAYER_SIZE, spawnAtStart } from '../core/player/player';
+import { Simulation, type SpokenLine } from '../core/sim/simulation';
 import { createDefaultStructures } from '../core/structures/builtin';
 import type { StructureRegistry, StructureType } from '../core/structures/registry';
 import type { World } from '../core/world/world';
@@ -37,6 +33,8 @@ export interface SessionWorld {
   readonly text: string;
   /** Absolute paths of the author's structure files, in registration order. */
   readonly structureFiles: readonly string[];
+  /** Texts of the other files the world file names (behaviors), by path in the folder. */
+  readonly files: Readonly<Record<string, string>>;
   readonly hash: number;
 }
 
@@ -51,6 +49,8 @@ export interface SessionOptions {
   readonly moduleUrl?: (file: string) => string;
   /** Whether the commands of the controllers may run: the user's consent (PROTO-005). */
   readonly consent?: CommandConsent;
+  /** The sentences the player hears (DIALOG-004.a): the console of the host. */
+  readonly heard?: (line: SpokenLine) => void;
 }
 
 /** Intents older than this are dropped: a stalled view does not keep the player walking (P9). */
@@ -81,13 +81,11 @@ export class HostSession {
   steps = 0;
   private warnedAboutCode = false;
 
-  private physics: PhysicsWorld | undefined;
-  private player: EntityHandle | undefined;
-  /** Characters, their actions and perception (F05); undefined before the first world. */
-  agents: AgentWorld | undefined;
-  /** Where each character's events and perception go: its controller, when it has one. */
-  private readonly controllerSinks = new Map<string, AgentListener>();
+  /** Physics, player, characters and dialogue (plan F06 P1); undefined before the first world. */
+  sim: Simulation | undefined;
   private controllers: RunningController[] = [];
+  /** Controllers attached to characters, kept across reloads (PROTO-004). */
+  private readonly controllerSinks = new Map<string, AgentListener>();
   private readonly stepper = new FixedStepper();
   /** Simulated time, seconds: intents expire on this clock, so that tests are exact. */
   private time = 0;
@@ -131,10 +129,21 @@ export class HostSession {
       );
       return this.finish(diagnostics, undefined);
     }
+    // Files named by the world file (behaviors, BEHAV-001.a), read inside the folder only.
+    const read: Record<string, string> = {};
     const result = composeWorld(text, file, {
       registry,
       seedOverride: this.options.seedOverride,
       now: this.options.now,
+      readFile: (relative) => {
+        const inside = insideFolder(relative);
+        if (!inside) return undefined;
+        try {
+          return (read[inside] = readFileSync(path.join(this.folder.root, inside), 'utf8'));
+        } catch {
+          return undefined;
+        }
+      },
     });
     diagnostics.push(...result.diagnostics);
     const world =
@@ -143,6 +152,7 @@ export class HostSession {
             result: result as SessionWorld['result'],
             text,
             structureFiles: files,
+            files: read,
             hash: result.world.hash(),
           }
         : undefined;
@@ -178,7 +188,7 @@ export class HostSession {
     const total = Object.values(result.structureCounts).reduce((a, b) => a + b, 0);
     const warnings = diagnostics.filter((d) => d.severity === 'warning').length;
     this.terminal.line(
-      `${PREFIX}  world ${this.display(this.folder.worldFile)} · seed ${result.seed}`,
+      `${PREFIX}  world ${result.name} (${this.display(this.folder.worldFile)}) · seed ${result.seed}`,
     );
     this.terminal.line(
       `${PREFIX}  ${total} structures${counts.length > 0 ? ` (${counts.join(', ')})` : ''} · ${warnings} warning${warnings === 1 ? '' : 's'}`,
@@ -188,33 +198,40 @@ export class HostSession {
 
   /**
    * A new world: the player keeps its place when there was one before (HOST-003.a), otherwise
-   * it starts where the world file says (PLAYER-001.c).
+   * it starts where the world file says (PLAYER-001.c). Characters and their behaviors start
+   * over (BEHAV-001.g); controllers on the WebSocket stay attached.
    */
   private startSimulation(world: SessionWorld): void {
-    const physics = new PhysicsWorld(world.result.world, createDefaultRegistry());
-    if (this.player) {
-      const { x, y, z } = this.player.state;
-      this.player = physics.spawn(PLAYER_SIZE, x, y, z);
-    } else {
-      const spawned = spawnAtStart(physics, world.result.player);
-      this.player = spawned.player;
-      this.view = { yaw: spawned.yaw, pitch: 0 };
-    }
-    this.physics = physics;
-    // Characters restart from their declared places at every new world (F05).
-    const characters = spawnCharacters(physics, world.result.characters);
-    const finder = new Pathfinder(new NavGrid(world.result.world, createDefaultRegistry().solid));
-    this.agents = new AgentWorld(physics, characters, this.player, finder, {
-      event: (id, event) => this.controllerSinks.get(id)?.event(id, event),
-      perception: (id, perception) => this.controllerSinks.get(id)?.perception(id, perception),
+    const previous = this.sim?.player.state;
+    const sim = new Simulation(world.result, {
+      playerAt: previous && { x: previous.x, y: previous.y, z: previous.z },
+      log: (id, message) => this.terminal.line(`${PREFIX}  [${id}] ${message}`),
+      heard: (line) => this.heard(line),
+      now: this.options.now,
     });
-    if (characters.length > 0) {
+    if (!previous) this.view = { ...sim.view };
+    sim.view = { ...this.view };
+    this.sim = sim;
+    for (const [id, sink] of this.controllerSinks) {
+      if (sim.agents.ids.includes(id)) sim.attach(id, sink);
+    }
+    if (world.result.characters.length > 0) {
       this.terminal.line(
         `${PREFIX}  characters: ${world.result.characters
-          .map((c) => `${c.id} (${c.command ?? 'no controller'})`)
+          .map((c) => `${c.id} (${c.behavior ? 'behavior' : (c.command ?? 'no controller')})`)
           .join(', ')}`,
       );
     }
+  }
+
+  /** Characters and the player, for the controllers and the tests (F05). */
+  get agents(): AgentWorld | undefined {
+    return this.sim?.agents;
+  }
+
+  /** A sentence the player hears: to the console and the views (DIALOG-002, DIALOG-004). */
+  private heard(line: SpokenLine): void {
+    this.options.heard?.(line);
   }
 
   /**
@@ -259,13 +276,17 @@ export class HostSession {
   /** Routes the events and perception of a character to its controller (PROTO-003, PROTO-004). */
   attachController(characterId: string, sink: AgentListener): void {
     this.controllerSinks.set(characterId, sink);
+    this.sim?.attach(characterId, sink);
   }
 
-  /** The controller of a character went away: it stops (PROTO-003.b, PROTO-004.b). */
+  /**
+   * The controller of a character went away: it stops, or its behavior goes on (PROTO-003.b,
+   * PROTO-004.b).
+   */
   detachController(characterId: string, sink: AgentListener): void {
     if (this.controllerSinks.get(characterId) !== sink) return;
     this.controllerSinks.delete(characterId);
-    this.agents?.release(characterId);
+    this.sim?.detach(characterId, sink);
   }
 
   /** Whether a character has a controller now. */
@@ -295,14 +316,15 @@ export class HostSession {
    * follows the intents of the driving view, if recent, and otherwise stands still (HOST-001.b).
    */
   advance(seconds: number): void {
-    if (!this.physics || !this.player) return;
+    const sim = this.sim;
+    if (!sim) return;
     const steps = this.stepper.advance(seconds);
     for (let i = 0; i < steps; i++) {
       this.time += STEP_SECONDS;
       const fresh = this.lastIntent && this.time - this.lastIntent.at <= INTENT_TIMEOUT_SECONDS;
-      this.player.intent = fresh ? this.lastIntent!.intent : IDLE;
-      // The agent world moves the characters and runs the physics step for everyone.
-      this.agents!.step();
+      sim.intent = fresh ? this.lastIntent!.intent : IDLE;
+      sim.view = { ...this.view };
+      sim.step();
       this.steps++;
     }
     if (steps > 0) {
@@ -318,8 +340,8 @@ export class HostSession {
 
   /** State of the player, or undefined before the first valid world. */
   snapshot(): PlayerSnapshot | undefined {
-    if (!this.player) return undefined;
-    const { x, y, z, vx, vy, vz, onGround, submerged } = this.player.state;
+    if (!this.sim) return undefined;
+    const { x, y, z, vx, vy, vz, onGround, submerged } = this.sim.player.state;
     return { x, y, z, vx, vy, vz, onGround, submerged, ...this.view };
   }
 
@@ -333,6 +355,7 @@ export class HostSession {
       file: this.display(this.folder.worldFile),
       text: world.text,
       structures: world.structureFiles.map(url),
+      files: world.files,
       seedOverride: this.options.seedOverride,
       hash: world.hash,
     };

@@ -217,7 +217,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - `Simulation` (P1); frasi del giocatore con destinatario e registro (P12); frasi sentite con destinatario ed elemento nominato; nomi nella percezione; misura con 20 personaggi.
   - Fatto quando: test di BEHAV-001.d–e, DIALOG-001.b–c, PROTO-002.a–b, PERF-006.a verdi.
 
-- [ ] **T6.10** Host con la simulazione condivisa
+- [x] **T6.10** Host con la simulazione condivisa
   - Req: HOST-001, BEHAV-001, CHAR-001 · Dip: T6.09
   - La sessione usa la `Simulation`. Terminale: nome del mondo, comportamenti, azioni fallite, limite raggiunto. Ricarica per ogni `.yaml` (P15), con i comportamenti che ripartono. Frasi alle viste filtrate sul giocatore.
   - Fatto quando: test di HOST-001.c, BEHAV-001.g, CHAR-001.c verdi; test di F04 e F05 verdi senza cambiarne le attese.

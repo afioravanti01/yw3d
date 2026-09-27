@@ -16,6 +16,8 @@ export interface WorldMessage {
   readonly text: string;
   /** URLs of the author's structure modules, in registration order. */
   readonly structures: readonly string[];
+  /** Texts of the files the world file names, e.g. behaviors, by path in the folder (F06 P14). */
+  readonly files: Readonly<Record<string, string>>;
   readonly seedOverride: number | undefined;
   /** Hash of the world composed by the host. */
   readonly hash: number;
