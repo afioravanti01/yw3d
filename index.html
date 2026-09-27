@@ -156,20 +156,21 @@
         padding: 6px 10px 10px;
         display: flex;
         flex-direction: column;
-        background: rgb(20 28 34 / 0.18);
-        border: 1px solid rgb(232 240 242 / 0.22);
+        background: rgb(255 255 255 / 0.72);
+        border: 1px solid rgb(255 255 255 / 0.85);
         border-radius: 8px;
-        color: #fff;
+        box-shadow: 0 2px 10px rgb(0 0 0 / 0.12);
+        color: #1d2a33;
         font:
-          14px/1.45 system-ui,
-          sans-serif;
-        text-shadow:
-          0 1px 2px rgb(0 0 0 / 0.85),
-          0 0 6px rgb(0 0 0 / 0.5);
+          13px/1.5 ui-monospace,
+          'Cascadia Mono',
+          Menlo,
+          Consolas,
+          monospace;
         pointer-events: none;
       }
       #console.open {
-        background: rgb(20 28 34 / 0.3);
+        background: rgb(255 255 255 / 0.82);
       }
       #console > ol {
         flex: 1;
@@ -182,17 +183,17 @@
         user-select: text;
         cursor: text;
         scrollbar-width: thin;
-        scrollbar-color: rgb(232 240 242 / 0.4) transparent;
+        scrollbar-color: rgb(29 42 51 / 0.3) transparent;
       }
       #console > ol > li {
         margin: 0 0 6px;
         overflow-wrap: anywhere;
       }
       #console > ol > li.error {
-        color: #ffc2b4;
+        color: #a3261a;
       }
       #console > ol > li.info {
-        color: #dcebff;
+        color: #1f4f7a;
       }
       #console > ol p,
       #console > ol ul,
@@ -214,18 +215,13 @@
       }
       #console > ol code {
         padding: 0 3px;
-        background: rgb(20 28 34 / 0.35);
+        background: rgb(29 42 51 / 0.08);
         border-radius: 3px;
-        font:
-          0.92em ui-monospace,
-          'Cascadia Mono',
-          Menlo,
-          Consolas,
-          monospace;
+        font: inherit;
       }
       #console > ol pre {
         padding: 4px 6px;
-        background: rgb(20 28 34 / 0.35);
+        background: rgb(29 42 51 / 0.08);
         border-radius: 4px;
         white-space: pre-wrap;
       }
@@ -234,15 +230,15 @@
         background: none;
       }
       #console > ol a {
-        color: #bfe0ff;
+        color: #1d5fa8;
       }
       #console .suggestions {
         margin: 6px 0 0;
         padding: 3px;
         list-style: none;
-        background: rgb(20 28 34 / 0.85);
+        background: rgb(255 255 255 / 0.95);
+        border: 1px solid rgb(29 42 51 / 0.15);
         border-radius: 6px;
-        text-shadow: none;
         pointer-events: auto;
       }
       #console .suggestions li {
@@ -251,19 +247,18 @@
         cursor: pointer;
       }
       #console .suggestions li.selected {
-        background: rgb(255 255 255 / 0.18);
+        background: rgb(29 42 51 / 0.1);
       }
       #console input {
         box-sizing: border-box;
         width: 100%;
         margin-top: 6px;
         padding: 7px 10px;
-        border: 1px solid rgb(255 255 255 / 0.6);
+        border: 1px solid rgb(29 42 51 / 0.25);
         border-radius: 6px;
-        background: rgb(20 28 34 / 0.78);
-        color: #fff;
+        background: rgb(255 255 255 / 0.9);
+        color: #1d2a33;
         font: inherit;
-        text-shadow: none;
         pointer-events: auto;
         outline: none;
       }
@@ -274,8 +269,7 @@
         align-self: flex-end;
         pointer-events: auto;
         cursor: pointer;
-        color: #e8f0f2;
-        text-shadow: none;
+        color: #1d2a33;
         font:
           12px/1.2 ui-monospace,
           'Cascadia Mono',
@@ -286,7 +280,7 @@
       #console .reduce {
         margin-bottom: 3px;
         padding: 0 7px 2px;
-        background: rgb(20 28 34 / 0.35);
+        background: rgb(29 42 51 / 0.08);
         border: none;
         border-radius: 6px;
         font-size: 16px;
@@ -297,8 +291,8 @@
       }
       #console .reopen {
         padding: 4px 10px;
-        background: rgb(20 28 34 / 0.28);
-        border: 1px solid rgb(232 240 242 / 0.35);
+        background: rgb(255 255 255 / 0.72);
+        border: 1px solid rgb(255 255 255 / 0.85);
         border-radius: 6px;
       }
       #console:not(.collapsed) .reopen,
