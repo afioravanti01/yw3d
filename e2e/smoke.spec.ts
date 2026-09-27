@@ -215,6 +215,28 @@ test('DIALOG-002.a: the log shows the sentences the player hears, with who speak
   await expect(page.locator('#chat li').first()).toBeVisible();
 });
 
+test('CHAR-002.d: names over the characters, the bubble above the name; the player named where its figure shows', async ({
+  page,
+}) => {
+  await open(page, '?world=test-behaviors');
+  const names = () => page.locator('#bubbles .label .name').allTextContents();
+  // Third person: the characters in view and the player's figure, each with its name.
+  await page.keyboard.press('KeyV');
+  await expect.poll(names).toEqual(expect.arrayContaining(['Anna', 'Bruno', 'viandante']));
+  // When Anna speaks, her bubble is in her label, above her name.
+  const anna = page.locator('#bubbles .label[data-id="anna"]');
+  await expect(anna.locator('.bubble')).toBeVisible({ timeout: 20_000 });
+  const [bubble, name] = await Promise.all([
+    anna.locator('.bubble').boundingBox(),
+    anna.locator('.name').boundingBox(),
+  ]);
+  expect(bubble!.y + bubble!.height).toBeLessThanOrEqual(name!.y + 1);
+  await expect(anna.locator('.name')).toHaveText('Anna');
+  // First person: no label over the player itself.
+  await page.keyboard.press('KeyV');
+  await expect.poll(names).not.toContain('viandante');
+});
+
 test('YAML-009.c: the title of the page is the name of the world', async ({ page }) => {
   await open(page, '?world=test-behaviors');
   await expect(page).toHaveTitle('Borgo dei test');

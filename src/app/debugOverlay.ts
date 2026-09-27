@@ -41,30 +41,62 @@ export interface OverlayData {
 }
 
 const REFRESH_MS = 250;
+/** Where the page remembers whether the overlay is reduced to its button (A6.3). */
+const COLLAPSED_KEY = 'yw3d.overlay.collapsed';
 
-/** Diagnostic overlay toggled with F3 (DEBUG-001.a). */
+/**
+ * Diagnostic overlay (DEBUG-001.a): F3 shows and hides it; its X reduces it to a small
+ * «Stats» button, which opens it again (A6.3). The page remembers the choice.
+ */
 export class DebugOverlay {
+  private readonly root: HTMLElement;
   private readonly element: HTMLElement;
+  private readonly stats: HTMLButtonElement;
   private lastRefresh = 0;
 
   constructor(parent: HTMLElement = document.body) {
+    this.root = document.createElement('div');
+    this.root.id = 'debug';
     this.element = document.createElement('pre');
     this.element.id = 'debug-overlay';
-    parent.append(this.element);
+    const close = button('debug-close', '×', 'Reduce the overlay');
+    this.stats = button('debug-stats', 'Stats', 'Open the overlay');
+    this.root.append(close, this.element, this.stats);
+    parent.append(this.root);
+    this.collapse(remembered());
+    close.addEventListener('click', () => {
+      close.blur();
+      this.collapse(true);
+    });
+    this.stats.addEventListener('click', () => {
+      this.stats.blur();
+      this.collapse(false);
+    });
     window.addEventListener('keydown', (e) => {
       if (e.code === 'F3') {
         e.preventDefault();
-        this.element.hidden = !this.element.hidden;
+        this.root.hidden = !this.root.hidden;
       }
     });
   }
 
+  /** Whether the overlay with its text is on screen. */
   get visible(): boolean {
-    return !this.element.hidden;
+    return !this.root.hidden && !this.root.classList.contains('collapsed');
+  }
+
+  private collapse(collapsed: boolean): void {
+    this.root.classList.toggle('collapsed', collapsed);
+    this.lastRefresh = 0;
+    try {
+      localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0');
+    } catch {
+      // Storage may be unavailable (private windows): the choice lasts until the page closes.
+    }
   }
 
   update(now: number, data: () => OverlayData): void {
-    if (this.element.hidden || now - this.lastRefresh < REFRESH_MS) return;
+    if (!this.visible || now - this.lastRefresh < REFRESH_MS) return;
     this.lastRefresh = now;
     const d = data();
     const block = (v: number) => v.toFixed(1);
@@ -97,6 +129,24 @@ export class DebugOverlay {
         ? `F3 hide · C player · WASD/arrows move · Space/Z up · Shift/X down · wheel speed`
         : `F3 hide · click to look · WASD/↑↓ walk · ←→ turn · Shift run · Space jump/swim up · X swim down · E talk · Enter speak · V view · C free camera`,
     ].join('\n');
+  }
+}
+
+function button(id: string, text: string, label: string): HTMLButtonElement {
+  const element = document.createElement('button');
+  element.id = id;
+  element.type = 'button';
+  element.textContent = text;
+  element.title = label;
+  element.setAttribute('aria-label', label);
+  return element;
+}
+
+function remembered(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
   }
 }
 

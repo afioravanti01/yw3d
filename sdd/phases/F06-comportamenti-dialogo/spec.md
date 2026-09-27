@@ -218,8 +218,14 @@ Stesso hardware di riferimento di PERF-001.
 ### DEBUG-001 — Overlay diagnostico
 - **Prima:** a `[manuale]` Il tasto F3 mostra e nasconde un overlay con: […] numero di personaggi e, per il più vicino, identificativo, controllore (tipo e stato) e azione in corso, […].
 - **Dopo:**
-- **a** `[manuale]` Come prima; per il personaggio più vicino anche il nome e, se ha un comportamento, lo stato e l'istruzione in corso.
-- **Motivo:** serve a capire a che punto è un comportamento.
+- **a** `[manuale]` Come prima; per il personaggio più vicino anche il nome e, se ha un comportamento, lo stato e l'istruzione in corso. Un pulsante con la X riduce l'overlay a un piccolo pulsante trasparente «Stats», che lo riapre; la pagina ricorda la scelta. F3 continua a mostrare e nascondere tutto, pulsante compreso (A6.3).
+- **Motivo:** serve a capire a che punto è un comportamento; l'overlay aperto copre la scena, e si vuole ridurlo senza perderlo.
+
+### CHAR-002 — Figura e animazioni
+- **Prima:** criteri a–c (posa, animazioni leggibili, fumetto).
+- **Dopo:** criteri a, b e c invariati; si aggiunge d:
+- **d** `[e2e]` Sopra ogni personaggio entro 48 blocchi (24 m) compare il suo nome, e sopra il giocatore dove si vede la sua figura (terza persona, camera libera, viste che guardano); quando parla, il fumetto sta sopra il nome (A6.4).
+- **Motivo:** nella demo non si capiva chi fosse chi.
 
 ## Requisiti RIMOSSI
 Nessuno.
@@ -246,3 +252,5 @@ Chiuse con l'utente il 2026-09-26, prima di G1, in tre blocchi di scelte guidate
 |---|---|---|---|---|---|
 | A6.1 | 2026-09-26 | BEHAV-002.b | `walk_to` con un elenco di mete le visita in ordine, come altrettante istruzioni `walk_to` consecutive | Emerso scrivendo il piano: senza, un comportamento della libreria non può percorrere tappe ricevute come parametro di tipo lista (BEHAV-006.a) | sì, utente, 2026-09-26 (con G2) |
 | A6.2 | 2026-09-26 | DIALOG-002.a, DIALOG-004.a | Le frasi del giocatore compaiono come «Tu» nella vista che guida e nella console, con il suo nome nelle viste che guardano | Emerso nella revisione del piano (P17): ognuno legge il registro dal proprio punto di vista | sì, utente, 2026-09-26 (con G2) |
+| A6.3 | 2026-09-27 | DEBUG-001.a | Pulsante X che riduce l'overlay a «Stats», che lo riapre; scelta ricordata; F3 invariato | Alla demo l'overlay copriva la scena | sì, utente, 2026-09-27 |
+| A6.4 | 2026-09-27 | CHAR-002.d (nuovo) | Nome sopra i personaggi entro 24 m, e sopra il giocatore dove si vede la sua figura; il fumetto sopra il nome | Alla demo non si capiva chi fosse chi | sì, utente, 2026-09-27 |

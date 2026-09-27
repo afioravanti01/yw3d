@@ -9,7 +9,7 @@ import type { World } from '../core/world/world';
 import { formatDiagnostic, type Diagnostic } from '../core/yaml/report';
 import type { CharacterSnapshot, WorldMessage } from '../protocol/messages';
 import { CharacterViews } from './characterViews';
-import { SpeechBubbles } from './speechBubbles';
+import { SpeechBubbles, type Labelled } from './speechBubbles';
 import { blocksToMeters } from '../core/world/units';
 import { ChunkRenderer } from '../render/chunkRenderer';
 import { FlyCamera } from '../render/flyCamera';
@@ -394,15 +394,18 @@ async function main(): Promise<void> {
     }
     current.scene.update(camera);
     renderer.render(current.scene.scene, camera);
-    // The player's bubble shows where its figure shows: third person, free camera, spectators.
-    const playerSpeech = connection
-      ? (connection.latest()?.speech ?? null)
-      : (local?.playerSpeech ?? null);
-    const bubbleOwners =
-      playerSpeech && playerView.mode !== 'first'
-        ? [...characters, { id: 'player', ...playerView.source.render(), speech: playerSpeech }]
-        : characters;
-    bubbles.update(bubbleOwners, camera);
+    // Names over the figures (A6.4); the player's name and bubble where its figure shows:
+    // third person, free camera, spectators.
+    const names = new Map(current.result.characters.map((c) => [c.id, c.name]));
+    const labelled: Labelled[] = characters.map((c) => ({ ...c, name: names.get(c.id) ?? c.id }));
+    if (playerView.mode !== 'first') {
+      const speech = connection
+        ? (connection.latest()?.speech ?? null)
+        : (local?.playerSpeech ?? null);
+      const name = current.result.playerName ?? 'viandante';
+      labelled.push({ id: 'player', name, ...playerView.source.render(), speech });
+    }
+    bubbles.update(labelled, camera);
 
     hook.frames++;
     if (!hook.ready) {

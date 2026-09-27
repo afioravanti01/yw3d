@@ -122,10 +122,12 @@ characters:
 Istruzioni predefinite: `walk_to`, `look_at`, `say`, `follow` (con `for`), `wait`, `ask`, `set` e `unset` (flag), `count` (contatori: `set`, `add`), `if` (`then`, `else`), `goto` (stato). Eventi: `interacted`, `heard`, `near` e `far` (raggio), `enter` e `leave` (area), `after` (tempo nello stato). Condizioni: `flag`, `counter`, `near`, `inside`, `chance`. Riferimenti: `player`, `answer`, `heard.from`, `heard.mentions`; nei testi `{player}`, `{speaker}`, `{answer}`, `{mentions}`.
 
 ## Emendamenti alla spec
-Nati durante la revisione del piano e approvati dall'utente con G2; sono nel registro della spec.
+A6.1 e A6.2 sono nati durante la revisione del piano e approvati con G2; A6.3 e A6.4 alla demo di T6.15. Sono tutti nel registro della spec.
 
 - **A6.1 — BEHAV-002.b.** «`walk_to` con un elenco di mete le visita in ordine, come altrettante istruzioni `walk_to` consecutive.» Motivo: i parametri di tipo lista (BEHAV-006.a) servono soprattutto per i giri, e senza questa regola un comportamento della libreria non può percorrere tappe ricevute come parametro. È zucchero sintattico: nell'esecuzione restano istruzioni `walk_to` di PROTO-001.b, e la ripresa riparte dalla tappa interrotta.
 - **A6.2 — DIALOG-002.a, DIALOG-004.a.** Le frasi del giocatore compaiono come «Tu» nella vista che guida e nella console, con il suo nome nelle viste che guardano (P16, P17).
+- **A6.3 — DEBUG-001.a.** Un pulsante con la X riduce l'overlay a un pulsante trasparente «Stats», che lo riapre; la scelta si ricorda nel browser; F3 invariato.
+- **A6.4 — CHAR-002.d (nuovo).** Nome sopra i personaggi entro 24 m e sopra il giocatore dove si vede la sua figura; il fumetto sopra il nome.
 
 ## Protocollo dei controllori (versione 2)
 Dall'host: `hello` (versione, personaggio con nome e descrizione, misure del mondo, mappa), `map` (alla ricarica), `perception` (con i nomi), `heard` (con `to` e `mentions`), `interacted`, esiti delle azioni, `error`. Dal controllore: le azioni di F05, con `target` che accetta ogni id della mappa. Sul WebSocket, come primo messaggio, `control` (un personaggio, anche con un comportamento) oppure `player` (parlare come il giocatore, poi messaggi `say`). Il dettaglio va in `docs/controllori.md`.
@@ -256,6 +258,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: DIALOG-001, DIALOG-002, BEHAV-001, CHAR-001, YAML-009 · Dip: T6.14
   - Mondi di prova con comportamenti in `e2e/worlds` e `e2e/host`.
   - Fatto quando: `npm run e2e` verde, con DIALOG-001.a, DIALOG-002.a, BEHAV-001.f, CHAR-001.d, YAML-009.c.
+
+- [x] **T6.20+** Overlay riducibile e nomi sopra i personaggi (A6.3, A6.4)
+  - Req: DEBUG-001, CHAR-002 · Dip: T6.14
+  - Nati alla demo. Pulsante X nell'overlay, pulsante trasparente «Stats» che lo riapre, scelta ricordata nel browser. Etichette con il nome sopra le figure, con la stessa proiezione dei fumetti, entro 48 blocchi; il fumetto sopra l'etichetta.
+  - Fatto quando: test e2e di CHAR-002.d verde; X e Stats provati nel browser.
 
 - [ ] **T6.17** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T6.15, T6.16
