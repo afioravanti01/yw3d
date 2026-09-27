@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { parseMarkdown } from '../core/dialogue/markdown';
+import { blocksToDom } from './markdownDom';
 
 /** Height of the labels above the feet, blocks: just above the head. */
 const ABOVE = 4.1;
@@ -18,12 +20,13 @@ export interface Labelled {
 /**
  * Names and speech bubbles over the figures (CHAR-002.c–d, plan F05 P14): HTML elements placed
  * by projecting the head on the screen, the bubble above the name. Texts come from world
- * files and from programs outside the page, so they are always set as text, never as HTML.
+ * files and from programs outside the page: bubbles show their Markdown as nodes built from
+ * the parsed tree, never as HTML (A7.8).
  */
 export class SpeechBubbles {
   private readonly labels = new Map<
     string,
-    { root: HTMLElement; bubble: HTMLElement; name: HTMLElement }
+    { root: HTMLElement; bubble: HTMLElement; name: HTMLElement; speech: string | null }
   >();
   private readonly point = new THREE.Vector3();
 
@@ -50,13 +53,15 @@ export class SpeechBubbles {
         name.className = 'name';
         root.append(bubble, name);
         this.container.append(root);
-        label = { root, bubble, name };
+        label = { root, bubble, name, speech: null };
         this.labels.set(f.id, label);
       }
       if (label.name.textContent !== f.name) label.name.textContent = f.name;
       label.bubble.hidden = f.speech === null;
-      if (f.speech !== null && label.bubble.textContent !== f.speech) {
-        label.bubble.textContent = f.speech;
+      if (f.speech !== null && label.speech !== f.speech) {
+        // The same Markdown as the console, built as nodes, never as HTML (A7.8).
+        label.speech = f.speech;
+        label.bubble.replaceChildren(...blocksToDom(parseMarkdown(f.speech)));
       }
       const x = ((this.point.x + 1) / 2) * width;
       const y = ((1 - this.point.y) / 2) * height;

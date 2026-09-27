@@ -306,7 +306,7 @@ test('DIALOG-005.d, DIALOG-005.f: after @ the console suggests the names and Tab
   expect((await talk(page, 'consoleLines')).some((l) => l.includes('Tu: /help'))).toBe(false);
 });
 
-test('CHAR-002.d: names over the characters, the bubble above the name; the player named where its figure shows', async ({
+test('CHAR-002.d, CHAR-002.c: names over the characters, the bubble above the name, with Markdown; the player named where its figure shows', async ({
   page,
 }) => {
   await open(page, '?world=test-dialogue');
@@ -317,10 +317,13 @@ test('CHAR-002.d: names over the characters, the bubble above the name; the play
   await expect(page.locator('#bubbles .label[data-id="anna"] .name')).toHaveText('Anna');
   // When the player speaks, its bubble is in its label, above its name.
   await page.keyboard.press('Enter');
-  await page.keyboard.type('@anna ciao!');
+  await page.keyboard.type('@anna **ciao**!');
   await page.keyboard.press('Enter');
   const player = page.locator('#bubbles .label[data-id="player"]');
   await expect(player.locator('.bubble')).toBeVisible();
+  // The bubble shows the Markdown, as the console does (A7.8).
+  await expect(player.locator('.bubble strong')).toHaveText('ciao');
+  await expect(player.locator('.bubble')).toHaveText('ciao!');
   const [bubble, name] = await Promise.all([
     player.locator('.bubble').boundingBox(),
     player.locator('.name').boundingBox(),

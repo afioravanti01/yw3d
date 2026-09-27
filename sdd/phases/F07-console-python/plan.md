@@ -102,6 +102,7 @@ Questa è la forma che la prova d'uso (T7.09) mette alla prova: nomi dei metodi 
 - **A7.5 — DIALOG-001.b, DIALOG-005.e, PROTO-002.b** (prova d'uso, richiesta dell'utente). Il giocatore parla con `@` solo ai personaggi entro 16 blocchi; altrimenti «Personaggio non in prossimità». La regola sta nella `Simulation`, quindi vale per la console del browser, il terminale e i client del giocatore. Con A7.6 la stessa regola vale per `say` con `to` tra personaggi: oltre 16 blocchi l'azione fallisce.
 - **A7.6 — PROTO-002.b** (richiesta dell'utente). `say` con `to` riesce solo se il destinatario è entro 16 blocchi.
 - **A7.7 — PY-002.e, PY-004.a** (richiesta dell'utente). `ask(testo, to=…)` verso il giocatore o un personaggio; esempio di Tobia che va da Marta a chiedere dei pesci e riferisce. Realizzato in T7.10 e T7.11.
+- **A7.8 — CHAR-002.c** (richiesta dell'utente). Le vignette usano `markdownDom.ts` come la console.
 
 ## Strategia di test
 - **Unit (Vitest, Node).**
@@ -221,6 +222,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: DIALOG-005, DIALOG-001, DIALOG-002, CHAR-001 · Dip: T7.04, T7.11
   - Suite completa nei due progetti, con il personaggio Python dell'host.
   - Fatto quando: `npm run e2e` verde.
+
+- [x] **T7.19+** Markdown nelle vignette (A7.8)
+  - Req: CHAR-002 · Dip: T7.17+
+  - Nato alla verifica: le frasi dei personaggi contengono Markdown.
+  - Fatto quando: e2e di CHAR-002.c–d verde.
 
 - [ ] **T7.14** Verifica di accettazione e chiusura della fase
   - Req: — (tutti) · Dip: T7.11, T7.12, T7.13

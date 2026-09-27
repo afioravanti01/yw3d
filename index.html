@@ -143,6 +143,23 @@
         box-shadow: 0 2px 6px rgb(0 0 0 / 0.18);
         white-space: pre-wrap;
       }
+      /* Markdown in the bubbles (A7.8). */
+      .bubble p,
+      .bubble ul,
+      .bubble ol,
+      .bubble pre {
+        margin: 0;
+      }
+      .bubble ul,
+      .bubble ol {
+        padding-left: 18px;
+      }
+      .bubble code {
+        padding: 0 3px;
+        background: rgb(46 42 36 / 0.08);
+        border-radius: 3px;
+        font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+      }
       /* The message console (DIALOG-005, A7.1, A7.4): a see-through block on the right, as high as
          the window, with the messages at the top and the box of the player at the bottom. The
          messages are free text, selectable; the rest of the block leaves the mouse to the scene. */
