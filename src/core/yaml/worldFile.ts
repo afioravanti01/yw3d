@@ -257,6 +257,13 @@ const characterSchema = object(
   },
 );
 
+/** Settings shared by the agents of a world (A8.6). */
+export const DEFAULT_CONVERSATION_TURNS = 12;
+const agentSettingsSchema = object({
+  /** Lines of a conversation between agents without the player, in all (AGENT-004.c). */
+  conversation_turns: int({ min: 1, max: 200, default: DEFAULT_CONVERSATION_TURNS }),
+});
+
 const worldFileSchema = object(
   {
     version: versionSchema,
@@ -268,6 +275,7 @@ const worldFileSchema = object(
     characters: optional(list(characterSchema)),
     structures: optional(list(structureSchema)),
     scatter: optional(list(scatterSchema)),
+    agents: optional(agentSettingsSchema),
     behaviors: optional(unknownValue()),
   },
   (world, path, issues) => {

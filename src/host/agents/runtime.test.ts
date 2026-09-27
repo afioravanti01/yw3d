@@ -5,7 +5,6 @@ import type { AgentDecl } from '../../core/yaml/worldFile';
 import type { Brain, BrainRequest } from './brain';
 import {
   AgentRuntime,
-  MAX_AGENT_EXCHANGES,
   MAX_REQUESTS_PER_MINUTE,
   MEMORY_SIZE,
   TIME_LIMIT_MS,
@@ -93,6 +92,8 @@ class FakeClock implements Clock {
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
 const say = (text: string) => ({ say: { text, to: null }, actions: [] });
+/** Lines of a conversation between agents in the world of these tests (A8.6). */
+const TURNS = 4;
 
 function setup(config: Partial<AgentDecl> = {}) {
   const brain = new ScriptedBrain();
@@ -109,6 +110,7 @@ function setup(config: Partial<AgentDecl> = {}) {
       map: () => MAP,
       isAgent: (id) => id === 'tobia',
       isCharacter: (id) => id === 'tobia' || id === 'marta',
+      conversationTurns: () => TURNS,
       log: (l) => log.push(l),
     },
     clock,
@@ -189,18 +191,24 @@ describe('the runtime of an agent', () => {
     expect(brain.requests).toHaveLength(2);
   });
 
-  it('AGENT-004.c: it answers another agent only up to 4 exchanges in a row without the player', async () => {
+  it('AGENT-004.c: a conversation between agents lasts the lines the world allows, both ways; the agent knows how many are left (A8.6)', async () => {
     const { brain, message } = setup();
-    for (let i = 0; i < MAX_AGENT_EXCHANGES + 2; i++) {
-      message(`battuta ${i}`, 'tobia');
-      if (brain.requests[i]) await brain.answer(i, say(`risposta ${i}`));
-    }
-    expect(brain.requests).toHaveLength(MAX_AGENT_EXCHANGES);
+    // Tobia starts: each of his lines is one; each of Marta's lines to him is another.
+    message('Marta, parliamo di pesca?', 'tobia');
+    expect(brain.requests[0]!.request.input.triggers).toMatchObject([{ turnsLeft: TURNS - 1 }]);
+    await brain.answer(0, { say: { text: 'Parliamone.', to: 'tobia' }, actions: [] });
+    message('Cosa abbocca oggi?', 'tobia');
+    expect(brain.requests[1]!.request.input.triggers).toMatchObject([{ turnsLeft: TURNS - 3 }]);
+    await brain.answer(1, { say: { text: 'Le tinche.', to: 'tobia' }, actions: [] });
+    // Four lines: the next line of Tobia gets no answer.
+    message('E domani?', 'tobia');
+    expect(brain.requests).toHaveLength(2);
     // The player speaks: the agents may talk again.
     message('e voi due?');
-    await brain.answer(MAX_AGENT_EXCHANGES, say('Parlavamo di pesci.'));
+    await brain.answer(2, say('Parlavamo di pesci.'));
     message('ancora', 'tobia');
-    expect(brain.requests).toHaveLength(MAX_AGENT_EXCHANGES + 2);
+    expect(brain.requests).toHaveLength(4);
+    expect(brain.requests[3]!.request.text).toContain('can go on for 3 more lines');
   });
 
   it('AGENT-005.a: the recent exchanges and actions go with every request, the last 12', async () => {

@@ -27,7 +27,7 @@ import { checkAgent, describeAgent } from './agents/config';
 import type { Brain } from './agents/brain';
 import { createBrain } from './agents/brains';
 import { AgentRuntime, type AgentStatus, type Clock } from './agents/runtime';
-import type { AgentDecl } from '../core/yaml/worldFile';
+import { DEFAULT_CONVERSATION_TURNS, type AgentDecl } from '../core/yaml/worldFile';
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
 import { structureFiles, type WorldFolder } from './worldFolder';
@@ -411,6 +411,7 @@ export class HostSession {
         map: () => this.world!.result.map!,
         isAgent: (other) => this.runtimes.has(other),
         isCharacter: (other) => this.sim?.agents.ids.includes(other) ?? false,
+        conversationTurns: () => this.world?.result.conversationTurns ?? DEFAULT_CONVERSATION_TURNS,
         log: (line) => this.terminal.line(`${PREFIX}  [${id}] ${line}`),
       },
       this.options.agentClock,

@@ -43,6 +43,8 @@ export type AgentTrigger =
       readonly fromName: string;
       readonly to: string | null;
       readonly text: string;
+      /** In a conversation between agents: the lines still allowed (A8.6). */
+      readonly turnsLeft?: number;
     }
   | { readonly kind: 'near'; readonly who: string; readonly whoName: string }
   | { readonly kind: 'interact' }
@@ -185,7 +187,13 @@ function entryOf(e: MapEntry) {
 function describeTrigger(t: AgentTrigger): string {
   switch (t.kind) {
     case 'message':
-      return `${t.fromName} (${t.from}) says${t.to ? ` to ${t.to}` : ' aloud'}: ${t.text}`;
+      return `${t.fromName} (${t.from}) says${t.to ? ` to ${t.to}` : ' aloud'}: ${t.text}${
+        t.turnsLeft !== undefined
+          ? `\n  (This conversation between characters can go on for ${t.turnsLeft} more lines${
+              t.turnsLeft <= 2 ? ': bring it to a natural close now' : ''
+            }.)`
+          : ''
+      }`;
     case 'near':
       return `${t.whoName} (${t.who}) came near you.`;
     case 'interact':
@@ -210,7 +218,7 @@ function instructions(identity: AgentIdentity): string {
     'The player can ask you to do things: do them, unless they are impossible in this world. Your character colors how you speak, never whether you help: grumble if it fits you, but go. "Vai da Anselmo", "portami al laghetto", "seguimi" are requests to you.',
     'When someone speaks to you, answer them: say.to = their id.',
     'Plans in steps: set "continue": true when your actions are one step of a longer plan and you must decide again once they are done (you will be asked); set it to false when you are done.',
-    'Errands: when the player asks you to ask someone something, first reply with walk_to that character and "continue": true; once there, say the question to them (say.to = their id); their answer will reach you as a new message; then walk_to "player" with "continue": true, and once there tell the player what they said. Your memory tells you which errand you are on.',
+    'Conversations: when the player asks you to talk with someone, or to ask them something, walk_to them with "continue": true; once there, speak to them (say.to = their id) and carry on the conversation as your character would, answering what they say. The player reads every message in the console: do not go back to report to the player, unless the player asks you to.',
     'First use what the world state below says: places, characters, where things are. When asked what you see, or where something is, name the places and the characters of your surroundings with their names, their direction and roughly their distance in meters. When a question is not about this world, answer with your own knowledge, as your character would.',
     `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
     'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',

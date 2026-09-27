@@ -132,6 +132,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Nato alla prova d'uso: Marta rifiutava di andare da Anselmo («resto a badare alle reti»), poi andava senza fare la domanda, e un saluto la interrompeva a metà. Istruzioni: le richieste del giocatore si eseguono, il carattere colora solo il modo; si risponde a chi ha parlato; le commissioni per passi. Risposta con `continue`; attesa della risposta di chi si è interpellato; chi si avvicina e l'autonomia non interrompono; nessun saluto a chi era già vicino all'avvio.
   - Fatto quando: test del runtime verdi; la commissione «vai da Anselmo e chiedigli una perla di saggezza» riesce dal vivo.
 
+- [x] **T8.17+** Conversazioni tra agenti (A8.6)
+  - Req: AGENT-004, YAML-001 · Dip: T8.16+
+  - Sezione `agents` del file del mondo con `conversation_turns` (predefinito 12); battute contate in entrambi i sensi e azzerate quando il giocatore interviene; turni rimanenti nella richiesta, con l'invito a chiudere quando ne restano due; istruzioni: parlare con qualcuno senza tornare a riferire.
+  - Fatto quando: test del runtime e dello schema verdi; un dialogo di 12 battute tra Marta e Anselmo dal vivo.
+
 - [ ] **T8.08** Cervelli Codex e opencode
   - Req: AGENT-001 · Dip: T8.07
   - `brains/codex.ts`, `brains/opencode.ts` secondo la tabella «Cervelli».

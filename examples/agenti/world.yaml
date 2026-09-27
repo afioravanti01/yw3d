@@ -103,6 +103,11 @@ scatter:
     density: 0.15
     minDistance: 22
 
+# Settings of all the agents: a conversation between agents, without the player, lasts at most
+# these lines in all; the agents know how many are left and close it naturally.
+agents:
+  conversation_turns: 12
+
 # Characters: each one is an LLM agent declared here, without programs (docs/agenti.md).
 # Stand near one and write to it with @name in the console on the right.
 characters:

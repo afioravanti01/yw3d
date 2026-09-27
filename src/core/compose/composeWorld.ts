@@ -16,6 +16,7 @@ import { diagnostic, hasErrors, type Diagnostic } from '../yaml/report';
 import {
   DEFAULT_PLAYER_NAME,
   loadWorldFile,
+  DEFAULT_CONVERSATION_TURNS,
   type AgentDecl,
   type PlaceDecl,
 } from '../yaml/worldFile';
@@ -101,6 +102,8 @@ export interface ComposeResult {
   readonly playerDescription: string | undefined;
   /** Named points and areas (YAML-010.a), in order. */
   readonly places: readonly PlaceDecl[];
+  /** Lines of a conversation between agents without the player (AGENT-004.c, A8.6). */
+  readonly conversationTurns?: number;
   /** The map of the world (MAP-002); undefined when the file has errors. */
   readonly map: WorldMap | undefined;
   /** Where a character goes for each id of the map (MAP-003). */
@@ -338,6 +341,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     playerName: decl.player?.name ?? DEFAULT_PLAYER_NAME,
     playerDescription: decl.player?.description,
     places: decl.places ?? [],
+    conversationTurns: decl.agents?.conversation_turns ?? DEFAULT_CONVERSATION_TURNS,
     map: built.map,
     goals: built.goals,
     characters: (decl.characters ?? []).map((c) => ({

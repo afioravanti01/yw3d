@@ -22,8 +22,6 @@ import { LONG_SAY_LENGTH, readReply, Sequence, type Step } from './reply';
 export const TIME_LIMIT_MS = { headless: 60_000, api: 30_000, fake: 5_000 } as const;
 /** Requests per minute of an agent (Q4). */
 export const MAX_REQUESTS_PER_MINUTE = 6;
-/** Exchanges in a row with other agents, without the player, before it stops answering (Q5). */
-export const MAX_AGENT_EXCHANGES = 4;
 /** Recent events kept in the memory (plan F08 P10). */
 export const MEMORY_SIZE = 12;
 /** The player is near within this distance, and far beyond HEARING_DISTANCE (Q1). */
@@ -66,6 +64,8 @@ export interface AgentHost {
   isAgent(id: string): boolean;
   /** Whether an id is a character of the world. */
   isCharacter(id: string): boolean;
+  /** Lines of a conversation between agents without the player (AGENT-004.c, A8.6). */
+  conversationTurns(): number;
   /** A line in the terminal of the host, with the character's id. */
   log(line: string): void;
 }
@@ -80,6 +80,7 @@ export class AgentRuntime {
   private readonly memory: string[] = [];
   private readonly requestTimes: number[] = [];
   private retry: unknown;
+  /** Lines of the conversation with other agents since the player last took part (A8.6). */
   private agentExchanges = 0;
   /** Since when the player is far, seconds of the world; -Infinity: never seen near. */
   private playerFarSince = -Infinity;
@@ -176,10 +177,13 @@ export class AgentRuntime {
     const answer = (this.awaiting.get(event.from) ?? -Infinity) >= now;
     if (to !== this.id && !answer) return;
     this.awaiting.delete(event.from);
+    let turnsLeft: number | undefined;
     if (this.host.isAgent(event.from)) {
-      // Two agents do not talk for ever (Q5).
-      if (this.agentExchanges >= MAX_AGENT_EXCHANGES) return;
+      // A conversation between agents lasts the lines the world allows (AGENT-004.c, A8.6).
+      const turns = this.host.conversationTurns();
+      if (this.agentExchanges >= turns) return;
       this.agentExchanges++;
+      turnsLeft = turns - this.agentExchanges;
     } else {
       this.agentExchanges = 0;
     }
@@ -189,6 +193,7 @@ export class AgentRuntime {
       fromName: nameOf(event.from),
       to,
       text: event.text,
+      ...(turnsLeft !== undefined ? { turnsLeft } : {}),
     });
   }
 
@@ -285,6 +290,8 @@ export class AgentRuntime {
       this.remember(`you said${step.to ? ` to ${step.to}` : ''}: ${step.text}`);
       if (step.to && step.to !== 'player' && this.host.isCharacter(step.to)) {
         this.awaiting.set(step.to, (this.seen?.time ?? 0) + ANSWER_SECONDS);
+        // Its own lines to an agent count in the conversation too (A8.6).
+        if (this.host.isAgent(step.to)) this.agentExchanges++;
       }
     }
     this.run(reply.steps, reply.continueAfter === true);

@@ -73,4 +73,17 @@ describe('agents in the world file', () => {
       ['characters[0].agent', 'a character has one of program, controller or agent, not more'],
     ]);
   });
+
+  it('AGENT-004.c: the world sets the lines of a conversation between agents; 12 when absent (A8.6)', () => {
+    const base = 'version: 2\nname: T\nterrain: { seed: 1, generator: 1 }\n';
+    expect(
+      loadWorldFile(`${base}agents: { conversation_turns: 20 }\n`, 'w.yaml').world?.agents,
+    ).toEqual({
+      conversation_turns: 20,
+    });
+    expect(loadWorldFile(base, 'w.yaml').world?.agents).toBeUndefined();
+    expect(
+      loadWorldFile(`${base}agents: { conversation_turns: 0 }\n`, 'w.yaml').diagnostics[0]?.path,
+    ).toBe('agents.conversation_turns');
+  });
 });
