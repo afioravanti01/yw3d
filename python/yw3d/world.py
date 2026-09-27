@@ -57,6 +57,19 @@ class MapEntry:
         (x0, z0), (x1, z1) = shape["from"], shape["to"]
         return ((x0 + x1) / 2, (z0 + z1) / 2)
 
+    def contains(self, point: Any, margin: float = 1.5) -> bool:
+        """Whether a point (a position, an entity) is inside the element, in blocks: inside an
+        area or a footprint, or within `margin` blocks of a point. A `walk_to` towards an area
+        the character is already in ends at once."""
+        shape = self.shape
+        if shape["kind"] == "point":
+            return math.hypot(point.x - shape["x"], point.z - shape["z"]) <= margin
+        if shape["kind"] == "circle":
+            cx, cz = shape["center"]
+            return math.hypot(point.x - cx - 0.5, point.z - cz - 0.5) <= shape["radius"] + 0.5
+        (x0, z0), (x1, z1) = shape["from"], shape["to"]
+        return x0 <= point.x < x1 and z0 <= point.z < z1
+
     @staticmethod
     def from_message(data: Dict[str, Any]) -> "MapEntry":
         return MapEntry(

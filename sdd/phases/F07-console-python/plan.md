@@ -171,6 +171,11 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: PY-005, DIALOG-005 · Dip: T7.04, T7.08
   - **Punto di controllo**: l'utente copia la bozza del template, scrive un personaggio suo in un mondo e gli parla dalla console. Si raccolgono le osservazioni su leggibilità della libreria e comodità della console; ciò che cambia la forma diventa una deviazione o un emendamento, prima di T7.10.
   - Fatto quando: l'utente ha scritto e fatto girare il suo personaggio e le osservazioni sono registrate nel piano.
+  - Osservazioni (2026-09-27):
+    - La console doveva essere un blocco sempre presente, con la casella in basso: A7.1, T7.15+.
+    - Serviva sapere cosa c'è nel mondo e dove: `/world`, A7.2, T7.16+.
+    - `@tobia vai a scatter#5` non muoveva Tobia: «Alberi dei prati» copre quasi tutta la valle e `walk_to` verso un'area in cui si è già dentro finisce subito (MAP-003.c). Proposto A7.3 (verso un gruppo, la struttura più vicina); l'utente ha preferito lasciare la regola e far rispondere «Sono già qui!». Aggiunto `MapEntry.contains` alla libreria e usato nel template.
+    - L'utente ha svuotato la routine con `pass`: una routine senza azioni funziona (pausa di 0,5 s e poi di nuovo).
 
 - [x] **T7.15+** Console sempre presente (A7.1)
   - Req: DIALOG-005 · Dip: T7.04

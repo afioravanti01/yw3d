@@ -5,7 +5,7 @@ import unittest
 from typing import Any, Awaitable, Callable, List
 
 from fake_host import HELLO, FakeHost, strip
-from yw3d import ActionFailed, Character, Message
+from yw3d import ActionFailed, Character, Message, Position
 
 
 def scenario(character: Character, test: Callable[[FakeHost], Awaitable[None]]) -> None:
@@ -196,6 +196,10 @@ class TestState(unittest.TestCase):
                 seen.append((self.time, self.position.x, [(e.id, e.name, e.is_player) for e in self.nearby]))
                 seen.append((self.map.name, self.map["orto"].description, self.map["orto"].center,
                              [e.id for e in self.map.of_kind("place")], "pozzo" in self.map))
+                seen.append((self.map["orto"].contains(Position(12, 34, 29.9)),
+                             self.map["orto"].contains(Position(20, 34, 25)),
+                             self.map["pozzo"].contains(Position(45, 34, 31)),
+                             self.map["pozzo"].contains(self.position)))
                 await self.wait(100)
 
         async def host_side(host: FakeHost) -> None:
@@ -209,6 +213,7 @@ class TestState(unittest.TestCase):
                 ("tobia", "Tobia", "Il garzone.", 30.5, 34.5),
                 (3.5, 31, [("player", "Ada", True)]),
                 ("Borgo", "Zucchine.", (15.0, 20.0), ["pozzo", "orto"], True),
+                (True, False, True, False),
             ])
 
         scenario(Looker(), host_side)

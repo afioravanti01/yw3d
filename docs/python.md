@@ -42,8 +42,12 @@ class Tobia(Character):
         if not message.to_me:
             return
         if message.mentions:
-            await self.say(f"Vado a {message.mentions.name}!")
-            await self.walk_to(message.mentions.id)
+            luogo = message.mentions
+            if luogo.contains(self.position):
+                await self.say("Sono già qui!")
+            else:
+                await self.say(f"Vado a {luogo.name}!")
+                await self.walk_to(luogo.id)
         else:
             await self.say(f"Ciao {message.sender_name}!", to=message.sender)
 
@@ -74,7 +78,7 @@ Senza chiederlo, il personaggio sa:
 - `self.id`, `self.name`, `self.description`;
 - `self.position` (x, y, z in blocchi) e `self.time` (secondi dall'avvio del mondo), aggiornati 4 volte al secondo;
 - `self.nearby`: le entità entro 32 blocchi, ognuna con `id`, `name`, `distance` e `is_player`;
-- `self.map`: ogni elemento del mondo per id (`self.map["laghetto1"].name`), con nome, descrizione e forma.
+- `self.map`: ogni elemento del mondo per id (`self.map["laghetto1"].name`), con nome, descrizione e forma; `elemento.contains(self.position)` dice se il personaggio ci si trova già. Verso un'area in cui è già dentro, `walk_to` finisce subito: per esempio «Alberi dei prati», che copre quasi tutta la valle.
 
 ## Messaggi
 
