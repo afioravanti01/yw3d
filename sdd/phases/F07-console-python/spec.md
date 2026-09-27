@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Stato | draft |
-| Versione | 0.1 |
+| Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-27 |
 | Piano | [plan.md](plan.md) (dopo G1) |
 
@@ -26,7 +26,7 @@ Il giocatore interagisce con i personaggi da una **console dei messaggi** traspa
 ## Storie utente
 - **US-1** Come giocatore, vedo tutti i messaggi del mondo in una console sulla destra, anche quelli detti lontano da me o mentre guardavo altrove.
 - **US-2** Come giocatore, scrivo `@tobia dove vai?` e Tobia riceve il messaggio ovunque si trovi.
-- **US-3** Come autore, parto da un template e scrivo un personaggio in Python in poche righe leggibili: un giro, un saluto, una risposta.
+- **US-3** Come autore, copio il template dalla guida e scrivo un personaggio in Python in poche righe leggibili: un giro, un saluto, una risposta.
 - **US-4** Come autore, metto il programma nella cartella del mondo, lo dichiaro nel YAML e lo vedo partire; se sbaglio, il terminale mi mostra l'errore con la riga.
 - **US-5** Come autore di mondi fatti con F06, capisco dall'errore cosa cambiare per passare dai comportamenti in YAML ai programmi Python.
 
@@ -59,13 +59,12 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **a** `[unit]` Un personaggio dichiara `program: <file.py>`, un percorso relativo alla cartella del mondo, in alternativa a `controller`. L'host lo lancia con l'interprete Python della macchina, con il consenso e la verifica di PROTO-005 (il comando mostrato è quello realmente eseguito).
 - **b** `[unit]` Un file inesistente, fuori dalla cartella del mondo o non `.py` è un errore del file del mondo nel formato di YAML-002. Un interprete Python mancante o più vecchio di 3.10 è segnalato con il personaggio (PROTO-005.b).
 - **c** `[unit]` Un'eccezione non gestita nel programma compare nel terminale con il file, la riga e il messaggio; il personaggio si ferma. Salvando il file Python il mondo si ricarica e il programma riparte (HOST-003).
-- **d** `[unit]` Il comando `yw3d new <cartella> <id>` crea nella cartella del mondo un programma dal template, commentato, e stampa le righe da aggiungere al `world.yaml`; non sovrascrive file esistenti.
 
 ### PY-004 — Esempi
 - **a** `[manuale]` Le cartelle di esempio sono rifatte in Python e si comportano come descritto nei commenti: un personaggio che fa un giro, uno che chiede al giocatore dove andare e ci va, uno che risponde ai messaggi, e una folla di 20 personaggi con lo stesso programma.
 
 ### PY-005 — Guida ed esperienza d'uso
-- **a** `[manuale]` Una guida spiega la struttura di un programma, ogni azione, la mappa, i messaggi e le domande, con esempi eseguibili.
+- **a** `[manuale]` Una guida spiega la struttura di un programma, ogni azione, la mappa, i messaggi e le domande, con esempi eseguibili; contiene un template commentato da copiare nella cartella del mondo (Q3).
 - **b** `[manuale]` Partendo dal template, un personaggio con un giro di tre tappe, un saluto al giocatore quando si avvicina e una risposta a una domanda si scrive in meno di 40 righe, e si rilegge a colpo d'occhio: la routine è in cima, un gestore per ogni cosa a cui reagisce.
 
 ## Requisiti MODIFICATI
@@ -123,7 +122,7 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **Prima:** a `[unit]` Un file del mondo dichiara la versione dello schema (`version: 2`), […] i comportamenti della libreria (`behaviors`) […].
 - **Dopo:** criteri b–e invariati; il criterio a diventa, e si aggiunge f:
 - **a** `[unit]` Un file del mondo dichiara la versione dello schema (`version: 2`), nome e descrizione del mondo (YAML-009), il terreno (`terrain`) e, facoltativi, il giocatore (`player`), le strutture (`structures`), le distribuzioni (`scatter`), i luoghi (`places`) e i personaggi (`characters`). Una versione dello schema non gestita è un errore.
-- **f** `[unit]` (Q7) Un file che usa ancora `behaviors` o `behavior` produce un errore che spiega che i comportamenti in YAML sono stati sostituiti dai programmi Python e rimanda a `yw3d new`.
+- **f** `[unit]` (Q7) Un file che usa ancora `behaviors` o `behavior` produce un errore che spiega che i comportamenti in YAML sono stati sostituiti dai programmi Python e rimanda alla guida.
 - **Motivo:** la sezione dei comportamenti non esiste più.
 
 ### MAP-001 — Identificatori
@@ -154,14 +153,18 @@ Legenda verifica: `[unit]` test automatico headless · `[e2e]` test automatico n
 - **BEHAV-001 … BEHAV-007** — il linguaggio dei comportamenti in YAML è sostituito dai programmi Python (D-010).
 - **PERF-006** — misurava il costo dei comportamenti nel passo di simulazione; il costo dei personaggi guidati da programmi resta coperto da PERF-005.
 
-## Domande aperte
-- **Q1** Tasto E: con la console serve ancora? Proposta: **sì, lo si tiene** come scorciatoia per «il personaggio più vicino» (PROTO-002.c invariato); la console è il modo principale.
-- **Q2** Interprete Python: proposta **`python3` dal `PATH`** (`python` su Windows), con l'opzione `--python <percorso>` per sceglierne un altro, e verifica della versione ≥ 3.10 all'avvio.
-- **Q3** Template: proposta **`yw3d new <cartella> <id>`** (PY-003.d) più il template nella guida. Alternativa: solo il file di template nella guida.
-- **Q4** Destinatario con `@`: proposta **id o nome, il più lungo che corrisponde**, con suggerimenti e Tab (DIALOG-005.d).
-- **Q5** Viste che guardano: proposta **leggono la console ma non scrivono**, come oggi; c'è un solo giocatore.
-- **Q6** Comandi: proposta **`/` riservato ai comandi**, solo `/help` in F07; i comandi di programmazione più avanti.
-- **Q7** Versione dello schema: proposta **resta 2**, con un errore che spiega la sostituzione (YAML-001.f); una versione 3 obbligherebbe a modificare tutti i file anche senza comportamenti.
+## Domande risolte
+Chiuse con l'utente il 2026-09-27, prima di G1.
+
+| # | Domanda | Decisione | Effetto sulla spec |
+|---|---|---|---|
+| Q1 | Tasto E | Resta come scorciatoia per il personaggio più vicino; la console è il modo principale | PROTO-002.c invariato |
+| Q2 | Interprete Python | `python3` dal `PATH` (`python` su Windows), `--python <percorso>` per sceglierne un altro, verifica della versione ≥ 3.10 | PY-003.b invariato |
+| Q3 | Template | Solo nella guida, commentato, da copiare; nessun comando `yw3d new` | PY-003.d tolto; PY-005.a e YAML-001.f rimandano alla guida |
+| Q4 | Destinatario con `@` | Id o nome, il più lungo che corrisponde, con suggerimenti e Tab | DIALOG-005.d invariato |
+| Q5 | Viste che guardano | Leggono la console ma non scrivono | DIALOG-001.a invariato |
+| Q6 | Comandi | `/` riservato ai comandi, solo `/help` in F07 | DIALOG-005.f invariato |
+| Q7 | Versione dello schema | Resta 2, con un errore che spiega la sostituzione dei comportamenti | YAML-001.f invariato |
 
 ## Registro emendamenti
 | ID | Data | Requisito | Modifica | Motivo | Approvato |
