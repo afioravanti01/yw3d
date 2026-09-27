@@ -151,7 +151,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Tutti i messaggi, `@nome`, `/help` nel terminale.
   - Fatto quando: test di DIALOG-004.a–b verdi.
 
-- [ ] **T7.06** Protocollo dei controllori, versione 3
+- [x] **T7.06** Protocollo dei controllori, versione 3
   - Req: PROTO-002, PROTO-004 · Dip: T7.03
   - P6: `yes_no`, `say` con `to`, `paused` e `resumed`, esito `paused` delle azioni sospese; `docs/controllori.md` aggiornato.
   - Fatto quando: test di PROTO-004.a–b e del nuovo `heard` verdi.

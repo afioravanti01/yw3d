@@ -38,7 +38,13 @@ export type ActionRequest =
       readonly speed?: number;
     } & Target)
   | ({ readonly kind: 'look_at'; readonly id: string } & Target)
-  | { readonly kind: 'say'; readonly id: string; readonly text: string }
+  | {
+      readonly kind: 'say';
+      readonly id: string;
+      readonly text: string;
+      /** To whom, a character or the player (plan F07 P6); heard by it wherever it is. */
+      readonly to?: string;
+    }
   | {
       readonly kind: 'follow';
       readonly id: string;
@@ -116,7 +122,7 @@ export interface AgentListener {
   event(characterId: string, event: AgentEvent): void;
   perception(characterId: string, perception: Perception): void;
   /** A character starts saying something: for the conversation log (DIALOG-002). */
-  said?(characterId: string, text: string): void;
+  said?(characterId: string, text: string, to: string | null): void;
 }
 
 /** What views need to draw a character (plan F05 P15). */
@@ -338,24 +344,30 @@ export class AgentWorld {
         running.deadline = this.time;
         return;
       }
-      case 'say':
+      case 'say': {
+        const to = request.to ?? null;
+        if (to !== null && !this.positionOf(to)) {
+          return this.fail(agent, `there is no character "${to}"`);
+        }
         agent.speech = { text: request.text, until: this.time + sayDuration(request.text) };
         running.deadline = agent.speech.until;
-        this.listener.said?.(agent.character.start.id, request.text);
+        this.listener.said?.(agent.character.start.id, request.text, to);
         for (const [otherId, other] of this.agents) {
           if (other === agent) continue;
           const o = other.character.entity.state;
           const distance = Math.hypot(o.x - state.x, o.y - state.y, o.z - state.z);
-          if (distance <= HEARING_DISTANCE) {
+          if (distance <= HEARING_DISTANCE || otherId === to) {
             this.listener.event(otherId, {
               type: 'heard',
               from: agent.character.start.id,
               text: request.text,
               distance,
+              to,
             });
           }
         }
         return;
+      }
       case 'follow':
         if (!this.positionOf(request.target)) {
           return this.fail(

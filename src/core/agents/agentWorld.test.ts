@@ -98,7 +98,7 @@ describe('actions', () => {
     ]);
     agents.request('a', { kind: 'say', id: 's1', text: 'Buongiorno!' });
     expect(events.filter(([, e]) => e.type === 'heard')).toEqual([
-      ['near', { type: 'heard', from: 'a', text: 'Buongiorno!', distance: 6 }],
+      ['near', { type: 'heard', from: 'a', text: 'Buongiorno!', distance: 6, to: null }],
     ]);
     expect(agents.views().find((v) => v.id === 'a')!.speech).toBe('Buongiorno!');
     // 1 s + 0.06 s × 11 characters = 1.66 s.
@@ -197,7 +197,10 @@ describe('perception and events', () => {
     agents.request('a', { kind: 'say', id: 's', text: 'Ciao' });
     agents.request('b', { kind: 'look_at', id: 'l', target: 'a' });
     // Before any step: the sentence is already heard.
-    expect(events).toContainEqual(['b', { type: 'heard', from: 'a', text: 'Ciao', distance: 4 }]);
+    expect(events).toContainEqual([
+      'b',
+      { type: 'heard', from: 'a', text: 'Ciao', distance: 4, to: null },
+    ]);
     agents.step();
     expect(events).toContainEqual(['b', { type: 'action_done', id: 'l' }]);
   });

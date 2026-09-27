@@ -19,7 +19,7 @@ describe('controller messages', () => {
       world: { size: [512, 96, 512] },
       map,
     });
-    expect(CONTROLLER_PROTOCOL_VERSION).toBe(2);
+    expect(CONTROLLER_PROTOCOL_VERSION).toBe(3);
   });
 
   it('PROTO-001.b: each action is a message with its id', () => {

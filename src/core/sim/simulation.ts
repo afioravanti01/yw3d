@@ -100,7 +100,7 @@ export class Simulation {
           this.sinks.get(id)?.event(id, this.enrich(event));
         },
         perception: (id, perception) => this.sinks.get(id)?.perception(id, this.named(perception)),
-        said: (id, text) => this.spoken({ from: id, to: null, text }),
+        said: (id, text, to) => this.spoken({ from: id, to, text }),
       },
       result.goals,
     );

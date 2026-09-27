@@ -1,6 +1,6 @@
 # Controllori dei personaggi
 
-Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Questa guida descrive il protocollo, versione 2. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
+Un **controllore** è un programma che guida un personaggio: riceve quello che il personaggio percepisce e chiede azioni. Si scrive in qualunque linguaggio: basta leggere e scrivere righe di testo in JSON. Questa guida descrive il protocollo, versione 3. Per scrivere personaggi in Python c'è una libreria che parla il protocollo al posto tuo (vedi [python.md](python.md)); questa guida serve per gli altri linguaggi e per capire cosa succede sotto. Gli esempi completi sono in [examples/valle/controllers](../examples/valle/controllers): `guardiano.py` in Python, `pescatrice.mjs` in JavaScript.
 
 ## Collegare un controllore
 
@@ -24,7 +24,7 @@ La prima volta che una cartella vuole lanciare dei comandi, yw3d li elenca e chi
 { "type": "control", "character": "guardiano" }
 ```
 
-Da lì in poi i messaggi sono gli stessi di stdio, uno per frame.
+Da lì in poi i messaggi sono gli stessi di stdio, uno per frame. Il client può prendere anche un personaggio guidato da un **programma** della cartella del mondo: il programma riceve `{ "type": "paused" }` e, finché il client guida, le sue azioni falliscono con la causa `paused`; quando il client si scollega il programma riceve `{ "type": "resumed" }` e torna a guidare. Un personaggio con un `controller` invece non si può prendere.
 
 ## Messaggi dall'host
 
@@ -33,7 +33,7 @@ Il primo messaggio è il saluto:
 ```json
 {
   "type": "hello",
-  "version": 2,
+  "version": 3,
   "character": { "id": "guardiano", "name": "Bruno", "description": null },
   "world": { "size": [512, 96, 512] },
   "map": { "name": "La valle", "description": "…", "size": [512, 96, 512], "entries": ["…"] }
@@ -71,11 +71,12 @@ E subito, quando succedono, gli **eventi**:
 
 | Messaggio | Quando |
 |---|---|
-| `{ "type": "heard", "from": "player", "text": "…", "distance": 6, "to": "guardiano", "mentions": "laghetto1" }` | qualcuno entro 16 blocchi ha detto qualcosa: un personaggio o il giocatore; `to` è a chi l'ha detto (o `null`), `mentions` l'elemento della mappa che la frase nomina, se ne nomina uno solo (o `null`) |
+| `{ "type": "heard", "from": "player", "text": "…", "distance": 6, "to": "guardiano", "mentions": "laghetto1", "yes_no": null }` | qualcuno ha detto qualcosa entro 16 blocchi, oppure l'ha detto proprio a questo personaggio, da qualunque distanza; `to` è a chi l'ha detto (o `null`), `mentions` l'elemento della mappa che la frase nomina, se ne nomina uno solo (o `null`), `yes_no` è `"yes"` o `"no"` se la frase è un sì o un no (o `null`) |
 | `{ "type": "interacted", "by": "player" }` | il giocatore, entro 3 m, ha premuto E |
 | `{ "type": "action_done", "id": "walk-3" }` | l'azione è finita |
 | `{ "type": "action_failed", "id": "walk-3", "reason": "…" }` | l'azione non è riuscita, con la causa |
 | `{ "type": "action_replaced", "id": "walk-3" }` | un'azione nuova ha preso il suo posto |
+| `{ "type": "paused" }`, `{ "type": "resumed" }` | un client sul WebSocket ha preso il personaggio di questo programma, o l'ha lasciato |
 | `{ "type": "error", "message": "…" }` | un messaggio del controllore non era valido |
 
 ## Azioni
@@ -86,7 +87,7 @@ Ogni azione ha un `id` scelto dal controllore, che ritorna nel suo esito. Un per
 |---|---|---|
 | `walk_to` | `x`, `z` oppure `target` (un id della mappa, o `player`); `speed` facoltativa, 0,5–7 m/s, predefinita 1,5 | all'arrivo, entro 1 blocco |
 | `look_at` | `x`, `z` oppure `target` (un id della mappa; un elemento esteso si guarda al centro) | subito |
-| `say` | `text`, 1–500 caratteri | dopo 1 s + 0,06 s per carattere |
+| `say` | `text`, 1–500 caratteri; `to` facoltativo, un personaggio o `player`, che la sente ovunque sia | dopo 1 s + 0,06 s per carattere |
 | `follow` | `target` (un personaggio o `player`); `distance` 1–32 blocchi, predefinita 3; `speed` | mai: finché non la sostituisci |
 | `wait` | `seconds`, 0–3600 | dopo i secondi indicati |
 | `stop` | — | subito, fermando l'azione in corso |
@@ -110,10 +111,10 @@ Verso un elemento della mappa il personaggio arriva dove ha senso: davanti alla 
 Un client sul WebSocket può parlare **come il giocatore** invece di guidare un personaggio: un bot di prova, un'altra interfaccia. Il primo messaggio è `{ "type": "player" }`; l'host risponde con un saluto che contiene il nome del giocatore e la mappa:
 
 ```json
-{ "type": "hello", "version": 2, "player": { "id": "player", "name": "viandante" }, "world": { "size": [512, 96, 512] }, "map": { … } }
+{ "type": "hello", "version": 3, "player": { "id": "player", "name": "viandante" }, "world": { "size": [512, 96, 512] }, "map": { … } }
 ```
 
-Poi il client dice frasi, con un destinatario facoltativo (o `@id` all'inizio del testo), e riceve quelle che il giocatore sente, sue comprese:
+Poi il client dice frasi, con un destinatario facoltativo (o `@` con l'id o il nome all'inizio del testo), e riceve tutti i messaggi del mondo, suoi compresi:
 
 ```json
 { "type": "say", "text": "Portami al laghetto1", "to": "tobia" }

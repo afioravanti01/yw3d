@@ -7,6 +7,7 @@ import { TERRAIN_GENERATOR_VERSION } from '../../core/gen/terrain';
 import type { ModuleLoader } from '../moduleLoader';
 import { HostSession } from '../session';
 import { resolveWorldFolder, WORLD_FILE } from '../worldFolder';
+import { ControllerLink } from './link';
 import { attachControllerSocket, type ControllerSocket } from './socket';
 
 const noModules: ModuleLoader = {
@@ -29,7 +30,7 @@ characters:
 `;
 
 async function session() {
-  const root = mkdtempSync(path.join(tmpdir(), 'yw3d-proto2-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'yw3d-proto3-'));
   const file = path.join(root, WORLD_FILE);
   writeFileSync(file, WORLD);
   const resolved = resolveWorldFolder(root);
@@ -72,14 +73,14 @@ const run = (s: HostSession, seconds: number) => {
 const speech = (s: HostSession, id: string) =>
   s.characterSnapshots().find((c) => c.id === id)!.speech;
 
-describe('controller protocol, version 2', () => {
+describe('controller protocol, version 3', () => {
   it('PROTO-001.a: the first message has the character with name and description, and the map', async () => {
     const { s } = await session();
     const marta = client(s);
     marta.say({ type: 'control', character: 'marta' });
     expect(marta.sent[0]).toMatchObject({
       type: 'hello',
-      version: 2,
+      version: 3,
       character: { id: 'marta', name: 'Marta', description: null },
       world: { size: [64, 96, 64] },
       map: { name: 'Borgo' },
@@ -111,7 +112,7 @@ describe('controller protocol, version 2', () => {
     voice.say({ type: 'player' });
     expect(voice.sent[0]).toMatchObject({
       type: 'hello',
-      version: 2,
+      version: 3,
       player: { id: 'player', name: 'Ada' },
       map: { name: 'Borgo' },
     });
@@ -144,5 +145,110 @@ describe('controller protocol, version 2', () => {
     });
     voice.say({ type: 'walk_to', id: 'x', x: 1, z: 1 });
     expect(voice.sent.at(-1)).toMatchObject({ type: 'error' });
+  });
+
+  it('PROTO-002.b: sentences carry yes or no; a message with @ reaches a controller anywhere; say may have an addressee', async () => {
+    const { s } = await session();
+    const marta = client(s);
+    marta.say({ type: 'control', character: 'marta' });
+    const tobia = client(s);
+    tobia.say({ type: 'control', character: 'tobia' });
+    run(s, 0.1);
+    s.playerSays('@marta sì, volentieri');
+    expect(marta.of('heard').at(-1)).toMatchObject({
+      from: 'player',
+      to: 'marta',
+      text: 'sì, volentieri',
+      yes_no: 'yes',
+      mentions: null,
+    });
+    // Marta walks far away; a message with @ still reaches her.
+    marta.say({ type: 'walk_to', id: 'w', x: 60, z: 60 });
+    run(s, 30);
+    const far = s.agents!.stateOf('marta')!;
+    const p = s.agents!.stateOf('player')!;
+    expect(Math.hypot(far.x - p.x, far.z - p.z)).toBeGreaterThan(16);
+    s.playerSays('@Marta torna al pozzo vecchio');
+    expect(marta.of('heard').at(-1)).toMatchObject({
+      to: 'marta',
+      mentions: 'pozzo',
+      yes_no: null,
+    });
+    // A character speaks to another one, far away, and to the player.
+    const lines: string[] = [];
+    s.listen((line) => lines.push(`${line.from}→${line.to}: ${line.text}`));
+    tobia.say({ type: 'say', id: 's1', text: 'Marta, ti aspetto!', to: 'marta' });
+    run(s, 0.1);
+    expect(marta.of('heard').at(-1)).toMatchObject({ from: 'tobia', to: 'marta' });
+    tobia.say({ type: 'say', id: 's2', text: 'Dove vado?', to: 'player' });
+    tobia.say({ type: 'say', id: 's3', text: 'Ehi', to: 'nessuno' });
+    run(s, 0.1);
+    expect(lines).toEqual(['tobia→marta: Marta, ti aspetto!', 'tobia→player: Dove vado?']);
+    expect(tobia.of('action_failed').at(-1)).toEqual({
+      type: 'action_failed',
+      id: 's3',
+      reason: 'there is no character "nessuno"',
+    });
+  });
+
+  it('PROTO-004.a, PROTO-004.b: a client takes a character from its program, which is paused and then resumed', async () => {
+    const { s, lines } = await session();
+    const terminal = { line: (t: string) => lines.push(t) };
+    // A program of the world folder, as the host starts it (plan F07 P7).
+    const sent: Record<string, unknown>[] = [];
+    const program = new ControllerLink(
+      'tobia',
+      s,
+      { send: (text) => (sent.push(JSON.parse(text) as Record<string, unknown>), true) },
+      terminal,
+      () => 0,
+      true,
+    );
+    program.start();
+    const received = (type: string) => sent.filter((m) => m.type === type);
+    program.receive(JSON.stringify({ type: 'walk_to', id: 'w1', target: 'pozzo' }));
+    run(s, 0.5);
+    // A client takes Tobia: the program is told, and its actions fail with «paused».
+    const client1 = client(s, lines);
+    client1.say({ type: 'control', character: 'tobia' });
+    expect(client1.sent[0]).toMatchObject({ type: 'hello', character: { id: 'tobia' } });
+    expect(lines).toContain('yw3d  [tobia] driven by a client on the WebSocket: its program waits');
+    expect(received('paused')).toEqual([{ type: 'paused' }]);
+    run(s, 0.5);
+    const held = { ...s.agents!.stateOf('tobia')! };
+    program.receive(JSON.stringify({ type: 'say', id: 's1', text: 'Io no' }));
+    expect(sent.at(-1)).toEqual({ type: 'action_failed', id: 's1', reason: 'paused' });
+    run(s, 2);
+    // The walk of the program stopped; the client drives.
+    expect(
+      Math.hypot(s.agents!.stateOf('tobia')!.x - held.x, s.agents!.stateOf('tobia')!.z - held.z),
+    ).toBeLessThan(0.3);
+    client1.say({ type: 'say', id: 'c1', text: 'Ora comando io' });
+    run(s, 0.1);
+    expect(speech(s, 'tobia')).toBe('Ora comando io');
+    const perceptionsWhilePaused = received('perception').length;
+    run(s, 1);
+    expect(received('perception')).toHaveLength(perceptionsWhilePaused);
+    // A second client cannot take it while the first one drives.
+    const client2 = client(s, lines);
+    client2.say({ type: 'control', character: 'tobia' });
+    expect(client2.sent.at(-1)).toMatchObject({ type: 'error' });
+    // The client leaves: the program is told and drives again.
+    client1.close();
+    expect(lines).toContain('yw3d  [tobia] the WebSocket client left: its program goes on');
+    expect(received('resumed')).toEqual([{ type: 'resumed' }]);
+    program.receive(JSON.stringify({ type: 'say', id: 's2', text: 'Di nuovo io' }));
+    run(s, 0.3);
+    expect(speech(s, 'tobia')).toBe('Di nuovo io');
+    expect(received('perception').length).toBeGreaterThan(perceptionsWhilePaused);
+    // A controller that is not a program cannot be taken (PROTO-004.a).
+    const marta = client(s);
+    marta.say({ type: 'control', character: 'marta' });
+    const other = client(s);
+    other.say({ type: 'control', character: 'marta' });
+    expect(other.sent.at(-1)).toEqual({
+      type: 'error',
+      message: 'the character "marta" already has a controller',
+    });
   });
 });

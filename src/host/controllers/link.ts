@@ -31,6 +31,7 @@ export class ControllerLink implements AgentListener {
   private fullSince: number | undefined;
   private warned = false;
   private closed = false;
+  private paused = false;
 
   constructor(
     readonly characterId: string,
@@ -38,6 +39,8 @@ export class ControllerLink implements AgentListener {
     private readonly channel: Channel,
     private readonly terminal: Terminal,
     private readonly now: () => number,
+    /** A program of the world folder, which a client may take over (PROTO-004.a). */
+    readonly pausable = false,
   ) {}
 
   /** Attaches to the character and greets the controller (PROTO-001.a). */
@@ -72,9 +75,14 @@ export class ControllerLink implements AgentListener {
       this.write(parsed.error);
       return;
     }
-    if (parsed.message.kind === 'action') {
-      this.session.agents?.request(this.characterId, parsed.message.request);
+    if (parsed.message.kind !== 'action') return;
+    if (this.paused) {
+      // A client drives the character: every action still gets an outcome (plan F07 P6).
+      const { id } = parsed.message.request;
+      this.write({ type: 'action_failed', id, reason: 'paused' });
+      return;
     }
+    this.session.agents?.request(this.characterId, parsed.message.request);
   }
 
   event(_: string, event: AgentEvent): void {
@@ -88,6 +96,22 @@ export class ControllerLink implements AgentListener {
   perception(_: string, perception: Perception): void {
     this.perceptionWaiting = perception;
     this.flush();
+  }
+
+  /** A client drives the character now; its actions fail with `paused` (PROTO-004.a). */
+  pause(): void {
+    if (this.paused) return;
+    this.paused = true;
+    this.events = [];
+    this.perceptionWaiting = undefined;
+    this.write({ type: 'paused' });
+  }
+
+  /** The client left: the character is this controller's again (PROTO-004.b). */
+  resume(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    this.write({ type: 'resumed' });
   }
 
   /** The channel has room again (e.g. the `drain` of a stream). */

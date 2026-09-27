@@ -57,6 +57,13 @@ export const INTENT_TIMEOUT_SECONDS = 0.5;
 /** A controller of a character: its events and perception, and the map after a reload. */
 export interface ControllerSink extends AgentListener {
   worldChanged?(map: WorldMap): void;
+  /**
+   * A program of the world folder, which a client may take over (PROTO-004.a): it is paused
+   * meanwhile and resumed when the client leaves.
+   */
+  readonly pausable?: boolean;
+  pause?(): void;
+  resume?(): void;
 }
 
 /** A view connected to the host: the host sends it messages, and gets its messages back. */
@@ -89,6 +96,8 @@ export class HostSession {
   private controllers: RunningController[] = [];
   /** Controllers attached to characters, kept across reloads (PROTO-004). */
   private readonly controllerSinks = new Map<string, ControllerSink>();
+  /** Programs waiting while a client drives their character (PROTO-004). */
+  private readonly pausedSinks = new Map<string, ControllerSink>();
   /** Who hears what the player hears besides the options: clients of the player (PROTO-007). */
   private readonly listeners = new Set<(line: SpokenLine) => void>();
   private readonly stepper = new FixedStepper();
@@ -208,6 +217,7 @@ export class HostSession {
       if (sim.agents.ids.includes(id)) sim.attach(id, sink);
       sink.worldChanged?.(world.result.map!);
     }
+    for (const sink of this.pausedSinks.values()) sink.worldChanged?.(world.result.map!);
     if (world.result.characters.length > 0) {
       this.terminal.line(
         `${PREFIX}  characters: ${world.result.characters
@@ -282,17 +292,53 @@ export class HostSession {
 
   /** Routes the events and perception of a character to its controller (PROTO-003, PROTO-004). */
   attachController(characterId: string, sink: ControllerSink): void {
+    const active = this.controllerSinks.get(characterId);
+    if (active && sink.pausable && !active.pausable) {
+      // A program starts (e.g. after a reload) while a client drives: it waits for its turn.
+      this.pausedSinks.set(characterId, sink);
+      sink.pause?.();
+      return;
+    }
+    if (active?.pausable) {
+      // A client takes a character from its program (PROTO-004.a).
+      active.pause?.();
+      this.pausedSinks.set(characterId, active);
+      this.sim?.agents.release(characterId);
+    }
     this.controllerSinks.set(characterId, sink);
     this.sim?.attach(characterId, sink);
   }
 
   /**
-   * The controller of a character went away: it stops (PROTO-003.b, PROTO-004.b).
+   * The controller of a character went away: it stops, or goes back to its program, which
+   * resumes (PROTO-003.b, PROTO-004.b).
    */
   detachController(characterId: string, sink: ControllerSink): void {
+    if (this.pausedSinks.get(characterId) === sink) {
+      this.pausedSinks.delete(characterId);
+      return;
+    }
     if (this.controllerSinks.get(characterId) !== sink) return;
     this.controllerSinks.delete(characterId);
     this.sim?.detach(characterId, sink);
+    const program = this.pausedSinks.get(characterId);
+    if (program) {
+      this.pausedSinks.delete(characterId);
+      this.controllerSinks.set(characterId, program);
+      this.sim?.attach(characterId, program);
+      program.resume?.();
+    }
+  }
+
+  /** Whether a client may drive a character: nobody drives it, or only its program (PROTO-004.a). */
+  canTake(characterId: string): boolean {
+    const active = this.controllerSinks.get(characterId);
+    return !active || active.pausable === true;
+  }
+
+  /** Whether the program of a character waits while a client drives it. */
+  hasPausedProgram(characterId: string): boolean {
+    return this.pausedSinks.has(characterId);
   }
 
   /** Whether a character has a controller now. */

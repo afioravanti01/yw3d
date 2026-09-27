@@ -18,11 +18,11 @@ import {
 } from '../core/schema/schema';
 
 /**
- * Protocol between the host and the controllers of characters (PROTO-001), version 2 (plan
- * F06 P13): JSON messages, one per line on stdio, one per frame on the WebSocket
+ * Protocol between the host and the controllers of characters (PROTO-001), version 3 (plan
+ * F07 P6): JSON messages, one per line on stdio, one per frame on the WebSocket
  * `/controller`. Every message has a `type`; fields are `snake_case` (F05 Q8).
  */
-export const CONTROLLER_PROTOCOL_VERSION = 2;
+export const CONTROLLER_PROTOCOL_VERSION = 3;
 export const CONTROLLER_SOCKET_PATH = '/controller';
 
 export interface ControllerHello {
@@ -64,6 +64,11 @@ export interface PlayerHeard {
   readonly text: string;
 }
 
+/** A client drives the character of a program now, or has left it (PROTO-004). */
+export interface ControlMessage {
+  readonly type: 'paused' | 'resumed';
+}
+
 export interface ControllerError {
   readonly type: 'error';
   readonly message: string;
@@ -71,7 +76,7 @@ export interface ControllerError {
 
 /** Messages from the host to a controller. */
 export type HostToController =
-  ControllerHello | MapMessage | Perception | AgentEvent | ControllerError;
+  ControllerHello | MapMessage | Perception | AgentEvent | ControlMessage | ControllerError;
 
 /** Messages from the host to a client that speaks as the player. */
 export type HostToPlayer = PlayerHello | MapMessage | PlayerHeard | ControllerError;
@@ -125,14 +130,17 @@ const MESSAGES: Record<string, Schema<Record<string, unknown>>> = {
     },
     pointOrTarget,
   ),
-  say: object({ type: oneOf(['say']), id: actionId(), text: str() }, (m, path, issues) => {
-    if (m.text.length === 0 || m.text.length > MAX_SAY_LENGTH) {
-      issues.push({
-        path: [...path, 'text'],
-        message: `the text must have 1 to ${MAX_SAY_LENGTH} characters`,
-      });
-    }
-  }),
+  say: object(
+    { type: oneOf(['say']), id: actionId(), text: str(), to: optional(entity()) },
+    (m, path, issues) => {
+      if (m.text.length === 0 || m.text.length > MAX_SAY_LENGTH) {
+        issues.push({
+          path: [...path, 'text'],
+          message: `the text must have 1 to ${MAX_SAY_LENGTH} characters`,
+        });
+      }
+    },
+  ),
   follow: object({
     type: oneOf(['follow']),
     id: actionId(),

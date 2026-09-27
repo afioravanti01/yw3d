@@ -62,7 +62,7 @@ export function attachControllerSocket(
     }
     const id = parsed.message.character;
     if (!session.agents?.ids.includes(id)) return refuse(`there is no character "${id}"`);
-    if (session.isControlled(id)) return refuse(`the character "${id}" already has a controller`);
+    if (!session.canTake(id)) return refuse(`the character "${id}" already has a controller`);
     link = new ControllerLink(
       id,
       session,
@@ -75,7 +75,10 @@ export function attachControllerSocket(
       terminal,
       now,
     );
-    terminal.line(`${PREFIX}  [${id}] driven by a client on the WebSocket`);
+    const program = session.isControlled(id);
+    terminal.line(
+      `${PREFIX}  [${id}] driven by a client on the WebSocket${program ? ': its program waits' : ''}`,
+    );
     link.start();
     // The `ws` package has no drain event: check the buffer now and then.
     drainTimer = setInterval(() => {
@@ -89,7 +92,9 @@ export function attachControllerSocket(
     if (!link) return;
     link.close();
     terminal.line(
-      `${PREFIX}  [${link.characterId}] the WebSocket client left: the character stops`,
+      `${PREFIX}  [${link.characterId}] the WebSocket client left: ${
+        session.isControlled(link.characterId) ? 'its program goes on' : 'the character stops'
+      }`,
     );
   });
 }
