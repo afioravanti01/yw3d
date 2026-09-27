@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | **draft** |
+| Stato | **approved** (G2, 2026-09-27) |
 | Versione | 0.1 |
 | Spec | [spec.md](spec.md) v0.2 |
 | Data | 2026-09-27 |

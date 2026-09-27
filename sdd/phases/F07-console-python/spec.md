@@ -5,7 +5,7 @@
 | Stato | **approved** (G1, 2026-09-27) |
 | Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-27 |
-| Piano | [plan.md](plan.md) (dopo G1) |
+| Piano | [plan.md](plan.md) |
 
 ## Obiettivo
 Il giocatore interagisce con i personaggi da una **console dei messaggi** trasparente sulla destra di ogni vista: vede tutti i messaggi del mondo e scrive a un personaggio con `@nome`, a qualunque distanza, senza cercarlo né puntarlo. Gli autori programmano i personaggi in **Python**, con una libreria `yw3d` che fa da template: un programma si legge come la descrizione del personaggio. Il linguaggio dei comportamenti in YAML si rimuove (D-010).
