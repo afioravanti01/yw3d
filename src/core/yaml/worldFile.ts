@@ -18,8 +18,10 @@ import {
   type Infer,
   type Issue,
 } from '../schema/schema';
+import { description, identifier, MAX_NAME_LENGTH, name } from './fields';
 import { parseYaml } from './parse';
 import { diagnostic, type Diagnostic } from './report';
+import { scenarioEntrySchema } from './scenarioFile';
 
 /** Versions of the world file schema this code can read (YAML-001.a). */
 export const WORLD_FILE_VERSIONS = [2] as const;
@@ -30,19 +32,7 @@ export const VERSION_1_MESSAGE =
 
 /** The player's name when the file gives none (YAML-009.b, F06 Q8). */
 export const DEFAULT_PLAYER_NAME = 'viandante';
-/** Longest name and description (YAML-009.a, F06 Q8). */
-export const MAX_NAME_LENGTH = 60;
-export const MAX_DESCRIPTION_LENGTH = 1000;
-
-/**
- * Identifiers of characters, places, structures and distributions (MAP-001.a). `#` is not
- * allowed: it marks the identifiers generated for structures without one (MAP-001.b).
- */
-export const IDENTIFIER = /^[a-z][a-z0-9_-]{0,31}$/;
-const identifier = () =>
-  pattern(IDENTIFIER, 'an identifier of lowercase letters, digits, "_" or "-"');
-const name = () => text({ min: 1, max: MAX_NAME_LENGTH });
-const description = () => optional(text({ max: MAX_DESCRIPTION_LENGTH }));
+export { IDENTIFIER, MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from './fields';
 
 const versionSchema = (() => {
   const versions = oneOf(WORLD_FILE_VERSIONS);
@@ -290,6 +280,8 @@ const worldFileSchema = object(
     scatter: optional(list(scatterSchema)),
     agents: optional(agentSettingsSchema),
     time: optional(timeSchema),
+    /** Experiments: inline, or files of the folder (LAB-001.a, F10 Q1). */
+    scenarios: optional(list(scenarioEntrySchema)),
     behaviors: optional(unknownValue()),
   },
   (world, path, issues) => {

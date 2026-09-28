@@ -7,7 +7,15 @@ import {
   TERRAIN_GENERATOR_VERSION,
 } from '../gen/terrain';
 import { formatPath, type Issue } from '../schema/schema';
-import { WATER } from '../blocks/builtin';
+import { createDefaultRegistry, WATER } from '../blocks/builtin';
+import {
+  checkScenarios,
+  loadScenarioFile,
+  type Scenario,
+  type ScenarioEntry,
+  type ScenarioSource,
+  type ScenarioWorld,
+} from '../yaml/scenarioFile';
 import { resolveAppearance, type Appearance } from '../characters/appearance';
 import { rotateColumn, rotatePoint, StructureBuilder, type Rect } from '../structures/builder';
 import {
@@ -45,6 +53,14 @@ export interface ComposeOptions {
   readonly seedOverride?: number;
   /** Clock for the step timings, e.g. `performance.now`; the core has no clock of its own. */
   readonly now?: () => number;
+  /**
+   * Reads a scenario file of the world folder, by its path relative to the folder (LAB-001.a):
+   * its text and the file name for diagnostics, or undefined when it cannot be read. The host
+   * gives it; without it (the browser) imported scenarios are skipped.
+   */
+  readonly readScenario?: (
+    path: string,
+  ) => { readonly text: string; readonly file: string } | undefined;
 }
 
 /** A character as declared, ready to be spawned (CHAR-001). */
@@ -126,6 +142,8 @@ export interface ComposeResult {
   readonly lights: readonly LightRect[];
   /** Structures built, in order: declared one by one first, then distributed. */
   readonly placements: readonly PlacedStructure[];
+  /** Scenarios of the laboratory, inline and imported, in order (LAB-001). */
+  readonly scenarios: readonly Scenario[];
   /** Duration of each step in milliseconds. */
   readonly timings: Record<string, number>;
 }
@@ -160,6 +178,7 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     characters: [],
     lights: [],
     placements: [],
+    scenarios: [],
     timings,
   });
 
@@ -338,7 +357,17 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
     })),
   });
 
-  const diagnostics = toDiagnostics();
+  const scenarios = resolveScenarios(decl.scenarios ?? [], file, loaded.lineOf, options, {
+    characters: (decl.characters ?? []).map((c) => ({ id: c.id, agent: c.agent !== undefined })),
+    places: (decl.places ?? []).map((p) => ({ id: p.id, point: p.at !== undefined })),
+    blockNames: new Set(
+      createDefaultRegistry()
+        .all()
+        .map((b) => b.name),
+    ),
+    size,
+  });
+  const diagnostics = [...toDiagnostics(), ...scenarios.diagnostics];
   return {
     world: hasErrors(diagnostics) ? undefined : world,
     name: decl.name,
@@ -387,7 +416,51 @@ export function composeWorld(text: string, file: string, options: ComposeOptions
       params: p.params,
       seed: p.seed,
     })),
+    scenarios: scenarios.scenarios,
     timings,
+  };
+}
+
+/**
+ * The scenarios of the world file, reading the imported files when the host can (LAB-001.a,
+ * plan F10 P2), checked against the world (LAB-001.b).
+ */
+function resolveScenarios(
+  entries: readonly ScenarioEntry[],
+  file: string,
+  lineOf: (path: readonly (string | number)[]) => number | null,
+  options: ComposeOptions,
+  world: ScenarioWorld,
+): { readonly scenarios: Scenario[]; readonly diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+  const sources: ScenarioSource[] = [];
+  entries.forEach((entry, i) => {
+    if (entry.kind === 'inline') {
+      sources.push({ scenario: entry.scenario, file, path: ['scenarios', i], lineOf });
+      return;
+    }
+    if (!options.readScenario) return;
+    const read = options.readScenario(entry.path);
+    if (!read) {
+      diagnostics.push(
+        diagnostic(
+          'error',
+          file,
+          lineOf(['scenarios', i]),
+          ['scenarios', i],
+          `cannot read the scenario file "${entry.path}"`,
+        ),
+      );
+      return;
+    }
+    const loaded = loadScenarioFile(read.text, read.file);
+    diagnostics.push(...loaded.diagnostics);
+    if (loaded.source) sources.push(loaded.source);
+  });
+  diagnostics.push(...checkScenarios(sources, world));
+  return {
+    scenarios: sources.map((s) => ({ ...s.scenario, file: s.file })),
+    diagnostics,
   };
 }
 

@@ -90,7 +90,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-005.b · Dip: —
   - Una chiamata vera per CLI (Claude Code, Codex, opencode) per capire dove si trovano token e costo nell'output e quali opzioni servono (es. `--json` per Codex); per le API, i campi `usage` dalla documentazione. Nessun codice di prodotto.
   - Fatto quando: una tabella nel piano dice, per ogni cervello, cosa si legge e cosa è «non disponibile».
-- [ ] **T10.02** Scenari nel file del mondo
+- [x] **T10.02** Scenari nel file del mondo
   - Req: LAB-001.a–c, YAML-001.a · Dip: —
   - Schema di `scenarios` (P2) e dello scenario: id, nome, descrizione, agente, compito, tempo limite, passi (predefinito 50), perturbazioni (solo la forma; l'effetto arriva in T10.08). Importazione dai file della cartella nell'host, con gli errori sul file importato; controlli incrociati (agente esistente e con `agent:`, uno scenario per agente); l'hash del mondo non cambia.
   - Fatto quando: test unit verdi, compresi un file importato con un errore e un file importato salvato che ricarica il mondo.

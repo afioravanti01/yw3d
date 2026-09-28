@@ -182,6 +182,15 @@ export class HostSession {
         const full = path.join(this.folder.root, relative);
         return existsSync(full) && statSync(full).isFile();
       },
+      // Scenario files of the folder (LAB-001.a); saving one reloads the world like world.yaml.
+      readScenario: (relative) => {
+        const full = path.join(this.folder.root, relative);
+        try {
+          return { text: readFileSync(full, 'utf8'), file: this.display(full) };
+        } catch {
+          return undefined;
+        }
+      },
     });
     diagnostics.push(...result.diagnostics);
     const world =
