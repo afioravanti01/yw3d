@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | draft |
+| Stato | **approved** (G1, 2026-09-28) |
 | Versione | 0.2: domande aperte risolte |
 | Data | 2026-09-28 |
 | Piano | [plan.md](plan.md) |
@@ -122,7 +122,7 @@ Un'esecuzione va dall'inizio degli scenari alla fine dell'ultimo.
 ## Requisiti RIMOSSI
 Nessuno.
 
-## Modifica della costituzione (con G1)
+## Modifica della costituzione (applicata con G1: v1.5)
 In P10, la frase «Il mondo non aspetta i controllori, e un controllore lento o bloccato non lo rallenta.» diventa: «Il mondo non aspetta i controllori, e un controllore lento o bloccato non lo rallenta; l'unica eccezione è il tempo a turni degli scenari, in cui il mondo aspetta gli agenti LLM per una scelta dichiarata (D-013, LAB-003).» La costituzione passa alla v1.5.
 
 ## Domande risolte

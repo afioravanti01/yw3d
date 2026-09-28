@@ -3,7 +3,7 @@
 > Principi non negoziabili del progetto. Ogni spec e ogni piano devono rispettarli.
 > Si modifica solo con una decisione esplicita registrata in [decisions.md](decisions.md).
 
-Versione: 1.4 — 2026-09-27 (D-012: agenti LLM nell'host, configurati nel file del mondo, senza MCP in F08)
+Versione: 1.5 — 2026-09-28 (D-013, spec di F10: il tempo a turni degli scenari è l'unica eccezione a «il mondo non aspetta»)
 
 ## Visione
 
@@ -45,7 +45,7 @@ Chiavi API e credenziali non finiscono mai nel codice eseguito dal browser né n
 Nuove dipendenze solo se motivate nel piano. Codice semplice e leggibile prima delle ottimizzazioni; le ottimizzazioni sono guidate dai requisiti di prestazione della spec.
 
 ### P10 — Personaggi guidati da controllori esterni
-Un personaggio può essere guidato da qualunque programma che parli il protocollo del mondo: script in qualunque linguaggio, client di rete, agenti LLM. Il controllore riceve percezioni e invia azioni di alto livello; l'host le traduce in intenzioni per la fisica (P3) e resta l'autorità sullo stato. Il mondo non aspetta i controllori, e un controllore lento o bloccato non lo rallenta. I comandi dichiarati in una cartella del mondo si eseguono solo con il consenso dell'utente (D-008).
+Un personaggio può essere guidato da qualunque programma che parli il protocollo del mondo: script in qualunque linguaggio, client di rete, agenti LLM. Il controllore riceve percezioni e invia azioni di alto livello; l'host le traduce in intenzioni per la fisica (P3) e resta l'autorità sullo stato. Il mondo non aspetta i controllori, e un controllore lento o bloccato non lo rallenta; l'unica eccezione è il tempo a turni degli scenari, in cui il mondo aspetta gli agenti LLM per una scelta dichiarata (D-013, LAB-003). I comandi dichiarati in una cartella del mondo si eseguono solo con il consenso dell'utente (D-008).
 
 ## Stack tecnologico
 
