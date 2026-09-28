@@ -32,6 +32,17 @@ import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
 import { structureFiles, type WorldFolder } from './worldFolder';
 import { ScenarioRun, type ScenarioOutcome } from './lab/scenarioRun';
+import {
+  brainOf,
+  fingerprint,
+  RUNS_DIR,
+  runName,
+  scenarioOfHeader,
+  TraceWriter,
+  type TraceEvent,
+} from './lab/trace';
+import { INSTRUCTIONS_VERSION } from './agents/context';
+import { PROJECT_ROOT } from './moduleLoader';
 
 /** A world composed by the host, with what the views need to compose the same one. */
 export interface SessionWorld {
@@ -41,6 +52,8 @@ export interface SessionWorld {
   /** Absolute paths of the author's structure files, in registration order. */
   readonly structureFiles: readonly string[];
   readonly hash: number;
+  /** Texts of the imported scenario files as read, by the file shown to the user (LAB-005.a). */
+  readonly scenarioTexts: Readonly<Record<string, string>>;
 }
 
 export interface SessionOptions {
@@ -68,6 +81,13 @@ export interface SessionOptions {
   readonly heard?: (line: SpokenLine) => void;
   /** A scenario of the world ended (LAB-002.c): for the series of runs. */
   readonly scenarioEnded?: (outcome: ScenarioOutcome) => void;
+  /**
+   * The folder of the trace of a new run (LAB-005.a): by default `runs/<date and time>` in the
+   * world folder; null writes no trace.
+   */
+  readonly traceFolder?: (() => string) | null;
+  /** Every scenario of the world ended: the run is over (LAB-005). */
+  readonly runEnded?: (trace: string | undefined) => void;
 }
 
 /** The program of a character and whether it runs (DEBUG-001.a, plan F07 P15). */
@@ -145,6 +165,12 @@ export class HostSession {
   private scenarioRuns: ScenarioRun[] = [];
   /** Lines of the laboratory of this world, for the views that come later (LAB-002.d). */
   private labLines: string[] = [];
+  /** The trace of the run now going on, if any (LAB-005). */
+  private trace: TraceWriter | undefined;
+  /** Simulated time at the start of the run. */
+  private traceStart = 0;
+  /** While the scenarios of a world are being started. */
+  private startingScenarios = false;
 
   constructor(
     readonly folder: WorldFolder,
@@ -172,6 +198,7 @@ export class HostSession {
     const registry = await this.loadStructures(files, diagnostics);
 
     const file = this.display(this.folder.worldFile);
+    const scenarioTexts: Record<string, string> = {};
     let text: string;
     try {
       text = readFileSync(this.folder.worldFile, 'utf8');
@@ -193,7 +220,9 @@ export class HostSession {
       readScenario: (relative) => {
         const full = path.join(this.folder.root, relative);
         try {
-          return { text: readFileSync(full, 'utf8'), file: this.display(full) };
+          const read = { text: readFileSync(full, 'utf8'), file: this.display(full) };
+          scenarioTexts[read.file] = read.text;
+          return read;
         } catch {
           return undefined;
         }
@@ -207,6 +236,7 @@ export class HostSession {
             text,
             structureFiles: files,
             hash: result.world.hash(),
+            scenarioTexts,
           }
         : undefined;
     const replaced = this.finish(diagnostics, world);
@@ -301,6 +331,7 @@ export class HostSession {
 
   /** A message of the world: to the console and the views (DIALOG-002.a, DIALOG-004.a). */
   private heard(line: SpokenLine): void {
+    this.traceEvent({ type: 'said', line });
     this.options.heard?.(line);
     for (const listener of this.listeners) listener(line);
     this.broadcast({ type: 'line', line });
@@ -441,6 +472,7 @@ export class HostSession {
         isCharacter: (other) => this.sim?.agents.ids.includes(other) ?? false,
         conversationTurns: () => this.world?.result.conversationTurns ?? DEFAULT_CONVERSATION_TURNS,
         log: (line) => this.terminal.line(`${PREFIX}  [${id}] ${line}`),
+        observe: (activity) => this.traceEvent({ type: 'agent', agent: id, ...activity }),
       },
       this.options.agentClock,
     );
@@ -460,7 +492,11 @@ export class HostSession {
 
   /** Every scenario of the world starts from scratch with the world (LAB-002.a). */
   private startScenarios(world: SessionWorld): void {
-    for (const scenario of world.result.scenarios) {
+    const { scenarios } = world.result;
+    if (scenarios.length === 0) return;
+    this.startTrace(world);
+    this.startingScenarios = true;
+    for (const scenario of scenarios) {
       const character = world.result.characters.find((c) => c.id === scenario.agent);
       this.scenarioRuns.push(
         new ScenarioRun(
@@ -474,11 +510,69 @@ export class HostSession {
               this.labLines.push(text);
               this.broadcast({ type: 'lab', text });
             },
-            ended: (outcome) => this.options.scenarioEnded?.(outcome),
+            ended: (outcome) => this.scenarioEnded(outcome),
           },
         ),
       );
     }
+    this.startingScenarios = false;
+    this.endRunIfOver();
+  }
+
+  /** A scenario ended; with the last one the run is over, and so is its trace (LAB-005). */
+  private scenarioEnded(outcome: ScenarioOutcome): void {
+    this.traceEvent({ type: 'outcome', ...outcome });
+    this.options.scenarioEnded?.(outcome);
+    // A scenario that ends at once ends while the others are still being started.
+    if (!this.startingScenarios) this.endRunIfOver();
+  }
+
+  /** With the last scenario ended the run is over, and so is its trace (LAB-005). */
+  private endRunIfOver(): void {
+    if (this.scenarioRuns.some((r) => r.running)) return;
+    this.traceEvent({ type: 'end', reason: 'every scenario ended' });
+    const file = this.trace?.file;
+    this.trace = undefined;
+    this.options.runEnded?.(file);
+  }
+
+  /** Starts the trace of a run (LAB-005.a): its header, with what the run depends on. */
+  private startTrace(world: SessionWorld): void {
+    this.trace = undefined;
+    const folderOf =
+      this.options.traceFolder === undefined
+        ? () => path.join(this.folder.root, RUNS_DIR, runName(new Date()))
+        : this.options.traceFolder;
+    if (!folderOf) return;
+    const { result } = world;
+    this.traceStart = this.sim?.time ?? 0;
+    this.trace = new TraceWriter(folderOf(), {
+      type: 'header',
+      yw3d: YW3D_VERSION,
+      date: new Date().toISOString(),
+      world: {
+        name: result.name ?? '',
+        file: this.display(this.folder.worldFile),
+        fingerprint: fingerprint(world.text),
+      },
+      scenario_files: Object.fromEntries(
+        Object.entries(world.scenarioTexts).map(([file, text]) => [file, fingerprint(text)]),
+      ),
+      seed: result.seed ?? 0,
+      scenarios: result.scenarios.map(scenarioOfHeader),
+      brains: result.characters.flatMap((c) =>
+        c.agent && result.scenarios.some((s) => s.agent === c.id) ? [brainOf(c.id, c.agent)] : [],
+      ),
+      instructions: INSTRUCTIONS_VERSION,
+    });
+    this.terminal.line(`${PREFIX}  trace of this run: ${this.display(this.trace.file)}`);
+  }
+
+  /** An event of the run now traced, at its simulated time (LAB-005.a). */
+  private traceEvent(event: DistributiveOmit<TraceEvent, 't'>): void {
+    if (!this.trace) return;
+    const t = Math.round(((this.sim?.time ?? 0) - this.traceStart) * 1000) / 1000;
+    this.trace.write({ t, ...event } as TraceEvent);
   }
 
   /** The scenarios of the world now running, or ended since it was loaded (LAB-002). */
@@ -795,3 +889,11 @@ function isStructureType(value: unknown): value is StructureType {
 function firstLine(error: unknown): string {
   return (error instanceof Error ? error.message : String(error)).split('\n')[0]!;
 }
+
+/** Omit over each member of a union. */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
+/** Version of yw3d, for the traces (LAB-005.a). */
+const YW3D_VERSION = (
+  JSON.parse(readFileSync(path.join(PROJECT_ROOT, 'package.json'), 'utf8')) as { version: string }
+).version;

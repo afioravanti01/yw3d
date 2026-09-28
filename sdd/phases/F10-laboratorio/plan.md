@@ -110,7 +110,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-002.b–d · Dip: T10.02, T10.03, T10.05
   - `scenarioRun`: parte a ogni caricamento del mondo, conta passi e tempo simulato, chiude con il primo esito (dichiarato, tempo scaduto, passi esauriti, errore), poi l'agente torna com'era nel file. Esiti nel terminale e nella console delle viste.
   - Fatto quando: test unit per ogni esito, con il cervello finto e con cervelli che falliscono; e2e dell'esito nella console.
-- [ ] **T10.07** Tracciato
+- [x] **T10.07** Tracciato
   - Req: LAB-005.a–c · Dip: T10.03, T10.06
   - `runs/<data-ora>/trace.jsonl` a ogni esecuzione dal vivo: intestazione (impronte, versione, cervelli, istruzioni, seed, data) ed eventi (richieste con contesto, tempo simulato di partenza e arrivo, risposta grezza, consumo, latenza, azioni, parti scartate, frasi, perturbazioni, esiti). La chiave API non compare mai.
   - Fatto quando: test unit sul contenuto e sull'assenza della chiave; un'esecuzione con il cervello finto produce un tracciato completo.
@@ -160,3 +160,5 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 | T10.04 | Il contesto invariato rispetto a F08 è stato verificato una volta, confrontando byte per byte i contesti prodotti prima e dopo la modifica (persona umana con risposte brevi e lunghe, animale), non con un test permanente | Un test «invariato rispetto a F08» andrebbe riscritto già in T10.05, che cambia le istruzioni; il test permanente verifica nome e impronta | Nessuno |
 | T10.06 | L'host conserva le righe del laboratorio del mondo in corso e le manda nel `hello` alle viste che si collegano dopo | Lo scenario parte all'avvio dell'host, prima che il browser si colleghi: senza, la vista non vedrebbe né il compito né l'esito | Nessuno: LAB-002.d chiede che la console riporti l'esito |
 | T10.06 | Il mondo di prova degli e2e (`e2e/host`) ha un luogo e uno scenario importato per Eco, vicino al punto di partenza | Un e2e dell'esito nella console; il luogo vicino lascia Eco il personaggio più vicino al giocatore, come vuole l'e2e di AGENT-002 | Nessuno |
+| T10.07 | Con l'esito dichiarato, il runtime fa partire i passi della risposta prima di avvisare il motore degli scenari | Altrimenti la frase detta insieme all'esito arrivava dopo la fine del tracciato; ora il tracciato la mostra prima dell'esito | Nessuno |
+| T10.07 | `runs/` è escluso da git nel repository | Il mondo degli e2e crea un tracciato a ogni avvio dell'host | Nessuno |

@@ -7,7 +7,7 @@ import {
 } from '../../core/agents/agentWorld';
 import type { WorldMap } from '../../core/map/worldMap';
 import type { AgentDecl } from '../../core/yaml/worldFile';
-import type { Brain } from './brain';
+import type { Brain, Thought, Usage } from './brain';
 import { buildContext, type AgentIdentity, type AgentTrigger, type ContextInput } from './context';
 import { LONG_SAY_LENGTH, readReply, Sequence, type Outcome, type Step } from './reply';
 
@@ -65,6 +65,34 @@ export interface TaskListener {
   failed(reason: string): void;
 }
 
+/** What an agent does, for the trace of a run (LAB-005.a, plan F10 P8). */
+export type AgentActivity =
+  | {
+      readonly kind: 'request';
+      readonly n: number;
+      readonly triggers: readonly AgentTrigger[];
+      readonly context: string;
+    }
+  | {
+      readonly kind: 'reply';
+      readonly n: number;
+      /** The reply as the brain gave it: an object, or the text the JSON was read from. */
+      readonly raw: unknown;
+      readonly usage: Usage;
+      readonly latency_ms: number;
+      readonly steps: readonly Step[];
+      readonly discarded: readonly string[];
+      readonly outcome: Outcome | null;
+    }
+  | {
+      readonly kind: 'failed';
+      readonly n: number;
+      readonly reason: string;
+      readonly latency_ms: number;
+    }
+  | { readonly kind: 'action'; readonly request: ActionRequest }
+  | { readonly kind: 'action_end'; readonly event: AgentEvent };
+
 export interface AgentHost {
   /** Asks an action of the character (PROTO-001.b). */
   request(request: ActionRequest): void;
@@ -78,6 +106,8 @@ export interface AgentHost {
   conversationTurns(): number;
   /** A line in the terminal of the host, with the character's id. */
   log(line: string): void;
+  /** What the agent does, for the trace of a run (LAB-005.a). */
+  observe?(activity: AgentActivity): void;
 }
 
 export class AgentRuntime {
@@ -100,6 +130,8 @@ export class AgentRuntime {
   private readonly awaiting = new Map<string, number>();
   private nextId = 0;
   private stopped = false;
+  /** Requests made so far, to number them in the trace. */
+  private requestCount = 0;
   /** The task of a scenario, while it runs (LAB-002). */
   private task: { readonly text: string; readonly listener: TaskListener } | undefined;
 
@@ -125,6 +157,13 @@ export class AgentRuntime {
   /** An event of the character (PROTO-002.b). */
   event(_: string, event: AgentEvent): void {
     if (this.stopped) return;
+    if (
+      event.type === 'action_done' ||
+      event.type === 'action_failed' ||
+      event.type === 'action_replaced'
+    ) {
+      this.host.observe?.({ kind: 'action_end', event });
+    }
     this.sequence?.event(event);
     if (event.type === 'heard') this.heard(event);
     else if (event.type === 'interacted') {
@@ -265,6 +304,9 @@ export class AgentRuntime {
     const triggers = this.pending;
     this.pending = [];
     const input = this.contextInput(triggers);
+    const text = buildContext(input);
+    const n = ++this.requestCount;
+    this.host.observe?.({ kind: 'request', n, triggers, context: text });
     const controller = new AbortController();
     this.thinking = controller;
     this.stateNow = 'thinking';
@@ -276,13 +318,18 @@ export class AgentRuntime {
         reject(new Error(`no reply within ${limit / 1000} s`)),
       ),
     );
-    Promise.race([
-      this.brain.think({ text: buildContext(input), input }, controller.signal),
-      aborted,
-    ])
+    Promise.race([this.brain.think({ text, input }, controller.signal), aborted])
       .then(
-        (thought) => this.answered(thought.reply),
-        (error: unknown) => this.failed(error, triggers),
+        (thought) => this.answered(thought, n, this.clock.now() - started),
+        (error: unknown) => {
+          this.host.observe?.({
+            kind: 'failed',
+            n,
+            reason: error instanceof Error ? error.message : String(error),
+            latency_ms: this.clock.now() - started,
+          });
+          this.failed(error, triggers);
+        },
       )
       .finally(() => {
         this.clock.clearTimeout(timer);
@@ -309,8 +356,9 @@ export class AgentRuntime {
   }
 
   /** The brain answered: the valid part runs, in place of what the character was doing. */
-  private answered(raw: unknown): void {
+  private answered(thought: Thought, n: number, latency: number): void {
     if (this.stopped) return;
+    const raw = thought.reply;
     const map = this.host.map();
     const known = new Set([...map.entries.map((e) => e.id), 'player']);
     const reply = readReply(
@@ -319,19 +367,29 @@ export class AgentRuntime {
       this.config.answers === 'long' ? LONG_SAY_LENGTH : MAX_SAY_LENGTH,
     );
     for (const reason of reply.discarded) this.host.log(`reply set aside: ${reason}`);
-    // The task goes on, or ends with the outcome the agent declares (LAB-002.c).
+    this.host.observe?.({
+      kind: 'reply',
+      n,
+      raw,
+      usage: thought.usage,
+      latency_ms: latency,
+      steps: reply.steps,
+      discarded: reply.discarded,
+      outcome: reply.outcome ?? null,
+    });
+    // The task goes on, or ends with the outcome the agent declares (LAB-002.c). The scenario
+    // hears of it once the steps of this reply have started: its last sentence comes first.
     const task = this.task;
-    if (task) {
-      if (reply.outcome) {
-        this.task = undefined;
-        this.remember(`you declared your task ${reply.outcome.result}: ${reply.outcome.reason}`);
-      }
-      task.listener.answered(reply.outcome);
-    } else if (reply.outcome) {
+    if (task && reply.outcome) {
+      this.task = undefined;
+      this.remember(`you declared your task ${reply.outcome.result}: ${reply.outcome.reason}`);
+    } else if (!task && reply.outcome) {
       this.host.log('reply set aside: an outcome, but there is no task');
     }
+    const notify = () => task?.listener.answered(reply.outcome);
     if (reply.steps.length === 0) {
       this.stateNow = 'idle';
+      notify();
       // A task is never left waiting: without actions the agent is asked again (plan F10 P5).
       if (this.task) this.trigger({ kind: 'continue', done: 'nothing: your reply had no actions' });
       return;
@@ -347,6 +405,7 @@ export class AgentRuntime {
     }
     // With a task the agent decides again when its actions end, asked or not (LAB-002.b).
     this.run(reply.steps, reply.continueAfter === true, this.task !== undefined);
+    notify();
   }
 
   private failed(error: unknown, triggers: readonly AgentTrigger[]): void {
@@ -374,7 +433,10 @@ export class AgentRuntime {
     const done = steps.map((s) => ('target' in s ? `${s.kind} ${s.target}` : s.kind)).join(', ');
     const sequence = new Sequence(
       steps,
-      (request) => this.host.request(request),
+      (request) => {
+        this.host.observe?.({ kind: 'action', request });
+        this.host.request(request);
+      },
       () => `agent-${++this.nextId}`,
       ({ failed, cancelled }) => {
         if (failed) this.remember(`your ${failed.step.kind} failed: ${failed.reason}`);

@@ -1,4 +1,6 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -8,6 +10,11 @@ import type { Brain } from '../agents/brain';
 import type { HostMessage } from '../../protocol/messages';
 import { HostSession } from '../session';
 import type { ScenarioOutcome } from './scenarioRun';
+import { fingerprint, readTrace, RUNS_DIR, TRACE_FILE } from './trace';
+import { UNKNOWN_USAGE } from '../agents/brain';
+import { AnthropicBrain } from '../agents/brains/anthropic';
+import { INSTRUCTIONS_VERSION } from '../agents/context';
+import type { AgentDecl } from '../../core/yaml/worldFile';
 import { affectsWorld } from '../watch';
 import { resolveWorldFolder, WORLD_FILE } from '../worldFolder';
 
@@ -103,10 +110,15 @@ const scenario = (fields: string) => `  - { id: prova, name: La prova, agent: ma
 /** A world with scenarios, run by the host with its simulation (LAB-002). */
 async function lab(
   scenarios: string,
-  options: { brain?: (mode: string) => Brain | undefined } = {},
+  options: {
+    brain?: (agent: AgentDecl) => Brain | undefined;
+    consent?: boolean;
+    env?: NodeJS.ProcessEnv;
+    world?: string;
+  } = {},
 ) {
   const root = mkdtempSync(path.join(tmpdir(), 'yw3d-lab-'));
-  writeFileSync(path.join(root, WORLD_FILE), LAB_WORLD + scenarios);
+  writeFileSync(path.join(root, WORLD_FILE), (options.world ?? LAB_WORLD) + scenarios);
   const resolved = resolveWorldFolder(root);
   if (!resolved.ok) throw new Error(resolved.message);
   const lines: string[] = [];
@@ -116,12 +128,13 @@ async function lab(
     noModules,
     { line: (t) => lines.push(t) },
     {
-      consent: async () => false,
+      consent: async () => options.consent ?? false,
+      ...(options.env ? { env: options.env } : {}),
       scenarioEnded: (o) => outcomes.push(o),
       ...(options.brain
         ? {
             brain: (agent) => {
-              const brain = options.brain!(agent.mode);
+              const brain = options.brain!(agent);
               if (!brain) throw new Error('no brain');
               return brain;
             },
@@ -141,7 +154,12 @@ async function lab(
     }
   };
   const notices = () => seen.flatMap((m) => (m.type === 'lab' ? [m.text] : []));
-  return { s, lines, outcomes, run, notices };
+  /** The trace of the first run of the world folder (LAB-005). */
+  const trace = () => {
+    const runs = readdirSync(path.join(root, RUNS_DIR));
+    return { file: path.join(root, RUNS_DIR, runs[0]!, TRACE_FILE), runs };
+  };
+  return { s, lines, outcomes, run, notices, trace, root };
 }
 
 describe('the scenarios of a world', () => {
@@ -203,5 +221,134 @@ describe('the scenarios of a world', () => {
     await run(2);
     await s.load();
     expect(s.scenarios[0]!.running).toBe(true);
+  });
+});
+
+describe('the trace of a run', () => {
+  it('LAB-005.a: a header with what the run depends on, then every request, reply, action, sentence and outcome in order of simulated time', async () => {
+    const { run, trace, root, lines } = await lab(
+      scenario('task: "Vai alla Fontana.", time_limit: 120'),
+    );
+    await run(20);
+    const { file, runs } = trace();
+    expect(runs).toHaveLength(1);
+    expect(lines.join('\n')).toContain(
+      `trace of this run: ${path.join(path.basename(root), path.relative(root, file))}`,
+    );
+    const { header, events } = readTrace(file);
+    expect(header).toMatchObject({
+      yw3d: '0.1.0',
+      world: {
+        name: 'Borgo',
+        fingerprint: fingerprint(readFileSync(path.join(root, WORLD_FILE), 'utf8')),
+      },
+      seed: 5,
+      scenarios: [
+        { id: 'prova', agent: 'marta', task: 'Vai alla Fontana.', time_limit: 120, max_steps: 50 },
+      ],
+      brains: [
+        { agent: 'marta', mode: 'fake', cli: null, provider: null, model: null, effort: null },
+      ],
+      instructions: INSTRUCTIONS_VERSION,
+    });
+    const kinds = events.map((e) => (e.type === 'agent' ? `${e.agent} ${e.kind}` : e.type));
+    expect(kinds).toEqual([
+      'marta request',
+      'marta reply',
+      'marta action',
+      'marta action_end',
+      'marta request',
+      'marta reply',
+      'outcome',
+      'end',
+    ]);
+    const [request, reply] = events;
+    expect(request).toMatchObject({
+      type: 'agent',
+      kind: 'request',
+      n: 1,
+      triggers: [{ kind: 'task' }],
+    });
+    expect(request!.type === 'agent' && request!.kind === 'request' && request!.context).toContain(
+      'YOUR TASK:\nVai alla Fontana.',
+    );
+    expect(reply).toMatchObject({
+      kind: 'reply',
+      n: 1,
+      raw: { actions: [{ type: 'walk_to', target: 'fontana' }], continue: true },
+      usage: { input_tokens: 0, output_tokens: 0, cost_usd: 0 },
+      steps: [{ kind: 'walk_to', target: 'fontana' }],
+      discarded: [],
+      outcome: null,
+    });
+    expect(events.find((e) => e.type === 'outcome')).toMatchObject({
+      result: 'succeeded',
+      steps: 2,
+    });
+    const times = events.map((e) => e.t);
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+    expect(times.at(-1)).toBeGreaterThan(1);
+  });
+
+  it('LAB-005.b: what a brain does not report is written as unknown, never estimated', async () => {
+    const { run, trace } = await lab(scenario('task: "Vai alla Fontana.", time_limit: 120'), {
+      brain: () => ({
+        name: 'silent',
+        think: () =>
+          Promise.resolve({
+            reply: {
+              say: { text: 'Non ci vado.', to: null },
+              actions: [],
+              outcome: { result: 'failed', reason: 'no' },
+            },
+            usage: UNKNOWN_USAGE,
+          }),
+      }),
+    });
+    await run(2);
+    const reply = readTrace(trace().file).events.find(
+      (e) => e.type === 'agent' && e.kind === 'reply',
+    );
+    expect(reply).toMatchObject({
+      usage: { input_tokens: null, output_tokens: null, cost_usd: null },
+    });
+
+    // The sentences said during the run are in the trace too.
+    expect(readTrace(trace().file).events.find((e) => e.type === 'said')).toMatchObject({
+      line: { from: 'marta', text: 'Non ci vado.' },
+    });
+  });
+
+  it('LAB-005.c: the key of an API never appears in the trace', async () => {
+    const KEY = 'sk-ant-very-secret-4242';
+    const server = createServer((_, res) => {
+      res.writeHead(401, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: `invalid x-api-key ${KEY}` } }));
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    try {
+      const world = LAB_WORLD.replace(
+        'agent: { mode: fake }',
+        'agent: { mode: api, provider: anthropic, model: claude-haiku-4-5 }',
+      );
+      const env = { ANTHROPIC_API_KEY: KEY };
+      const { run, trace } = await lab(scenario('task: "Vai alla Fontana.", time_limit: 600'), {
+        world,
+        consent: true,
+        env,
+        brain: (agent) => new AnthropicBrain(agent, env, url),
+      });
+      for (let i = 0; i < 20 && !readFileSync(trace().file, 'utf8').includes('"end"'); i++) {
+        await run(0.5);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      const text = readFileSync(trace().file, 'utf8');
+      expect(text).toContain('"type":"end"');
+      expect(text).toContain('invalid x-api-key ***');
+      expect(text).not.toContain(KEY);
+    } finally {
+      server.close();
+    }
   });
 });
