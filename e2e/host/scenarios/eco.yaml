@@ -5,3 +5,6 @@ name: Al pozzo
 agent: eco
 task: Vai al Pozzo.
 time_limit: 120
+# High in the sky, out of everyone's way: blocks the views must show (LAB-004.b).
+perturbations:
+  - { at: 0, blocks: { from: [10, 90, 10], to: [11, 90, 10], block: stone } }

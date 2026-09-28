@@ -148,6 +148,8 @@ export class AgentWorld {
   /** Simulated seconds since the start. */
   time = 0;
   private readonly agents = new Map<string, Agent>();
+  /** Where each id of the map leads (MAP-003); characters and the player need no entry. */
+  private readonly goals: Map<string, Goal>;
   private nextPerception = 0;
 
   /** Regions of the map ids, built when first needed. */
@@ -160,8 +162,9 @@ export class AgentWorld {
     private readonly navigator: Navigator,
     private readonly listener: AgentListener,
     /** Where each id of the map leads (MAP-003); characters and the player need no entry. */
-    private readonly goals: ReadonlyMap<string, Goal> = new Map(),
+    goals: ReadonlyMap<string, Goal> = new Map(),
   ) {
+    this.goals = new Map(goals);
     for (const character of characters) {
       this.agents.set(character.start.id, {
         character,
@@ -170,6 +173,51 @@ export class AgentWorld {
         speech: undefined,
       });
     }
+  }
+
+  /**
+   * A character says a sentence without an action, so that what it is doing goes on: a
+   * perturbation of a scenario (LAB-004.a). Returns why it cannot, if it cannot.
+   */
+  speak(characterId: string, text: string, to: string | null): string | undefined {
+    const agent = this.agents.get(characterId);
+    if (!agent) return `there is no character "${characterId}"`;
+    return this.utter(agent, text, to);
+  }
+
+  /** The sentence of a character, heard within 16 blocks (A7.6); why not, if it cannot. */
+  private utter(agent: Agent, text: string, to: string | null): string | undefined {
+    const state = agent.character.entity.state;
+    if (to !== null) {
+      const addressee = this.positionOf(to);
+      if (!addressee) return `there is no character "${to}"`;
+      // Only someone within 16 blocks can be spoken to (A7.6).
+      const d = Math.hypot(addressee.x - state.x, addressee.y - state.y, addressee.z - state.z);
+      if (d > HEARING_DISTANCE) return `"${to}" is not nearby`;
+    }
+    agent.speech = { text, until: this.time + sayDuration(text) };
+    this.listener.said?.(agent.character.start.id, text, to);
+    for (const [otherId, other] of this.agents) {
+      if (other === agent) continue;
+      const o = other.character.entity.state;
+      const distance = Math.hypot(o.x - state.x, o.y - state.y, o.z - state.z);
+      if (distance <= HEARING_DISTANCE) {
+        this.listener.event(otherId, {
+          type: 'heard',
+          from: agent.character.start.id,
+          text,
+          distance,
+          to,
+        });
+      }
+    }
+    return undefined;
+  }
+
+  /** Where an id of the map leads from now on: a place that moved (LAB-004.a). */
+  setGoal(id: string, goal: Goal): void {
+    this.goals.set(id, goal);
+    this.regions.delete(id);
   }
 
   get ids(): string[] {
@@ -359,31 +407,9 @@ export class AgentWorld {
         return;
       }
       case 'say': {
-        const to = request.to ?? null;
-        if (to !== null) {
-          const addressee = this.positionOf(to);
-          if (!addressee) return this.fail(agent, `there is no character "${to}"`);
-          // Only someone within 16 blocks can be spoken to (A7.6).
-          const d = Math.hypot(addressee.x - state.x, addressee.y - state.y, addressee.z - state.z);
-          if (d > HEARING_DISTANCE) return this.fail(agent, `"${to}" is not nearby`);
-        }
-        agent.speech = { text: request.text, until: this.time + sayDuration(request.text) };
-        running.deadline = agent.speech.until;
-        this.listener.said?.(agent.character.start.id, request.text, to);
-        for (const [otherId, other] of this.agents) {
-          if (other === agent) continue;
-          const o = other.character.entity.state;
-          const distance = Math.hypot(o.x - state.x, o.y - state.y, o.z - state.z);
-          if (distance <= HEARING_DISTANCE) {
-            this.listener.event(otherId, {
-              type: 'heard',
-              from: agent.character.start.id,
-              text: request.text,
-              distance,
-              to,
-            });
-          }
-        }
+        const error = this.utter(agent, request.text, request.to ?? null);
+        if (error) return this.fail(agent, error);
+        running.deadline = agent.speech!.until;
         return;
       }
       case 'follow':

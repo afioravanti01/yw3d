@@ -117,7 +117,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
 - [x] **PC1 — Prova d'uso** (punto di controllo con l'utente) — 2026-09-28: scenario comodo da scrivere, agente autonomo e sensato, esito dichiarato corretto, righe della console sufficienti; nessuna modifica
   - Dip: T10.07
   - L'utente scrive uno scenario (commissione con tempo limite) nel suo `world.yaml`, oppure in un file importato, e lo guarda dal vivo con un modello vero; poi apre il tracciato. Si raccolgono le osservazioni su formato, svolgimento ed esito prima di costruire perturbazioni, serie, rapporto ed esempi (process.md, «prova d'uso presto»).
-- [ ] **T10.08** Perturbazioni
+- [x] **T10.08** Perturbazioni
   - Req: LAB-004.a–c · Dip: T10.06
   - Frase di un personaggio o del giocatore, luogo spostato (con le mete che cambiano), obiettivi cambiati, blocchi posati o tolti (P9) con il rispetto di P3, griglia dei percorsi ricostruita, viste aggiornate anche se collegate dopo; tutto nel tracciato e nel terminale.
   - Fatto quando: test unit per ogni perturbazione ed e2e dei blocchi; tempo di ricostruzione della griglia misurato e annotato.
@@ -162,3 +162,7 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 | T10.06 | Il mondo di prova degli e2e (`e2e/host`) ha un luogo e uno scenario importato per Eco, vicino al punto di partenza | Un e2e dell'esito nella console; il luogo vicino lascia Eco il personaggio più vicino al giocatore, come vuole l'e2e di AGENT-002 | Nessuno |
 | T10.07 | Con l'esito dichiarato, il runtime fa partire i passi della risposta prima di avvisare il motore degli scenari | Altrimenti la frase detta insieme all'esito arrivava dopo la fine del tracciato; ora il tracciato la mostra prima dell'esito | Nessuno |
 | T10.07 | `runs/` è escluso da git nel repository | Il mondo degli e2e crea un tracciato a ogni avvio dell'host | Nessuno |
+| T10.08 | La griglia dei percorsi si ricostruisce solo negli angoli vicini ai blocchi cambiati (`NavGrid.rebuildArea`), non per intero come diceva P9 | Misurata su un mondo di 512 × 512 colonne (`examples/agenti`), la ricostruzione completa costa 560–620 ms a ogni perturbazione, uno scatto per l'host e per le viste; quella locale meno di 1 ms. Un test verifica che dia la stessa griglia della ricostruzione completa | Nessuno |
+| T10.08 | Una frase detta per perturbazione passa da `AgentWorld.speak`, che fa parlare il personaggio senza un'azione | Con l'azione `say` la frase avrebbe sostituito l'azione in corso del personaggio (PROTO-001.c), interrompendo il lavoro dell'agente | Nessuno |
+| T10.08 | Il gancio di test `worldHash` della vista dà l'hash del mondo composto dal file, prima dei blocchi degli scenari; la vista applica i blocchi dopo aver mostrato il mondo | HOST-002.a confronta il mondo composto dal YAML con quello dell'host; con i blocchi della perturbazione di Eco l'hash vivo non coincideva più | Nessuno |
+

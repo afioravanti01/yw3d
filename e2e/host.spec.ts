@@ -244,3 +244,20 @@ test('LAB-002.a, LAB-002.d: a scenario of the world runs on its own; the console
     .poll(lines, { timeout: 20_000 })
     .toContainEqual(expect.stringMatching(/^Scenario «Al pozzo» \(Eco\): riuscito dopo /));
 });
+
+test('LAB-004.b: blocks set by a perturbation are in the world of the view, also when it comes later', async ({
+  page,
+}) => {
+  await open(page);
+  const block = (x: number, y: number, z: number) =>
+    page.evaluate(
+      ([x, y, z]) =>
+        (
+          globalThis as unknown as { __yw3d: { getBlock(x: number, y: number, z: number): number } }
+        ).__yw3d.getBlock(x, y, z),
+      [x, y, z] as const,
+    );
+  await expect.poll(() => block(10, 90, 10), { timeout: 20_000 }).toBe(3);
+  expect(await block(11, 90, 10)).toBe(3);
+  expect(await block(12, 90, 10)).toBe(0);
+});

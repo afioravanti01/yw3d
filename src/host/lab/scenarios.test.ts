@@ -352,3 +352,81 @@ describe('the trace of a run', () => {
     }
   });
 });
+
+describe('the perturbations of a scenario', () => {
+  it('LAB-004.a, LAB-004.c: a sentence, a place that moves, new goals, blocks: each once, at its time, in terminal and trace', async () => {
+    const { s, lines, outcomes, run, trace } = await lab(
+      scenario(`task: "Vai alla Fontana.", time_limit: 120, perturbations: [
+      { at: 0, move_place: { place: fontana, to: [34, 32] } },
+      { at: 0, goals: { agent: marta, goals: [riposare] } },
+      { at: 0.5, say: { by: ugo, text: "Attenta, Marta!" } },
+      { at: 1, blocks: { from: [5, 80, 5], to: [6, 81, 5], block: cobblestone } } ]`),
+    );
+    await run(20);
+    expect(outcomes.map((o) => o.result)).toEqual(['succeeded']);
+    // The fake agent went to the new place of the fountain.
+    const marta = s.agents!.stateOf('marta')!;
+    expect(Math.hypot(marta.x - 34.5, marta.z - 32.5)).toBeLessThan(2);
+    expect(s.world!.result.map!.entries.find((e) => e.id === 'fontana')!.shape).toEqual({
+      kind: 'point',
+      x: 34,
+      z: 32,
+    });
+    const out = lines.join('\n');
+    expect(out).toMatch(/scenario prova: at [\d.]+ s, the place fontana moves to \[34, 32\]/);
+    expect(out).toMatch(/scenario prova: at [\d.]+ s, new goals for marta: riposare/);
+    expect(out).toMatch(/scenario prova: at [\d.]+ s, ugo says: Attenta, Marta!/);
+    expect(out).toMatch(
+      /scenario prova: at [\d.]+ s, 4 blocks set to cobblestone from \[5, 80, 5\]/,
+    );
+    const { events } = readTrace(trace().file);
+    const perturbations = events.flatMap((e) => (e.type === 'perturbation' ? [e] : []));
+    expect(perturbations.map((p) => p.perturbation.kind)).toEqual([
+      'move_place',
+      'goals',
+      'say',
+      'blocks',
+    ]);
+    expect(perturbations[3]!.t).toBeGreaterThanOrEqual(1);
+    // The next question of the agent carries its new goals.
+    const later = events.filter((e) => e.type === 'agent' && e.kind === 'request').at(-1);
+    expect(later?.type === 'agent' && later.kind === 'request' && later.context).toContain(
+      'Your goals: riposare.',
+    );
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: 'said', line: expect.objectContaining({ from: 'ugo' }) }),
+    );
+  });
+
+  it('LAB-004.b: the views get the blocks, also the ones that come later; a reload brings back the world of the file', async () => {
+    const { s, run } = await lab(
+      scenario(`task: "Vola sulla luna.", time_limit: 120, perturbations: [
+      { at: 0, blocks: { from: [5, 80, 5], to: [5, 80, 6], block: stone } } ]`),
+    );
+    const seen: HostMessage[] = [];
+    s.connect((m) => seen.push(m));
+    await run(1);
+    expect(seen).toContainEqual({
+      type: 'blocks',
+      edits: [
+        [5, 80, 5, 3],
+        [5, 80, 6, 3],
+      ],
+    });
+    const late: HostMessage[] = [];
+    s.connect((m) => late.push(m));
+    expect(late[0]).toMatchObject({
+      type: 'hello',
+      blocks: [
+        [5, 80, 5, 3],
+        [5, 80, 6, 3],
+      ],
+    });
+    expect(s.world!.result.world.getBlock(5, 80, 5)).toBe(3);
+    await s.load();
+    expect(s.world!.result.world.getBlock(5, 80, 5)).toBe(0);
+    const again: HostMessage[] = [];
+    s.connect((m) => again.push(m));
+    expect(again[0]).toMatchObject({ type: 'hello', blocks: [] });
+  });
+});

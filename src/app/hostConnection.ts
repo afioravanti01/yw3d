@@ -1,6 +1,7 @@
 import type { Intent } from '../core/physics/entity';
 import type { Diagnostic } from '../core/yaml/report';
 import type { SpokenLine } from '../core/sim/simulation';
+import type { BlockEdit } from '../core/world/edits';
 import type {
   CharacterSnapshot,
   HostMessage,
@@ -37,6 +38,8 @@ export interface HostHandlers {
   sayError(error: string): void;
   /** A line of the laboratory (LAB-002.d). */
   lab(text: string): void;
+  /** Blocks changed by a scenario (LAB-004.b). */
+  blocks(edits: readonly BlockEdit[]): void;
   closed(): void;
 }
 
@@ -210,6 +213,9 @@ export class HostConnection {
         break;
       case 'lab':
         this.handlers.lab(message.text);
+        break;
+      case 'blocks':
+        this.handlers.blocks(message.edits);
         break;
       case 'pong': {
         const sent = this.pings.get(message.id);

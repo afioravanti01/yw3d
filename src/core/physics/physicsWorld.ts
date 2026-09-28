@@ -1,7 +1,7 @@
 import { WATER } from '../blocks/builtin';
 import type { BlockRegistry } from '../blocks/registry';
 import type { World } from '../world/world';
-import { boxIntersectsSolid, boxOf, moveAlongAxis, type Axis, type Box } from './collide';
+import { boxIntersectsSolid, boxOf, EPSILON, moveAlongAxis, type Axis, type Box } from './collide';
 import {
   BUOYANCY_STIFFNESS,
   FLOAT_FRACTION,
@@ -90,6 +90,21 @@ export class PhysicsWorld {
         body.intent = intent;
       },
     };
+  }
+
+  /** Whether the block cell (x, y, z) overlaps the box of an entity (LAB-004.b). */
+  occupied(x: number, y: number, z: number): boolean {
+    return this.bodies.some((body) => {
+      const { min, max } = boxOf(body.state, body.size);
+      return (
+        min[0] < x + 1 - EPSILON &&
+        max[0] > x + EPSILON &&
+        min[1] < y + 1 - EPSILON &&
+        max[1] > y + EPSILON &&
+        min[2] < z + 1 - EPSILON &&
+        max[2] > z + EPSILON
+      );
+    });
   }
 
   /** Advances every entity by one fixed step of 1/60 s (PHYS-002.a). */

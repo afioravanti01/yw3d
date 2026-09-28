@@ -69,4 +69,18 @@ describe('path search', () => {
     expect(MAX_STEP_UP).toBe(1);
     expect(MAX_DROP).toBe(3);
   });
+
+  it('LAB-004.b: rebuilding the grid around changed blocks gives the grid built from scratch', () => {
+    const grid = channelWorld(30).grid;
+    const { world } = grid;
+    // A pillar, a step and a pit, near the channel and on the edge of the world.
+    const edits: [number, number, number, number][] = [];
+    for (let y = 10; y < 14; y++) edits.push([40, y, 20, STONE]);
+    edits.push([41, 10, 21, STONE], [0, 9, 0, 0], [0, 8, 0, 0], [30, 10, 29, STONE]);
+    for (const [x, y, z, b] of edits) world.setBlock(x, y, z, b);
+    grid.rebuildArea(0, 0, 41, 29);
+    const fresh = new NavGrid(world, registry.solid);
+    expect([...grid.level]).toEqual([...fresh.level]);
+    expect([...grid.wet]).toEqual([...fresh.wet]);
+  });
 });

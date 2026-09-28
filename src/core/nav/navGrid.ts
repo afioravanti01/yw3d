@@ -63,79 +63,121 @@ export class NavGrid {
     return best;
   }
 
-  private build(): void {
-    const { size } = this.world;
-    // Standing levels of every column (not corners yet), with their wetness.
-    const columnLevels: number[][] = new Array(size.x * size.z);
-    const columnWet: boolean[][] = new Array(size.x * size.z);
-    // Free blocks above each level, counted up to HEADROOM + 1: enough to know whether the
-    // character still fits when it stands one block higher on a neighbor column.
-    const columnFree: number[][] = new Array(size.x * size.z);
-    const column = new Uint8Array(size.y);
-    for (let z = 0; z < size.z; z++) {
-      for (let x = 0; x < size.x; x++) {
-        this.world.readColumn(x, z, column);
-        const levels: number[] = [];
-        const wets: boolean[] = [];
-        const frees: number[] = [];
-        for (let y = 1; y + HEADROOM <= size.y; y++) {
-          const below = column[y - 1]!;
-          const onSolid = this.solid[below] === 1;
-          // On the water surface: floating, where the block below is water and this one is not.
-          const onWater = below === WATER && column[y] !== WATER;
-          if (!onSolid && !onWater) continue;
-          let free = true;
-          for (let k = 0; k < HEADROOM && free; k++) {
-            const b = column[y + k]!;
-            if (this.solid[b] === 1 || (k > 0 && b === WATER)) free = false;
-          }
-          if (!free) continue;
-          let freeCount = HEADROOM;
-          if (y + HEADROOM < size.y && this.solid[column[y + HEADROOM]!] !== 1) freeCount++;
-          levels.push(y);
-          wets.push(onWater || column[y] === WATER);
-          frees.push(freeCount);
-        }
-        columnLevels[x + z * size.x] = levels;
-        columnWet[x + z * size.x] = wets;
-        columnFree[x + z * size.x] = frees;
+  /**
+   * Builds the grid again around a box of columns whose blocks changed during the simulation
+   * (LAB-004.b): only the corners that touch those columns, not the whole world.
+   */
+  rebuildArea(minX: number, minZ: number, maxX: number, maxZ: number): void {
+    const cx0 = Math.max(0, minX - 1);
+    const cz0 = Math.max(0, minZ - 1);
+    const cx1 = Math.min(this.cornersX - 1, maxX);
+    const cz1 = Math.min(this.cornersZ - 1, maxZ);
+    const columns = new Map<number, ColumnData>();
+    const column = new Uint8Array(this.world.size.y);
+    const dataOf = (c: number) => {
+      let data = columns.get(c);
+      if (!data) {
+        data = this.columnData(c % this.world.size.x, Math.floor(c / this.world.size.x), column);
+        columns.set(c, data);
       }
-    }
-    // A corner level L needs each of its 4 columns to have a level in [L - 1, L], the free space
-    // of the highest one above: the character stands on the highest of the four.
-    for (let cz = 0; cz < this.cornersZ; cz++) {
-      for (let cx = 0; cx < this.cornersX; cx++) {
-        const cols = [
-          cx + cz * size.x,
-          cx + 1 + cz * size.x,
-          cx + (cz + 1) * size.x,
-          cx + 1 + (cz + 1) * size.x,
-        ];
-        const candidates = new Set<number>();
-        for (const c of cols) for (const l of columnLevels[c]!) candidates.add(l);
-        let slot = 0;
-        for (const L of [...candidates].sort((a, b) => a - b)) {
-          if (slot >= LEVELS) break;
-          let ok = true;
-          let wet = false;
-          let top = false;
-          for (const c of cols) {
-            const levels = columnLevels[c]!;
-            const i = levels.findIndex((l) => l === L || l === L - 1);
-            // A column one block lower must stay free one block higher than its own headroom.
-            if (i < 0 || (levels[i] === L - 1 && columnFree[c]![i]! <= HEADROOM)) {
-              ok = false;
-              break;
-            }
-            if (levels[i] === L) top = true;
-            wet ||= columnWet[c]![i]!;
-          }
-          if (!ok || !top) continue;
-          const n = this.node(cx, cz, slot++);
-          this.level[n] = L;
-          this.wet[n] = wet ? 1 : 0;
-        }
-      }
+      return data;
+    };
+    for (let cz = cz0; cz <= cz1; cz++) {
+      for (let cx = cx0; cx <= cx1; cx++) this.buildCorner(cx, cz, dataOf);
     }
   }
+
+  private build(): void {
+    const { size } = this.world;
+    // Standing levels of every column (not corners yet), with their wetness and free space.
+    const columns: ColumnData[] = new Array(size.x * size.z);
+    const column = new Uint8Array(size.y);
+    for (let z = 0; z < size.z; z++) {
+      for (let x = 0; x < size.x; x++) columns[x + z * size.x] = this.columnData(x, z, column);
+    }
+    for (let cz = 0; cz < this.cornersZ; cz++) {
+      for (let cx = 0; cx < this.cornersX; cx++) this.buildCorner(cx, cz, (c) => columns[c]!);
+    }
+  }
+
+  /**
+   * Standing levels of a column, with their wetness, and the free blocks above each level,
+   * counted up to HEADROOM + 1: enough to know whether the character still fits when it stands
+   * one block higher on a neighbor column.
+   */
+  private columnData(x: number, z: number, column: Uint8Array): ColumnData {
+    const { size } = this.world;
+    this.world.readColumn(x, z, column);
+    const levels: number[] = [];
+    const wets: boolean[] = [];
+    const frees: number[] = [];
+    for (let y = 1; y + HEADROOM <= size.y; y++) {
+      const below = column[y - 1]!;
+      const onSolid = this.solid[below] === 1;
+      // On the water surface: floating, where the block below is water and this one is not.
+      const onWater = below === WATER && column[y] !== WATER;
+      if (!onSolid && !onWater) continue;
+      let free = true;
+      for (let k = 0; k < HEADROOM && free; k++) {
+        const b = column[y + k]!;
+        if (this.solid[b] === 1 || (k > 0 && b === WATER)) free = false;
+      }
+      if (!free) continue;
+      let freeCount = HEADROOM;
+      if (y + HEADROOM < size.y && this.solid[column[y + HEADROOM]!] !== 1) freeCount++;
+      levels.push(y);
+      wets.push(onWater || column[y] === WATER);
+      frees.push(freeCount);
+    }
+    return { levels, wets, frees };
+  }
+
+  /**
+   * The levels of a corner: a corner level L needs each of its 4 columns to have a level in
+   * [L - 1, L], the free space of the highest one above; the character stands on the highest.
+   */
+  private buildCorner(cx: number, cz: number, dataOf: (column: number) => ColumnData): void {
+    const { size } = this.world;
+    for (let s = 0; s < LEVELS; s++) {
+      const n = this.node(cx, cz, s);
+      this.level[n] = NONE;
+      this.wet[n] = 0;
+    }
+    const cols = [
+      cx + cz * size.x,
+      cx + 1 + cz * size.x,
+      cx + (cz + 1) * size.x,
+      cx + 1 + (cz + 1) * size.x,
+    ].map(dataOf);
+    const candidates = new Set<number>();
+    for (const c of cols) for (const l of c.levels) candidates.add(l);
+    let slot = 0;
+    for (const L of [...candidates].sort((a, b) => a - b)) {
+      if (slot >= LEVELS) break;
+      let ok = true;
+      let wet = false;
+      let top = false;
+      for (const c of cols) {
+        const i = c.levels.findIndex((l) => l === L || l === L - 1);
+        // A column one block lower must stay free one block higher than its own headroom.
+        if (i < 0 || (c.levels[i] === L - 1 && c.frees[i]! <= HEADROOM)) {
+          ok = false;
+          break;
+        }
+        if (c.levels[i] === L) top = true;
+        wet ||= c.wets[i]!;
+      }
+      if (!ok || !top) continue;
+      const n = this.node(cx, cz, slot++);
+      this.level[n] = L;
+      this.wet[n] = wet ? 1 : 0;
+    }
+  }
+}
+
+/** What a column offers to stand on (plan F05 P1). */
+interface ColumnData {
+  readonly levels: readonly number[];
+  readonly wets: readonly boolean[];
+  readonly frees: readonly number[];
 }

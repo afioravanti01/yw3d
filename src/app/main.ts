@@ -27,6 +27,7 @@ import { characterDetails } from '../protocol/details';
 import { LocalSimulation } from './localSimulation';
 import { PlayerView, RemotePlayer, type PlayerSource } from './playerView';
 import { installTestHook, type TestHook } from './testHook';
+import type { BlockEdit } from '../core/world/edits';
 import * as bundledWorlds from './worlds';
 
 function required<T extends Element>(selector: string): T {
@@ -49,6 +50,8 @@ interface Loaded {
   readonly result: ComposeResult;
   readonly composeMs: number;
   readonly meshingMs: number;
+  /** Hash of the world as composed from its file, before the blocks of the scenarios. */
+  readonly hash: number;
 }
 
 const toMessages = (diagnostics: readonly Diagnostic[]): PanelMessage[] =>
@@ -147,7 +150,7 @@ async function main(): Promise<void> {
     loadTimeMs: 0,
     frames: 0,
     connection: null,
-    worldHash: () => current?.world.hash() ?? 0,
+    worldHash: () => current?.hash ?? 0,
     getBlock: (x, y, z) => current?.world.getBlock(x, y, z) ?? 0,
     setBlock: (x, y, z, id) => current?.world.setBlock(x, y, z, id) ?? false,
     stats: () => ({
@@ -214,7 +217,16 @@ async function main(): Promise<void> {
 
     current?.chunks.dispose();
     current?.windows.dispose();
-    current = { world: result.world, scene, chunks, windows, result, composeMs, meshingMs };
+    current = {
+      world: result.world,
+      scene,
+      chunks,
+      windows,
+      result,
+      composeMs,
+      meshingMs,
+      hash: result.world.hash(),
+    };
     messageConsole.characters = result.characters.map((c) => ({ id: c.id, name: c.name }));
     messageConsole.context = () =>
       result.map && {
@@ -366,22 +378,36 @@ async function main(): Promise<void> {
       show(result as ComposeResult & { world: World }, performance.now() - start, () => {
         return new RemotePlayer(connection!, () => performance.now());
       });
+      // The blocks the scenarios changed so far: the renderer rebuilds the regions they touch.
+      for (const [x, y, z, block] of blockEdits) result.world.setBlock(x, y, z, block);
       playerView!.setSpectator(connection!.role === 'spectator', camera);
       if (reload) reloadMs = performance.now() - start;
       showMessages(messages, 'ready');
     };
 
+    /** Blocks changed by the scenarios of the world of the host (LAB-004.b). */
+    let blockEdits: BlockEdit[] = [];
     connection = new HostConnection(
       host!,
       {
         hello: (message) => {
+          // Blocks the scenarios changed before this view came (LAB-004.b).
+          blockEdits = [...(message.blocks ?? [])];
           hook.connection = { role: message.role };
           messageConsole.canWrite = message.role === 'driver';
           if (message.player) playerControls.yaw = message.player.yaw;
           if (message.world) void receiveWorld(message.world, message.diagnostics);
           else showMessages(toMessages(message.diagnostics), 'error');
         },
-        world: (world, diagnostics) => void receiveWorld(world, diagnostics),
+        world: (world, diagnostics) => {
+          // A new world from the file: the blocks changed in the previous one are gone.
+          blockEdits = [];
+          void receiveWorld(world, diagnostics);
+        },
+        blocks: (edits) => {
+          blockEdits.push(...edits);
+          for (const [x, y, z, block] of edits) current?.world.setBlock(x, y, z, block);
+        },
         diagnostics: (diagnostics) =>
           showMessages(toMessages(diagnostics), current ? 'ready' : 'error'),
         line: (line) => messageConsole.message(line, connection!.role === 'driver'),

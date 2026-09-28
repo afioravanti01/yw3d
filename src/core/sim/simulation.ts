@@ -25,6 +25,7 @@ import { address } from '../dialogue/address';
 import { understandElement, understandYesNo } from '../dialogue/understand';
 import { PLAYER_ID } from '../map/worldMap';
 import { NavGrid } from '../nav/navGrid';
+import { editBox, type BlockEdit } from '../world/edits';
 import { Pathfinder } from '../nav/pathfinding';
 import { IDLE, type Intent } from '../physics/entity';
 import { PhysicsWorld, type EntityHandle } from '../physics/physicsWorld';
@@ -83,6 +84,8 @@ export class Simulation {
   private playerSpeech: { text: string; until: number } | undefined;
   /** External controllers by character (PROTO-003, PROTO-004). */
   private readonly sinks = new Map<string, AgentListener>();
+  /** Where characters can stand, built again when blocks change (LAB-004.b). */
+  private readonly grid: NavGrid;
   private readonly names: ReadonlyMap<string, string>;
   private readonly elements: readonly { id: string; name: string }[];
   /** The characters, for the addressee of the player's messages (DIALOG-005.d). */
@@ -119,7 +122,8 @@ export class Simulation {
     this.elements = map.entries.map((e) => ({ id: e.id, name: e.name }));
     this.characters = result.characters.map((c) => ({ id: c.id, name: c.name }));
     const characters = spawnCharacters(this.physics, result.characters);
-    const finder = new Pathfinder(new NavGrid(result.world, registry.solid));
+    this.grid = new NavGrid(result.world, registry.solid);
+    const finder = new Pathfinder(this.grid);
     this.agents = new AgentWorld(
       this.physics,
       characters,
@@ -150,6 +154,34 @@ export class Simulation {
   /** Brings the world to an hour, going forward (`/time`, TIME-002.a). */
   setClock(minutes: number): void {
     this.clockOffset += secondsBetween(this.clock.minutes, minutes, this.clockSettings);
+  }
+
+  /**
+   * Sets a box of blocks during the simulation, `AIR` to remove them (LAB-004.b): never inside
+   * an entity; the paths of the characters take the new blocks into account.
+   */
+  editBlocks(
+    from: readonly [number, number, number],
+    to: readonly [number, number, number],
+    block: number,
+  ): { readonly edits: BlockEdit[]; readonly skipped: number } {
+    const done = editBox(this.result.world, from, to, block, (x, y, z) =>
+      this.physics.occupied(x, y, z),
+    );
+    if (done.edits.length > 0) {
+      this.grid.rebuildArea(
+        Math.min(from[0], to[0]),
+        Math.min(from[2], to[2]),
+        Math.max(from[0], to[0]),
+        Math.max(from[2], to[2]),
+      );
+    }
+    return done;
+  }
+
+  /** A place with a point moves: walking to it leads to the new column (LAB-004.a). */
+  movePlace(id: string, x: number, z: number): void {
+    this.agents.setGoal(id, { kind: 'point', x: x + 0.5, z: z + 0.5 });
   }
 
   /** One fixed step: the player's intent, the agent world and the physics. */

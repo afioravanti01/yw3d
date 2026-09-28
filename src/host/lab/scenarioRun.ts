@@ -1,4 +1,4 @@
-import type { Scenario } from '../../core/yaml/scenarioFile';
+import type { Perturbation, Scenario } from '../../core/yaml/scenarioFile';
 import type { AgentRuntime } from '../agents/runtime';
 import type { Outcome } from '../agents/reply';
 
@@ -42,6 +42,8 @@ export interface ScenarioHooks {
   /** A line in the console of the views. */
   notice(text: string): void;
   ended(outcome: ScenarioOutcome): void;
+  /** Makes a perturbation happen (LAB-004.a): what happened, for the terminal and the trace. */
+  perturb(scenario: Scenario, perturbation: Perturbation): string;
 }
 
 export class ScenarioRun {
@@ -49,6 +51,8 @@ export class ScenarioRun {
   private failures = 0;
   private readonly start: number;
   private outcomeNow: ScenarioOutcome | undefined;
+  /** Perturbations still to happen, in order of time. */
+  private readonly perturbations: Perturbation[];
 
   /**
    * Starts the scenario on the runtime of its agent; without a runtime (no consent, no CLI, no
@@ -61,6 +65,7 @@ export class ScenarioRun {
     private readonly hooks: ScenarioHooks,
   ) {
     this.start = hooks.now();
+    this.perturbations = [...(scenario.perturbations ?? [])].sort((a, b) => a.at - b.at);
     hooks.log(`[${scenario.agent}] scenario ${scenario.id} started: ${scenario.task}`);
     hooks.notice(`Scenario «${scenario.name}» assegnato a ${agentName}: ${scenario.task}`);
     if (!runtime) {
@@ -82,10 +87,18 @@ export class ScenarioRun {
     return this.outcomeNow === undefined;
   }
 
-  /** The world went on: the time limit (LAB-002.c). */
+  /** The world went on: perturbations that are due (LAB-004.a), then the time limit (LAB-002.c). */
   tick(): void {
     if (!this.running) return;
-    if (this.hooks.now() - this.start >= this.scenario.time_limit) {
+    const elapsed = this.hooks.now() - this.start;
+    while (this.perturbations.length > 0 && this.perturbations[0]!.at <= elapsed) {
+      const perturbation = this.perturbations.shift()!;
+      const what = this.hooks.perturb(this.scenario, perturbation);
+      this.hooks.log(
+        `[${this.scenario.agent}] scenario ${this.scenario.id}: at ${Math.round(elapsed * 10) / 10} s, ${what}`,
+      );
+    }
+    if (elapsed >= this.scenario.time_limit) {
       this.end('timeout', `${this.scenario.time_limit} s of simulated time are over`);
     }
   }

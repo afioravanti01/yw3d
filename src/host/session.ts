@@ -42,6 +42,9 @@ import {
   type TraceEvent,
 } from './lab/trace';
 import { INSTRUCTIONS_VERSION } from './agents/context';
+import { AIR, createDefaultRegistry } from '../core/blocks/builtin';
+import type { BlockEdit } from '../core/world/edits';
+import type { Perturbation } from '../core/yaml/scenarioFile';
 import { PROJECT_ROOT } from './moduleLoader';
 
 /** A world composed by the host, with what the views need to compose the same one. */
@@ -165,6 +168,8 @@ export class HostSession {
   private scenarioRuns: ScenarioRun[] = [];
   /** Lines of the laboratory of this world, for the views that come later (LAB-002.d). */
   private labLines: string[] = [];
+  /** Blocks changed by the scenarios since the world was composed (LAB-004.b). */
+  private blockEdits: BlockEdit[] = [];
   /** The trace of the run now going on, if any (LAB-005). */
   private trace: TraceWriter | undefined;
   /** Simulated time at the start of the run. */
@@ -257,6 +262,8 @@ export class HostSession {
       return false;
     }
     this.world = world;
+    // A new world from the files: the blocks the scenarios changed are gone (LAB-004.b).
+    this.blockEdits = [];
     this.startSimulation(world);
     this.broadcast({
       type: 'world',
@@ -511,12 +518,72 @@ export class HostSession {
               this.broadcast({ type: 'lab', text });
             },
             ended: (outcome) => this.scenarioEnded(outcome),
+            perturb: (s, p) => {
+              const result = this.perturb(p);
+              this.traceEvent({ type: 'perturbation', scenario: s.id, perturbation: p, result });
+              return result;
+            },
           },
         ),
       );
     }
     this.startingScenarios = false;
     this.endRunIfOver();
+  }
+
+  /**
+   * Makes a perturbation of a scenario happen (LAB-004.a) and says what happened. The world
+   * rules hold: sentences reach only who is near, blocks never appear inside someone (P3).
+   */
+  private perturb(p: Perturbation): string {
+    const sim = this.sim;
+    const world = this.world;
+    if (!sim || !world) return 'no world';
+    switch (p.kind) {
+      case 'say': {
+        const to = p.to ?? null;
+        const error =
+          p.by === 'player'
+            ? (() => {
+                const said = sim.playerSays(p.text, { to });
+                return said.ok ? undefined : said.error;
+              })()
+            : sim.agents.speak(p.by, p.text, to);
+        return error
+          ? `${p.by} could not say "${p.text}": ${error}`
+          : `${p.by} says${to ? ` to ${to}` : ''}: ${p.text}`;
+      }
+      case 'move_place': {
+        const [x, z] = p.to;
+        sim.movePlace(p.place, x, z);
+        const map = {
+          ...world.result.map!,
+          entries: world.result.map!.entries.map((e) =>
+            e.id === p.place ? { ...e, shape: { kind: 'point' as const, x, z } } : e,
+          ),
+        };
+        this.world = { ...world, result: { ...world.result, map } };
+        // Programs and controllers get the new map, as after a reload (PROTO-001.e).
+        for (const sink of this.controllerSinks.values()) sink.worldChanged?.(map);
+        return `the place ${p.place} moves to [${x}, ${z}]`;
+      }
+      case 'blocks': {
+        const block = createDefaultRegistry().getByName(p.block)!;
+        const { edits, skipped } = sim.editBlocks(p.from, p.to, block.id);
+        this.blockEdits.push(...edits);
+        if (edits.length > 0) this.broadcast({ type: 'blocks', edits });
+        const what = block.id === AIR ? 'removed' : `set to ${p.block}`;
+        return `${edits.length} blocks ${what} from [${p.from.join(', ')}] to [${p.to.join(', ')}]${
+          skipped > 0 ? `; ${skipped} left out because someone stands there` : ''
+        }`;
+      }
+      case 'goals': {
+        const runtime = this.runtimes.get(p.agent);
+        if (!runtime) return `${p.agent} has no running agent: its goals stay`;
+        runtime.setGoals(p.goals);
+        return `new goals for ${p.agent}: ${p.goals.join('; ')}`;
+      }
+    }
   }
 
   /** A scenario ended; with the last one the run is over, and so is its trace (LAB-005). */
@@ -764,6 +831,7 @@ export class HostSession {
       views: this.views.length,
       clock: this.sim?.clock.minutes ?? null,
       lab: [...this.labLines],
+      blocks: [...this.blockEdits],
     });
     const currentRole = () => this.roleOf(view);
     return {

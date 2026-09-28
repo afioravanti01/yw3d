@@ -137,7 +137,7 @@ export class AgentRuntime {
 
   constructor(
     readonly id: string,
-    private readonly identity: AgentIdentity,
+    private identity: AgentIdentity,
     private readonly config: AgentDecl,
     private readonly brain: Brain,
     private readonly host: AgentHost,
@@ -221,6 +221,11 @@ export class AgentRuntime {
   endTask(): void {
     this.task = undefined;
     this.pending = this.pending.filter((t) => t.kind !== 'task' && t.kind !== 'continue');
+  }
+
+  /** New goals for the agent, from a perturbation of a scenario (LAB-004.a). */
+  setGoals(goals: readonly string[]): void {
+    this.identity = { ...this.identity, goals };
   }
 
   /** Whether the agent is working on a task now. */

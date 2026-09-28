@@ -3,7 +3,7 @@ import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { SpokenLine } from '../../core/sim/simulation';
 import type { AgentDecl } from '../../core/yaml/worldFile';
-import type { Scenario } from '../../core/yaml/scenarioFile';
+import type { Perturbation, Scenario } from '../../core/yaml/scenarioFile';
 import type { AgentActivity } from '../agents/runtime';
 import type { ScenarioOutcome } from './scenarioRun';
 
@@ -70,7 +70,13 @@ export type TraceEvent = { readonly t: number } & (
   | ({ readonly type: 'agent'; readonly agent: string } & AgentActivity)
   | { readonly type: 'said'; readonly line: SpokenLine }
   | ({ readonly type: 'outcome' } & ScenarioOutcome)
-  | { readonly type: 'perturbation'; readonly scenario: string; readonly what: unknown }
+  | {
+      readonly type: 'perturbation';
+      readonly scenario: string;
+      readonly perturbation: Perturbation;
+      /** What happened, as the terminal says it. */
+      readonly result: string;
+    }
   | { readonly type: 'end'; readonly reason: string }
 );
 

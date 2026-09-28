@@ -1,5 +1,6 @@
 import type { Intent } from '../core/physics/entity';
 import type { SpokenLine } from '../core/sim/simulation';
+import type { BlockEdit } from '../core/world/edits';
 import type { Diagnostic } from '../core/yaml/report';
 
 /**
@@ -86,6 +87,8 @@ export type HostMessage =
       readonly clock: number | null;
       /** Lines of the laboratory of the world now running, oldest first (LAB-002.d). */
       readonly lab?: readonly string[];
+      /** Blocks changed by the scenarios since the world was composed, in order (LAB-004.b). */
+      readonly blocks?: readonly BlockEdit[];
     }
   | {
       readonly type: 'world';
@@ -111,7 +114,9 @@ export type HostMessage =
   /** A sentence of the driving view that could not be said, e.g. an unknown `@id`. */
   | { readonly type: 'say_error'; readonly error: string }
   /** A line of the laboratory for the console: a scenario started or ended (LAB-002.d). */
-  | { readonly type: 'lab'; readonly text: string };
+  | { readonly type: 'lab'; readonly text: string }
+  /** Blocks set or removed by a perturbation of a scenario (LAB-004.b). */
+  | { readonly type: 'blocks'; readonly edits: readonly BlockEdit[] };
 
 export type ViewMessage =
   | {
