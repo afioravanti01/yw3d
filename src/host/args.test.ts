@@ -169,4 +169,13 @@ describe('yw3d command line', () => {
     expect(parseArgs(['show', 'x', '--step', '0'])).toMatchObject({ kind: 'error' });
     expect(USAGE).toContain('yw3d show <run> [--step <n>]');
   });
+
+  it('LAB-006.a, CLI-001.c: --replay takes a run to replay', () => {
+    expect(parseArgs(['valle', '--replay', 'valle/runs/x'])).toMatchObject({
+      kind: 'run',
+      options: { folder: 'valle', replay: 'valle/runs/x' },
+    });
+    expect(parseArgs(['valle', '--replay'])).toMatchObject({ kind: 'error' });
+    expect(USAGE).toContain('--replay <run>');
+  });
 });

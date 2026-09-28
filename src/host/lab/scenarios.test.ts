@@ -12,6 +12,7 @@ import { HostSession } from '../session';
 import type { ScenarioOutcome } from './scenarioRun';
 import { fingerprint, readTrace, RUNS_DIR, TRACE_FILE } from './trace';
 import { stepDetail, timeline, traceFileOf } from './show';
+import { ReplayBrain } from '../agents/brains/replay';
 import { UNKNOWN_USAGE } from '../agents/brain';
 import { AnthropicBrain } from '../agents/brains/anthropic';
 import { INSTRUCTIONS_VERSION } from '../agents/context';
@@ -466,5 +467,84 @@ describe('yw3d show', () => {
     expect(detail.join('\n')).toContain('YOUR TASK:\nVai alla Fontana.');
     expect(detail.join('\n')).toMatch(/REPLY at [\d.]+ s, after \d+ ms:\n\{\n {2}"say": null/);
     expect(stepDetail(file, 9)).toBe('there is no step 9: this run has 2');
+  });
+});
+
+describe('the replay of a run', () => {
+  it('LAB-006.a: the replies of the trace, in order, not before their time; failures fail again; then the agent stands still', async () => {
+    let now = 0;
+    const logged: string[] = [];
+    const brain = new ReplayBrain(
+      [
+        { t: 2, raw: { say: null, actions: [] }, usage: UNKNOWN_USAGE },
+        { t: 3, error: 'HTTP 529' },
+      ],
+      () => now,
+      (l) => logged.push(l),
+      () => new Promise((resolve) => setTimeout(resolve, 0)),
+    );
+    const signal = new AbortController().signal;
+    let replied = false;
+    const first = brain.think(undefined, signal).then((t) => {
+      replied = true;
+      return t;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(replied).toBe(false);
+    now = 2;
+    expect((await first).reply).toEqual({ say: null, actions: [] });
+    now = 5;
+    await expect(brain.think(undefined, signal)).rejects.toThrow('HTTP 529');
+    const stop = new AbortController();
+    const over = brain.think(undefined, stop.signal);
+    stop.abort();
+    await expect(over).rejects.toThrow('no more recorded replies');
+    expect(logged).toEqual(['the recorded replies are over: the agent stands still']);
+  });
+
+  it('LAB-006.a: a replay gives the agents the recorded replies without calling an LLM, and says which files changed since the run', async () => {
+    const original = await lab(scenario('task: "Vai alla Fontana.", time_limit: 120'));
+    await original.run(20);
+    const file = original.trace().file;
+    // The same world, but the agent of Marta would now need Claude Code, which is not there.
+    const worldFile = path.join(original.root, WORLD_FILE);
+    writeFileSync(
+      worldFile,
+      readFileSync(worldFile, 'utf8').replace(
+        'agent: { mode: fake }',
+        'agent: { mode: headless, cli: claude }',
+      ),
+    );
+    const resolved = resolveWorldFolder(original.root);
+    if (!resolved.ok) throw new Error(resolved.message);
+    const lines: string[] = [];
+    const outcomes: ScenarioOutcome[] = [];
+    const replay = new HostSession(
+      resolved.folder,
+      noModules,
+      { line: (t) => lines.push(t) },
+      {
+        consent: async () => false,
+        env: { PATH: '' },
+        replay: file,
+        scenarioEnded: (o) => outcomes.push(o),
+      },
+    );
+    sessions.push(replay);
+    await replay.load();
+    for (let t = 0; t < 20 && outcomes.length === 0; t += 0.25) {
+      replay.advance(0.25);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    const out = lines.join('\n');
+    expect(out).toContain('replaying the run of');
+    expect(out).toMatch(
+      /warning: changed since the run: .*world\.yaml; the replay may go differently/,
+    );
+    expect(outcomes.map((o) => [o.result, o.steps])).toEqual(
+      original.outcomes.map((o) => [o.result, o.steps]),
+    );
+    // No new trace: the folder of the runs still has only the original one.
+    expect(readdirSync(path.join(original.root, RUNS_DIR))).toHaveLength(1);
   });
 });

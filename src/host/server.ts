@@ -62,6 +62,7 @@ export async function startHostServer(
     now: () => performance.now(),
     consent,
     python: options.python,
+    ...(options.replay ? { replay: options.replay } : {}),
   });
   await session.load();
 

@@ -13,6 +13,8 @@ export interface CliOptions {
   readonly allowCommands: boolean;
   /** Python interpreter of the programs, when not the default one (F07 Q2). */
   readonly python: string | undefined;
+  /** A run to replay: its folder in runs/ or its trace (LAB-006.a). */
+  readonly replay?: string;
 }
 
 /** Options of `yw3d run`: a series of runs of the scenarios of a world (LAB-007). */
@@ -55,6 +57,7 @@ Options:
                  run the commands and programs of the characters without asking
   --python <path>
                  Python interpreter of the programs (default: python3, python on Windows)
+  --replay <run> replay a run of runs/ with the replies it recorded, calling no LLM
   -h, --help     show this help
 
 yw3d run: runs the scenarios of the world again and again, without the browser, and
@@ -80,6 +83,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let seed: number | undefined;
   let allowCommands = false;
   let python: string | undefined;
+  let replay: string | undefined;
   const error = (message: string): ParsedArgs => ({ kind: 'error', message });
 
   for (let i = 0; i < argv.length; i++) {
@@ -104,6 +108,12 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
           return error('--python needs the path of a Python interpreter');
         }
         python = raw;
+        break;
+      }
+      case '--replay': {
+        const raw = value();
+        if (raw === undefined || raw.trim() === '') return error('--replay needs a run of runs/');
+        replay = raw;
         break;
       }
       case '--port': {
@@ -133,7 +143,19 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     }
   }
   if (folder === undefined) return error('missing the world folder');
-  return { kind: 'run', options: { folder, port, open, lan, seed, allowCommands, python } };
+  return {
+    kind: 'run',
+    options: {
+      folder,
+      port,
+      open,
+      lan,
+      seed,
+      allowCommands,
+      python,
+      ...(replay ? { replay } : {}),
+    },
+  };
 }
 
 /** Parses `yw3d run <folder> …` (LAB-007.a, CLI-001.c). */

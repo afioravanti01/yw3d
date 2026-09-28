@@ -31,11 +31,21 @@ export async function main(
   }
   if (parsed.kind === 'series') return series(parsed.options, terminal);
   if (parsed.kind === 'show') return show(parsed.run, parsed.step, terminal);
-  const { options } = parsed;
+  let { options } = parsed;
   const resolved = resolveWorldFolder(options.folder);
   if (!resolved.ok) {
     terminal.line(`${PREFIX}: ${resolved.message}`);
     return 1;
+  }
+  if (options.replay !== undefined) {
+    const trace = traceFileOf(options.replay);
+    if (!trace) {
+      terminal.line(
+        `${PREFIX}: ${options.replay} is not a run: give its folder in runs/ or its trace.jsonl`,
+      );
+      return 1;
+    }
+    options = { ...options, replay: trace };
   }
   // One reader of an interactive stdin, for the consent and then the console (plan F06 P16).
   const input = terminalInput(process.stdin, process.stdout);

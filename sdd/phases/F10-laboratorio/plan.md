@@ -133,7 +133,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-005.d · Dip: T10.07
   - Cronologia di un tracciato, un passo per riga; `--step n` per contesto e risposta completi.
   - Fatto quando: test unit su un tracciato d'esempio.
-- [ ] **T10.12** Rigioco
+- [x] **T10.12** Rigioco
   - Req: LAB-006.a–b · Dip: T10.07, T10.08
   - `yw3d <cartella> --replay <esecuzione>` con il cervello `replay` (P12); avviso se le impronte dei file non coincidono.
   - Fatto quando: test unit: le risposte arrivano in ordine e non prima dei tempi registrati; avviso sui file cambiati.
@@ -167,4 +167,4 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 | T10.08 | Il gancio di test `worldHash` della vista dà l'hash del mondo composto dal file, prima dei blocchi degli scenari; la vista applica i blocchi dopo aver mostrato il mondo | HOST-002.a confronta il mondo composto dal YAML con quello dell'host; con i blocchi della perturbazione di Eco l'hash vivo non coincideva più | Nessuno |
 | T10.09 | Formato di `--brain`: il nome e poi `model=` ed `effort=` separati da virgole (`claude,model=sonnet,effort=low`), non con i due punti come in P11 | I modelli di Ollama hanno i due punti nel nome (`llama3.1:8b`) | Nessuno |
 | T10.09 | Durante una serie il terminale mostra solo le righe degli scenari, degli errori e del consenso, più una riga per esecuzione | Ogni esecuzione ricarica il mondo: le righe di composizione, ripetute per ogni esecuzione, nascondevano l'avanzamento | Nessuno: LAB-007.d chiede cervello, esiti, tempo e spesa per esecuzione |
-
+| T10.12 | In rigioco tutti gli agenti del mondo usano il cervello `replay`, non solo quelli con uno scenario, e restano nella loro modalità: niente consenso né controllo della CLI | Nessuna chiamata a un LLM durante il rigioco; la modalità originale mantiene il tempo limite della richiesta, che per un cervello finto sarebbe di 5 s | Nessuno |

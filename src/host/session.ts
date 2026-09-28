@@ -38,9 +38,12 @@ import {
   RUNS_DIR,
   runName,
   scenarioOfHeader,
+  readTrace,
   TraceWriter,
   type TraceEvent,
+  type TraceHeader,
 } from './lab/trace';
+import { recordedReplies, ReplayBrain, type RecordedReply } from './agents/brains/replay';
 import { INSTRUCTIONS_VERSION } from './agents/context';
 import { AIR, createDefaultRegistry } from '../core/blocks/builtin';
 import type { BlockEdit } from '../core/world/edits';
@@ -96,6 +99,11 @@ export interface SessionOptions {
    * Persona, goals and initiative stay the ones of the world file.
    */
   readonly agentOverride?: (agent: AgentDecl) => AgentDecl;
+  /**
+   * Replays a run (LAB-006.a): every agent gets the replies of this trace, and no new trace is
+   * written.
+   */
+  readonly replay?: string;
   /** What each reply of an agent consumed (LAB-007.c): for the spending cap of a series. */
   readonly usage?: (agent: string, usage: Usage) => void;
 }
@@ -189,7 +197,18 @@ export class HostSession {
     private readonly loader: ModuleLoader,
     private readonly terminal: Terminal,
     private readonly options: SessionOptions = {},
-  ) {}
+  ) {
+    if (options.replay) {
+      const { header, events } = readTrace(options.replay);
+      this.replay = { header, replies: recordedReplies(events) };
+      this.options = { ...options, traceFolder: null };
+      terminal.line(`${PREFIX}  replaying the run of ${header.date}: no LLM is called`);
+    }
+  }
+
+  /** The run being replayed, if any (LAB-006.a). */
+  private readonly replay:
+    { readonly header: TraceHeader; readonly replies: Map<string, RecordedReply[]> } | undefined;
 
   /** Path shown to the user for a file of the folder. */
   display(file: string): string {
@@ -398,7 +417,8 @@ export class HostSession {
       if (c.agent) {
         this.agentsToStart.push({ id: c.id, agent: c.agent });
         // A fake agent runs no program and uses no network: nothing to allow (plan F08 P12).
-        if (c.agent.mode === 'fake') return [];
+        // A replay calls no LLM: nothing to allow (LAB-006.a).
+        if (c.agent.mode === 'fake' || this.replay) return [];
         return [{ id: c.id, command: describeAgent(c.agent), program: false, agent: true }];
       }
       if (c.program) {
@@ -463,8 +483,10 @@ export class HostSession {
    */
   private startAgents(allowed: boolean): void {
     for (const { id, agent } of this.agentsToStart) {
-      if (agent.mode !== 'fake' && !allowed) continue;
-      const check = checkAgent(agent, this.folder.root, this.options.env);
+      if (agent.mode !== 'fake' && !allowed && !this.replay) continue;
+      const check = this.replay
+        ? { ok: true as const }
+        : checkAgent(agent, this.folder.root, this.options.env);
       if (!check.ok) {
         this.terminal.line(`${PREFIX}  [${id}] cannot start the agent: ${check.error}`);
         continue;
@@ -478,7 +500,15 @@ export class HostSession {
   private startAgent(id: string, agent: AgentDecl): void {
     let brain: Brain;
     try {
-      brain = this.options.brain ? this.options.brain(agent) : createBrain(agent, this.options.env);
+      brain = this.replay
+        ? new ReplayBrain(
+            this.replay.replies.get(id) ?? [],
+            () => (this.sim?.time ?? 0) - this.traceStart,
+            (line) => this.terminal.line(`${PREFIX}  [${id}] ${line}`),
+          )
+        : this.options.brain
+          ? this.options.brain(agent)
+          : createBrain(agent, this.options.env);
     } catch (error) {
       this.terminal.line(`${PREFIX}  [${id}] cannot start the agent: ${(error as Error).message}`);
       return;
@@ -529,6 +559,7 @@ export class HostSession {
   private startScenarios(world: SessionWorld): void {
     const { scenarios } = world.result;
     if (scenarios.length === 0) return;
+    if (this.replay) this.checkReplayedFiles(world);
     this.startTrace(world);
     this.startingScenarios = true;
     for (const scenario of scenarios) {
@@ -631,6 +662,24 @@ export class HostSession {
     this.options.runEnded?.(file);
   }
 
+  /** A replay of files that changed since the run is not the same run: the terminal says so. */
+  private checkReplayedFiles(world: SessionWorld): void {
+    const { header } = this.replay!;
+    const changed: string[] = [];
+    if (header.world.fingerprint !== fingerprint(world.text)) changed.push(header.world.file);
+    const now = Object.fromEntries(
+      Object.entries(world.scenarioTexts).map(([file, text]) => [file, fingerprint(text)]),
+    );
+    for (const file of new Set([...Object.keys(header.scenario_files), ...Object.keys(now)])) {
+      if (header.scenario_files[file] !== now[file]) changed.push(file);
+    }
+    if (changed.length > 0) {
+      this.terminal.line(
+        `${PREFIX}  warning: changed since the run: ${changed.join(', ')}; the replay may go differently`,
+      );
+    }
+  }
+
   /** Starts the trace of a run (LAB-005.a): its header, with what the run depends on. */
   private startTrace(world: SessionWorld): void {
     this.trace = undefined;
@@ -638,9 +687,10 @@ export class HostSession {
       this.options.traceFolder === undefined
         ? () => path.join(this.folder.root, RUNS_DIR, runName(new Date()))
         : this.options.traceFolder;
+    // The time of the run counts also without a trace: a replay follows it (LAB-006.a).
+    this.traceStart = this.sim?.time ?? 0;
     if (!folderOf) return;
     const { result } = world;
-    this.traceStart = this.sim?.time ?? 0;
     this.trace = new TraceWriter(folderOf(), {
       type: 'header',
       yw3d: YW3D_VERSION,
