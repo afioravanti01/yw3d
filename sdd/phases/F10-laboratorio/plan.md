@@ -125,7 +125,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-007.a–d, CLI-001.c · Dip: T10.07
   - `yw3d run <cartella> [--runs N] [--brain …]… [--budget USD] [--allow-commands]` (P10, P11): consenso una volta, esecuzioni in sequenza dal mondo iniziale, tetto di spesa, righe di avanzamento; aiuto aggiornato.
   - Fatto quando: test unit con cervelli finti, anche con un costo simulato per il tetto.
-- [ ] **T10.10** Rapporto
+- [x] **T10.10** Rapporto
   - Req: LAB-007.e–f · Dip: T10.09
   - Statistiche per condizione e scenario (esiti; media e deviazione standard di passi, azioni, tempo simulato, token, costo; latenza anche massima; parti scartate), intestazione comune, elenco delle esecuzioni; tabella nel terminale e `report.json`; nota «esito dichiarato dall'agente».
   - Fatto quando: test unit sulle statistiche e sul file.

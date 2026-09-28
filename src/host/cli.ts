@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { parseArgs, USAGE, type SeriesCliOptions } from './args';
 import { parseBrain, runSeries, type BrainCondition } from './lab/series';
+import { buildReport, printReport, writeReport } from './lab/report';
 import { createModuleServer, viteModuleLoader } from './moduleLoader';
 import { startConsole, terminalInput } from './console';
 import { commandConsent, fileConsentStore } from './consent';
@@ -105,7 +106,8 @@ async function series(options: SeriesCliOptions, terminal: Terminal): Promise<nu
       ...(options.budget !== undefined ? { budget: options.budget } : {}),
       ...(options.python ? { python: options.python } : {}),
     });
-    terminal.line(`${PREFIX}  traces of the series: ${result.folder}`);
+    const report = buildReport(result);
+    printReport(terminal, report, writeReport(report));
     return 0;
   } catch (error) {
     terminal.line(`${PREFIX}: ${(error as Error).message}`);

@@ -1,4 +1,4 @@
-import { chmodSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -12,6 +12,7 @@ import type { HostSession } from '../session';
 import { resolveWorldFolder, WORLD_FILE } from '../worldFolder';
 import { parseBrain, runSeries, type BrainCondition } from './series';
 import { readTrace, TRACE_FILE } from './trace';
+import { buildReport, DECLARED, printReport, REPORT_FILE, stat, writeReport } from './report';
 
 const noModules: ModuleLoader = {
   load: () => Promise.reject(new Error('none')),
@@ -216,5 +217,68 @@ describe('a series of runs', () => {
     expect(unknown.result.unknownCost).toBe(true);
     expect(unknown.result.spent).toBe(0);
     expect(unknown.lines.join('\n')).toContain('spent so far $0.0000 + unknown');
+  });
+});
+
+describe('the report of a series', () => {
+  it('LAB-007.e: mean and sample standard deviation of the known values; unknown when none is known', () => {
+    expect(stat([2, 4, 4, 4, 5, 5, 7, 9])).toEqual({ mean: 5, sd: Math.sqrt(32 / 7), n: 8 });
+    expect(stat([3])).toEqual({ mean: 3, sd: 0, n: 1 });
+    expect(stat([null, 2, null, 4], true)).toEqual({ mean: 3, sd: Math.SQRT2, n: 2, max: 4 });
+    expect(stat([null, null])).toBeNull();
+  });
+
+  it('LAB-007.e, LAB-007.f: for each brain and scenario, outcomes and measures; in the terminal and in report.json, with the reminder that outcomes are declared', async () => {
+    const { result } = await series([brain('fake'), brain('claude,model=sonnet')], {
+      runs: 2,
+    });
+    const report = buildReport(result);
+    expect(report.note).toBe(DECLARED);
+    expect(report.header).toMatchObject({ yw3d: '0.1.0', seed: 5, scenarios: [{ id: 'prova' }] });
+    expect(report.warnings).toEqual([]);
+    const [fake, claude] = report.conditions;
+    expect(fake!.condition).toBe('fake');
+    expect(fake!.scenarios[0]).toMatchObject({
+      scenario: 'prova',
+      runs: 2,
+      outcomes: { succeeded: 2, failed: 0, timeout: 0, steps: 0, error: 0 },
+      steps: { mean: 2, sd: 0, n: 2 },
+      actions: { mean: 1, sd: 0, n: 2 },
+      cost_usd: { mean: 0, sd: 0, n: 2 },
+      discarded: { mean: 0, sd: 0, n: 2 },
+    });
+    expect(claude!.scenarios[0]).toMatchObject({
+      input_tokens: { mean: 200, sd: 0, n: 2 },
+      output_tokens: { mean: 20, sd: 0, n: 2 },
+      cost_usd: { mean: 0.02, n: 2 },
+    });
+    expect(claude!.scenarios[0]!.latency_ms).toMatchObject({ n: 4 });
+    expect(report.runs.map((r) => r.trace)).toEqual([
+      '1-fake-1/trace.jsonl',
+      '1-fake-2/trace.jsonl',
+      '2-claude_model=sonnet-1/trace.jsonl',
+      '2-claude_model=sonnet-2/trace.jsonl',
+    ]);
+    const file = writeReport(report);
+    expect(file).toBe(path.join(result.folder, REPORT_FILE));
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual(JSON.parse(JSON.stringify(report)));
+    const lines: string[] = [];
+    printReport({ line: (t) => lines.push(t) }, report, file);
+    const text = lines.join('\n');
+    expect(text).toContain('brain: claude,model=sonnet');
+    expect(text).toMatch(/prova\s+2\/2\s+0\s+0\s+0\s+0\s+2\.0 ± 0\.0/);
+    expect(text).toContain('0.0200 ± 0.0000');
+    expect(text).toContain(DECLARED);
+    expect(text).toContain(`report: ${file}`);
+  });
+
+  it('LAB-007.e: costs a brain does not report are unknown in the report', async () => {
+    const { result } = await series([brain('codex')], { runs: 1, cost: null });
+    const report = buildReport(result);
+    expect(report.unknown_cost).toBe(true);
+    expect(report.conditions[0]!.scenarios[0]!.cost_usd).toBeNull();
+    const lines: string[] = [];
+    printReport({ line: (t) => lines.push(t) }, report, 'r.json');
+    expect(lines.join('\n')).toContain('some brains report no cost');
   });
 });
