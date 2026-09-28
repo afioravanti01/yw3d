@@ -114,7 +114,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-005.a–c · Dip: T10.03, T10.06
   - `runs/<data-ora>/trace.jsonl` a ogni esecuzione dal vivo: intestazione (impronte, versione, cervelli, istruzioni, seed, data) ed eventi (richieste con contesto, tempo simulato di partenza e arrivo, risposta grezza, consumo, latenza, azioni, parti scartate, frasi, perturbazioni, esiti). La chiave API non compare mai.
   - Fatto quando: test unit sul contenuto e sull'assenza della chiave; un'esecuzione con il cervello finto produce un tracciato completo.
-- [ ] **PC1 — Prova d'uso** (punto di controllo con l'utente)
+- [x] **PC1 — Prova d'uso** (punto di controllo con l'utente) — 2026-09-28: scenario comodo da scrivere, agente autonomo e sensato, esito dichiarato corretto, righe della console sufficienti; nessuna modifica
   - Dip: T10.07
   - L'utente scrive uno scenario (commissione con tempo limite) nel suo `world.yaml`, oppure in un file importato, e lo guarda dal vivo con un modello vero; poi apre il tracciato. Si raccolgono le osservazioni su formato, svolgimento ed esito prima di costruire perturbazioni, serie, rapporto ed esempi (process.md, «prova d'uso presto»).
 - [ ] **T10.08** Perturbazioni
