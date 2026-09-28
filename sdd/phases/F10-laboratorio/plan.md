@@ -121,7 +121,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-004.a–c · Dip: T10.06
   - Frase di un personaggio o del giocatore, luogo spostato (con le mete che cambiano), obiettivi cambiati, blocchi posati o tolti (P9) con il rispetto di P3, griglia dei percorsi ricostruita, viste aggiornate anche se collegate dopo; tutto nel tracciato e nel terminale.
   - Fatto quando: test unit per ogni perturbazione ed e2e dei blocchi; tempo di ricostruzione della griglia misurato e annotato.
-- [ ] **T10.09** Serie di esecuzioni
+- [x] **T10.09** Serie di esecuzioni
   - Req: LAB-007.a–d, CLI-001.c · Dip: T10.07
   - `yw3d run <cartella> [--runs N] [--brain …]… [--budget USD] [--allow-commands]` (P10, P11): consenso una volta, esecuzioni in sequenza dal mondo iniziale, tetto di spesa, righe di avanzamento; aiuto aggiornato.
   - Fatto quando: test unit con cervelli finti, anche con un costo simulato per il tetto.
@@ -165,4 +165,6 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 | T10.08 | La griglia dei percorsi si ricostruisce solo negli angoli vicini ai blocchi cambiati (`NavGrid.rebuildArea`), non per intero come diceva P9 | Misurata su un mondo di 512 × 512 colonne (`examples/agenti`), la ricostruzione completa costa 560–620 ms a ogni perturbazione, uno scatto per l'host e per le viste; quella locale meno di 1 ms. Un test verifica che dia la stessa griglia della ricostruzione completa | Nessuno |
 | T10.08 | Una frase detta per perturbazione passa da `AgentWorld.speak`, che fa parlare il personaggio senza un'azione | Con l'azione `say` la frase avrebbe sostituito l'azione in corso del personaggio (PROTO-001.c), interrompendo il lavoro dell'agente | Nessuno |
 | T10.08 | Il gancio di test `worldHash` della vista dà l'hash del mondo composto dal file, prima dei blocchi degli scenari; la vista applica i blocchi dopo aver mostrato il mondo | HOST-002.a confronta il mondo composto dal YAML con quello dell'host; con i blocchi della perturbazione di Eco l'hash vivo non coincideva più | Nessuno |
+| T10.09 | Formato di `--brain`: il nome e poi `model=` ed `effort=` separati da virgole (`claude,model=sonnet,effort=low`), non con i due punti come in P11 | I modelli di Ollama hanno i due punti nel nome (`llama3.1:8b`) | Nessuno |
+| T10.09 | Durante una serie il terminale mostra solo le righe degli scenari, degli errori e del consenso, più una riga per esecuzione | Ogni esecuzione ricarica il mondo: le righe di composizione, ripetute per ogni esecuzione, nascondevano l'avanzamento | Nessuno: LAB-007.d chiede cervello, esiti, tempo e spesa per esecuzione |
 

@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
-import { parseArgs, USAGE } from './args';
+import { parseArgs, USAGE, type SeriesCliOptions } from './args';
+import { parseBrain, runSeries, type BrainCondition } from './lab/series';
+import { createModuleServer, viteModuleLoader } from './moduleLoader';
 import { startConsole, terminalInput } from './console';
 import { commandConsent, fileConsentStore } from './consent';
 import { startHostServer } from './server';
@@ -25,6 +27,7 @@ export async function main(
     terminal.line(`${PREFIX}: ${parsed.message}\n\n${USAGE}`);
     return 2;
   }
+  if (parsed.kind === 'series') return series(parsed.options, terminal);
   const { options } = parsed;
   const resolved = resolveWorldFolder(options.folder);
   if (!resolved.ok) {
@@ -64,4 +67,51 @@ function openBrowser(url: string): void {
         ? ['cmd', ['/c', 'start', '', url]]
         : ['xdg-open', [url]];
   spawn(command, args, { stdio: 'ignore', detached: true }).unref();
+}
+
+/** `yw3d run <folder>`: a series of runs of the scenarios, without views (LAB-007). */
+async function series(options: SeriesCliOptions, terminal: Terminal): Promise<number> {
+  const resolved = resolveWorldFolder(options.folder);
+  if (!resolved.ok) {
+    terminal.line(`${PREFIX}: ${resolved.message}`);
+    return 1;
+  }
+  const brains: BrainCondition[] = [];
+  for (const spec of options.brains) {
+    const brain = parseBrain(spec);
+    if (typeof brain === 'string') {
+      terminal.line(`${PREFIX}: ${brain}\n\n${USAGE}`);
+      return 2;
+    }
+    brains.push(brain);
+  }
+  const input = terminalInput(process.stdin, process.stdout);
+  const consent = commandConsent({
+    folder: resolved.folder.root,
+    allowAll: options.allowCommands,
+    store: fileConsentStore(),
+    terminal,
+    ask: input ? (question) => input.question(question) : undefined,
+  });
+  const vite = await createModuleServer();
+  try {
+    const result = await runSeries({
+      folder: resolved.folder,
+      loader: viteModuleLoader(vite),
+      terminal,
+      consent,
+      runs: options.runs,
+      brains,
+      ...(options.budget !== undefined ? { budget: options.budget } : {}),
+      ...(options.python ? { python: options.python } : {}),
+    });
+    terminal.line(`${PREFIX}  traces of the series: ${result.folder}`);
+    return 0;
+  } catch (error) {
+    terminal.line(`${PREFIX}: ${(error as Error).message}`);
+    return 1;
+  } finally {
+    input?.close?.();
+    await vite.close();
+  }
 }

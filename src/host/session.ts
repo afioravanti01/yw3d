@@ -24,7 +24,7 @@ import { checkPrograms, type CommandConsent } from './consent';
 import { startStdioController, type RunningController } from './controllers/stdio';
 import { checkPython, defaultPython, programCommand, programEnv, type PythonCheck } from './python';
 import { checkAgent, describeAgent } from './agents/config';
-import type { Brain } from './agents/brain';
+import type { Brain, Usage } from './agents/brain';
 import { createBrain } from './agents/brains';
 import { AgentRuntime, type AgentStatus, type Clock } from './agents/runtime';
 import { DEFAULT_CONVERSATION_TURNS, type AgentDecl } from '../core/yaml/worldFile';
@@ -91,6 +91,13 @@ export interface SessionOptions {
   readonly traceFolder?: (() => string) | null;
   /** Every scenario of the world ended: the run is over (LAB-005). */
   readonly runEnded?: (trace: string | undefined) => void;
+  /**
+   * Another brain for the agents that have a scenario (LAB-007.a): a condition of a series.
+   * Persona, goals and initiative stay the ones of the world file.
+   */
+  readonly agentOverride?: (agent: AgentDecl) => AgentDecl;
+  /** What each reply of an agent consumed (LAB-007.c): for the spending cap of a series. */
+  readonly usage?: (agent: string, usage: Usage) => void;
 }
 
 /** The program of a character and whether it runs (DEBUG-001.a, plan F07 P15). */
@@ -237,7 +244,7 @@ export class HostSession {
     const world =
       result.world && !hasErrors(diagnostics)
         ? {
-            result: result as SessionWorld['result'],
+            result: this.withOverride(result as SessionWorld['result']),
             text,
             structureFiles: files,
             hash: result.world.hash(),
@@ -247,6 +254,24 @@ export class HostSession {
     const replaced = this.finish(diagnostics, world);
     if (replaced) await this.restartControllers(world!);
     return replaced;
+  }
+
+  /** The brain of a condition for the agents with a scenario (LAB-007.a). */
+  private withOverride(result: SessionWorld['result']): SessionWorld['result'] {
+    const override = this.options.agentOverride;
+    if (!override) return result;
+    const subjects = new Set(result.scenarios.map((s) => s.agent));
+    return {
+      ...result,
+      characters: result.characters.map((c) =>
+        c.agent && subjects.has(c.id) ? { ...c, agent: override(c.agent) } : c,
+      ),
+    };
+  }
+
+  /** Stops every scenario now running with an error (LAB-007.c: the spending cap). */
+  interruptScenarios(reason: string): void {
+    for (const run of this.scenarioRuns) run.interrupt(reason);
   }
 
   private finish(diagnostics: Diagnostic[], world: SessionWorld | undefined): boolean {
@@ -479,7 +504,10 @@ export class HostSession {
         isCharacter: (other) => this.sim?.agents.ids.includes(other) ?? false,
         conversationTurns: () => this.world?.result.conversationTurns ?? DEFAULT_CONVERSATION_TURNS,
         log: (line) => this.terminal.line(`${PREFIX}  [${id}] ${line}`),
-        observe: (activity) => this.traceEvent({ type: 'agent', agent: id, ...activity }),
+        observe: (activity) => {
+          this.traceEvent({ type: 'agent', agent: id, ...activity });
+          if (activity.kind === 'reply') this.options.usage?.(id, activity.usage);
+        },
       },
       this.options.agentClock,
     );

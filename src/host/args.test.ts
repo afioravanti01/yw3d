@@ -112,4 +112,49 @@ describe('yw3d command line', () => {
       'tower.ts',
     ]);
   });
+
+  it('LAB-007.a, CLI-001.c: yw3d run takes a folder, runs, brains, a spending cap; the help describes it', () => {
+    expect(
+      parseArgs([
+        'run',
+        'valle',
+        '--runs',
+        '3',
+        '--brain',
+        'fake',
+        '--brain',
+        'claude,model=sonnet,effort=low',
+        '--budget',
+        '0.5',
+        '--allow-commands',
+      ]),
+    ).toEqual({
+      kind: 'series',
+      options: {
+        folder: 'valle',
+        runs: 3,
+        brains: ['fake', 'claude,model=sonnet,effort=low'],
+        budget: 0.5,
+        allowCommands: true,
+        python: undefined,
+      },
+    });
+    expect(parseArgs(['run', 'valle'])).toMatchObject({
+      kind: 'series',
+      options: { runs: 5, brains: [], budget: undefined },
+    });
+    expect(parseArgs(['run'])).toEqual({
+      kind: 'error',
+      message: 'yw3d run: missing the world folder',
+    });
+    expect(parseArgs(['run', 'valle', '--runs', '0'])).toMatchObject({ kind: 'error' });
+    expect(parseArgs(['run', 'valle', '--budget', '-1'])).toMatchObject({ kind: 'error' });
+    expect(parseArgs(['run', 'valle', '--port', '1'])).toEqual({
+      kind: 'error',
+      message: 'unknown option --port of yw3d run',
+    });
+    expect(USAGE).toContain('yw3d run <folder>');
+    expect(USAGE).toContain('--brain <b>');
+    expect(USAGE).toContain('--budget <d>');
+  });
 });
