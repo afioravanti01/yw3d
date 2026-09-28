@@ -6,7 +6,8 @@ import { surroundings } from '../context';
 /**
  * A brain without an LLM (plan F08 P11, Q7): deterministic replies computed from the context,
  * to test the whole circuit and to try a world without keys or CLIs. It describes what it sees,
- * goes to an element named in a message, greets who comes near, and otherwise echoes.
+ * goes to an element named in a message, greets who comes near, and otherwise echoes. Given a
+ * task, it goes to the element the task names and declares the outcome (plan F10, T10.05).
  */
 export class FakeBrain implements Brain {
   readonly name = 'fake';
@@ -22,7 +23,25 @@ export class FakeBrain implements Brain {
   private reply({ input }: BrainRequest): unknown {
     const trigger = input.triggers.at(-1);
     const say = (text: string, to: string | null = null) => ({ text, to });
-    if (trigger?.kind === 'continue') return { say: null, actions: [] };
+    const elements = input.map.entries.map((e) => ({ id: e.id, name: e.name }));
+    // A task (LAB-002): go to the element it names, then declare it done; nowhere to go, failed.
+    if (input.task !== undefined && (trigger?.kind === 'task' || trigger?.kind === 'continue')) {
+      if (trigger.kind === 'continue') {
+        return trigger.failed
+          ? { say: null, actions: [], outcome: { result: 'failed', reason: trigger.failed } }
+          : { say: null, actions: [], outcome: { result: 'succeeded', reason: trigger.done } };
+      }
+      const goal = understandElement(input.task, elements);
+      if (!goal || goal === input.identity.id) {
+        return {
+          say: null,
+          actions: [],
+          outcome: { result: 'failed', reason: 'the task names no place of the world' },
+        };
+      }
+      return { say: null, actions: [{ type: 'walk_to', target: goal }], continue: true };
+    }
+    if (trigger?.kind === 'continue' || trigger?.kind === 'task') return { say: null, actions: [] };
     if (!trigger || trigger.kind === 'autonomous') {
       return {
         say: null,
@@ -49,7 +68,6 @@ export class FakeBrain implements Brain {
         actions: [],
       };
     }
-    const elements = input.map.entries.map((e) => ({ id: e.id, name: e.name }));
     const named = understandElement(trigger.text, elements);
     if (named && named !== input.identity.id) {
       const name = input.map.entries.find((e) => e.id === named)!.name;

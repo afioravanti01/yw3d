@@ -52,7 +52,9 @@ export type AgentTrigger =
   | { readonly kind: 'near'; readonly who: string; readonly whoName: string }
   | { readonly kind: 'interact' }
   | { readonly kind: 'autonomous' }
-  | { readonly kind: 'continue'; readonly done: string; readonly failed?: string };
+  | { readonly kind: 'continue'; readonly done: string; readonly failed?: string }
+  /** The world started, or was reloaded, with a scenario for this agent (LAB-002.a). */
+  | { readonly kind: 'task' };
 
 export interface ContextInput {
   readonly identity: AgentIdentity;
@@ -67,6 +69,8 @@ export interface ContextInput {
   /** Recent events, oldest first, already written as lines (AGENT-005). */
   readonly memory: readonly string[];
   readonly triggers: readonly AgentTrigger[];
+  /** The task of its scenario, while the scenario runs (LAB-002.a). */
+  readonly task?: string;
 }
 
 const round = (v: number) => Math.round(v * 10) / 10;
@@ -206,6 +210,8 @@ function describeTrigger(t: AgentTrigger): string {
       return 'The player turned to you (pressed E near you).';
     case 'autonomous':
       return 'Nothing in particular: decide what to do now, following your goals.';
+    case 'task':
+      return 'The world has just started: begin your task.';
     case 'continue':
       return t.failed
         ? `Your last actions stopped: ${t.failed}. Decide the next step.`
@@ -248,10 +254,15 @@ export const INSTRUCTION_TEXT = {
     long: `When a question asks for it, answer fully and precisely, up to about 300 words (at most ${LONG_SAY_LENGTH} characters); otherwise keep it short. Markdown is allowed.`,
     short: 'Keep what you say short: one to three sentences; Markdown is allowed.',
   },
+  // A scenario of the laboratory (LAB-002, plan F10 P4–P5).
+  task: [
+    'You have a task, given to you when the world started: it is under YOUR TASK below. Work on it on your own: nobody will tell you what to do next. You will be asked again each time your actions end, until you declare the outcome.',
+    'Add "outcome" to your reply: null while you work on the task; {"result": "succeeded", "reason": "…"} when it is done, or {"result": "failed", "reason": "…"} when you are sure it cannot be done. Declare only what you have really done: once declared, the task is over.',
+  ],
 } as const;
 
 /** Name of the instructions, changed by hand when they change on purpose (LAB-008.a). */
-export const INSTRUCTIONS_NAME = 'f10-1';
+export const INSTRUCTIONS_NAME = 'f10-2';
 
 /** First 12 hex digits of the SHA-256 of a fixed text of the instructions (plan F10 P7). */
 export function instructionsFingerprint(text: unknown = INSTRUCTION_TEXT): string {
@@ -265,7 +276,7 @@ export const INSTRUCTIONS_VERSION = {
 } as const;
 
 /** The instructions of a character: the fixed text with its name, body and goals. */
-function instructions(identity: AgentIdentity): string {
+function instructions(identity: AgentIdentity, task: boolean): string {
   const t = INSTRUCTION_TEXT;
   const animal = identity.body !== undefined && identity.body !== 'human';
   const fill = (line: string) =>
@@ -280,7 +291,14 @@ function instructions(identity: AgentIdentity): string {
   const reply = animal
     ? t.reply
     : `${t.reply} ${identity.answers === 'long' ? t.human.long : t.human.short}`;
-  return [fill(body.who), ...own, ...body.rules.map(fill), ...t.common, reply]
+  return [
+    fill(body.who),
+    ...own,
+    ...body.rules.map(fill),
+    ...t.common,
+    ...(task ? t.task : []),
+    reply,
+  ]
     .filter((line) => line !== '')
     .join('\n');
 }
@@ -311,8 +329,9 @@ export function buildContext(input: ContextInput): string {
     memory: input.memory,
   };
   return [
-    instructions(identity),
+    instructions(identity, input.task !== undefined),
     '',
+    ...(input.task !== undefined ? ['YOUR TASK:', input.task, ''] : []),
     'WORLD STATE (JSON):',
     JSON.stringify(state),
     '',

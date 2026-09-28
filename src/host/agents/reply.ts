@@ -10,6 +10,16 @@ export const MAX_ACTIONS = 5;
 /** Longest sentence of an agent with long answers (A8.1): the console shows it all. */
 export const LONG_SAY_LENGTH = 2000;
 export const ACTION_TYPES = ['walk_to', 'look_at', 'follow', 'wait', 'stop'] as const;
+/** What an agent can declare of its task (LAB-002.c). */
+export const OUTCOME_RESULTS = ['succeeded', 'failed'] as const;
+/** Longest reason of an outcome, in characters. */
+export const MAX_REASON_LENGTH = 500;
+
+/** The outcome of a task, declared by the agent (LAB-002.c). */
+export interface Outcome {
+  readonly result: (typeof OUTCOME_RESULTS)[number];
+  readonly reason: string;
+}
 
 /**
  * JSON Schema of the reply, for the brains that can enforce it (plan F08 P5). Every field is
@@ -18,9 +28,19 @@ export const ACTION_TYPES = ['walk_to', 'look_at', 'follow', 'wait', 'stop'] as 
 export const REPLY_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['say', 'actions', 'continue'],
+  required: ['say', 'actions', 'continue', 'outcome'],
   properties: {
     continue: { type: 'boolean' },
+    // The outcome of a task, only with a scenario (LAB-002.c, plan F10 P4).
+    outcome: {
+      type: ['object', 'null'],
+      additionalProperties: false,
+      required: ['result', 'reason'],
+      properties: {
+        result: { type: 'string', enum: [...OUTCOME_RESULTS] },
+        reason: { type: 'string' },
+      },
+    },
     say: {
       type: ['object', 'null'],
       additionalProperties: false,
@@ -64,6 +84,8 @@ export interface Reply {
   readonly discarded: readonly string[];
   /** Whether the agent wants to decide again when its actions are over (A8.5). */
   readonly continueAfter?: boolean;
+  /** The outcome of its task, when it declares one (LAB-002.c). */
+  readonly outcome?: Outcome;
 }
 
 /**
@@ -136,7 +158,26 @@ export function readReply(
     if (typeof step === 'string') discarded.push(`actions[${i}]: ${step}`);
     else steps.push(step);
   });
-  return { steps, discarded, ...(value.continue === true ? { continueAfter: true } : {}) };
+  const outcome = readOutcome(value.outcome);
+  if (typeof outcome === 'string') discarded.push(outcome);
+  return {
+    steps,
+    discarded,
+    ...(value.continue === true ? { continueAfter: true } : {}),
+    ...(outcome && typeof outcome !== 'string' ? { outcome } : {}),
+  };
+}
+
+/** The outcome of a reply, nothing when it has none, or why it is set aside. */
+function readOutcome(outcome: unknown): Outcome | string | undefined {
+  if (outcome === null || outcome === undefined) return undefined;
+  if (!isObject(outcome)) return 'outcome: not an object';
+  const result = outcome.result;
+  if (result !== 'succeeded' && result !== 'failed') {
+    return `outcome: the result must be ${OUTCOME_RESULTS.join(' or ')}`;
+  }
+  const reason = typeof outcome.reason === 'string' ? outcome.reason.trim() : '';
+  return { result, reason: reason.slice(0, MAX_REASON_LENGTH) };
 }
 
 /** One action of the reply, or why it is set aside. */

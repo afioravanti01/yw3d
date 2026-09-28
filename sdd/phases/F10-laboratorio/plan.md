@@ -102,7 +102,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-008.a · Dip: —
   - Il testo fisso delle istruzioni si separa dal contesto variabile; `INSTRUCTIONS_NAME` e impronta (P7) sono esposti al runtime.
   - Fatto quando: un test verifica che cambiando il testo cambi l'impronta e che il contesto costruito resti invariato rispetto a F08.
-- [ ] **T10.05** L'agente svolge uno scenario
+- [x] **T10.05** L'agente svolge uno scenario
   - Req: LAB-002.a–c, AGENT-003.a · Dip: T10.04
   - Sezione del compito nel contesto e istruzioni sull'esito, solo con uno scenario; campo `outcome` nella risposta (P4); runtime in modalità scenario (P5): trigger `task` all'avvio a prescindere dall'iniziativa, nuova domanda a fine azioni, esito dichiarato che chiude lo scenario. Il cervello finto svolge un compito: va alla meta nominata e poi dichiara «riuscito».
   - Fatto quando: test unit con orologio finto: il compito parte senza messaggi, le domande proseguono, l'esito arriva; fuori da uno scenario `outcome` si scarta.

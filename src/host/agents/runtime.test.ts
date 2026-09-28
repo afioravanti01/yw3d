@@ -53,13 +53,15 @@ class ScriptedBrain implements Brain {
   readonly requests: {
     request: BrainRequest;
     resolve: (v: unknown) => void;
+    reject: (error: Error) => void;
     signal: AbortSignal;
   }[] = [];
   think(request: BrainRequest, signal: AbortSignal): Promise<Thought> {
-    return new Promise((resolve) =>
+    return new Promise((resolve, reject) =>
       this.requests.push({
         request,
         resolve: (reply) => resolve({ reply, usage: UNKNOWN_USAGE }),
+        reject,
         signal,
       }),
     );
@@ -337,5 +339,94 @@ describe('the runtime of an agent', () => {
     expect(brain.requests.at(-1)!.request.input.triggers).toMatchObject([
       { kind: 'message', text: 'anzi no' },
     ]);
+  });
+
+  describe('with the task of a scenario', () => {
+    function withTask(config: Partial<AgentDecl> = {}) {
+      const t = setup(config);
+      const events: string[] = [];
+      const listener = {
+        asked: () => events.push('asked'),
+        answered: (o: unknown) => events.push(o ? `outcome ${JSON.stringify(o)}` : 'answered'),
+        failed: (reason: string) => events.push(`failed ${reason}`),
+      };
+      t.runtime.startTask('Vai al pozzo e torna.', listener);
+      const done = () =>
+        t.runtime.event('marta', { type: 'action_done', id: t.requests.at(-1)!.id });
+      return { ...t, events, done };
+    }
+
+    it('LAB-002.a: the agent asks at once, without messages and whatever its initiative; the task is in its context', async () => {
+      const { brain, events } = withTask({ initiative: 'reactive' });
+      expect(brain.requests).toHaveLength(1);
+      const { input, text } = brain.requests[0]!.request;
+      expect(input.triggers).toEqual([{ kind: 'task' }]);
+      expect(input.task).toBe('Vai al pozzo e torna.');
+      expect(text).toContain('YOUR TASK:\nVai al pozzo e torna.');
+      expect(text).toContain('Add "outcome" to your reply');
+      expect(text).toContain('The world has just started: begin your task.');
+      expect(events).toEqual(['asked']);
+    });
+
+    it('LAB-002.b: when its actions end it is asked again, even without "continue"; a reply without actions too', async () => {
+      const { brain, done, events } = withTask();
+      await brain.answer(0, { say: null, actions: [{ type: 'walk_to', target: 'pozzo' }] });
+      expect(brain.requests).toHaveLength(1);
+      done();
+      expect(brain.requests[1]!.request.input.triggers).toMatchObject([
+        { kind: 'continue', done: 'walk_to pozzo' },
+      ]);
+      await brain.answer(1, { say: null, actions: [] });
+      expect(brain.requests[2]!.request.input.triggers).toMatchObject([
+        { kind: 'continue', done: 'nothing: your reply had no actions' },
+      ]);
+      expect(events).toEqual(['asked', 'answered', 'asked', 'answered', 'asked']);
+    });
+
+    it('LAB-002.c, AGENT-003.a: the agent declares the outcome with a reason; the task ends and it goes back to the world file', async () => {
+      const { brain, done, events, runtime, message } = withTask();
+      await brain.answer(0, {
+        say: { text: 'Fatto!', to: null },
+        actions: [{ type: 'walk_to', target: 'marta' }],
+        outcome: { result: 'succeeded', reason: 'sono tornata dal pozzo' },
+      });
+      expect(events.at(-1)).toBe(
+        'outcome {"result":"succeeded","reason":"sono tornata dal pozzo"}',
+      );
+      expect(runtime.hasTask).toBe(false);
+      done();
+      done();
+      // No more questions of its own: it is reactive again, as the world file says.
+      expect(brain.requests).toHaveLength(1);
+      message('Com’è andata?');
+      expect(brain.requests[1]!.request.input.task).toBeUndefined();
+      expect(brain.requests[1]!.request.input.memory).toContain(
+        'you declared your task succeeded: sono tornata dal pozzo',
+      );
+    });
+
+    it('AGENT-003.a: without a task an outcome is set aside; a scenario ended from outside stops the questions', async () => {
+      const plain = setup();
+      plain.message('ciao');
+      await plain.brain.answer(0, {
+        say: null,
+        actions: [],
+        outcome: { result: 'succeeded', reason: 'x' },
+      });
+      expect(plain.log).toContain('reply set aside: an outcome, but there is no task');
+      const { brain, runtime, done } = withTask();
+      await brain.answer(0, { say: null, actions: [{ type: 'walk_to', target: 'pozzo' }] });
+      runtime.endTask();
+      done();
+      expect(brain.requests).toHaveLength(1);
+    });
+
+    it('LAB-002.c: a failed request is counted, and the same question is asked again', async () => {
+      const { brain, events, clock } = withTask();
+      brain.requests[0]!.reject(new Error('HTTP 529'));
+      await clock.advance(0);
+      expect(events).toEqual(['asked', 'failed HTTP 529', 'asked']);
+      expect(brain.requests[1]!.request.input.triggers).toEqual([{ kind: 'task' }]);
+    });
   });
 });

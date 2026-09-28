@@ -138,4 +138,17 @@ characters:
     const long = readReply({ say: { text, to: null }, actions: [] }, KNOWN, 2000);
     expect((long.steps[0] as { text: string }).text).toHaveLength(2000);
   });
+
+  it('LAB-002.c, AGENT-003.b: an outcome is succeeded or failed with a reason; a wrong one is set aside', () => {
+    expect(
+      readReply(
+        { say: null, actions: [], outcome: { result: 'failed', reason: ' il ponte è crollato ' } },
+        KNOWN,
+      ).outcome,
+    ).toEqual({ result: 'failed', reason: 'il ponte è crollato' });
+    expect(readReply({ say: null, actions: [], outcome: null }, KNOWN).outcome).toBeUndefined();
+    const wrong = readReply({ say: null, actions: [], outcome: { result: 'maybe' } }, KNOWN);
+    expect(wrong.outcome).toBeUndefined();
+    expect(wrong.discarded).toEqual(['outcome: the result must be succeeded or failed']);
+  });
 });

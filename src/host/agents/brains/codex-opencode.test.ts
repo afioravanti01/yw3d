@@ -74,6 +74,7 @@ echo '{"type":"turn.completed","usage":{"input_tokens":13856,"cached_input_token
       'say',
       'actions',
       'continue',
+      'outcome',
     ]);
     await new CodexBrain(agent('codex', { model: 'gpt-5', effort: 'low' }), cli.env).think(
       request,

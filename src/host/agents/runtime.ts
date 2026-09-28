@@ -9,7 +9,7 @@ import type { WorldMap } from '../../core/map/worldMap';
 import type { AgentDecl } from '../../core/yaml/worldFile';
 import type { Brain } from './brain';
 import { buildContext, type AgentIdentity, type AgentTrigger, type ContextInput } from './context';
-import { LONG_SAY_LENGTH, readReply, Sequence, type Step } from './reply';
+import { LONG_SAY_LENGTH, readReply, Sequence, type Outcome, type Step } from './reply';
 
 /**
  * An agent drives its character from the host (AGENT-003–006, plan F08 P1, P8–P10): it listens
@@ -55,6 +55,16 @@ const realClock: Clock = {
   clearTimeout: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
 };
 
+/**
+ * Who follows the task of a scenario (LAB-002, plan F10 P5): the requests made for it, their
+ * answers with the outcome when the agent declares one, and the failed requests.
+ */
+export interface TaskListener {
+  asked(): void;
+  answered(outcome: Outcome | undefined): void;
+  failed(reason: string): void;
+}
+
 export interface AgentHost {
   /** Asks an action of the character (PROTO-001.b). */
   request(request: ActionRequest): void;
@@ -90,6 +100,8 @@ export class AgentRuntime {
   private readonly awaiting = new Map<string, number>();
   private nextId = 0;
   private stopped = false;
+  /** The task of a scenario, while it runs (LAB-002). */
+  private task: { readonly text: string; readonly listener: TaskListener } | undefined;
 
   constructor(
     readonly id: string,
@@ -153,6 +165,28 @@ export class AgentRuntime {
       this.lastAutonomous = time;
       this.trigger({ kind: 'autonomous' });
     }
+  }
+
+  /**
+   * Gives the agent the task of a scenario (LAB-002.a): it asks its brain at once, whatever its
+   * initiative, and again whenever its actions end, until it declares the outcome or the task
+   * is ended from outside.
+   */
+  startTask(text: string, listener: TaskListener): void {
+    if (this.stopped) return;
+    this.task = { text, listener };
+    this.trigger({ kind: 'task' });
+  }
+
+  /** The scenario ended without the agent (time limit, steps, errors): back to the world file. */
+  endTask(): void {
+    this.task = undefined;
+    this.pending = this.pending.filter((t) => t.kind !== 'task' && t.kind !== 'continue');
+  }
+
+  /** Whether the agent is working on a task now. */
+  get hasTask(): boolean {
+    return this.task !== undefined;
   }
 
   stop(): void {
@@ -227,6 +261,7 @@ export class AgentRuntime {
       return;
     }
     this.requestTimes.push(now);
+    this.task?.listener.asked();
     const triggers = this.pending;
     this.pending = [];
     const input = this.contextInput(triggers);
@@ -247,7 +282,7 @@ export class AgentRuntime {
     ])
       .then(
         (thought) => this.answered(thought.reply),
-        (error: unknown) => this.failed(error),
+        (error: unknown) => this.failed(error, triggers),
       )
       .finally(() => {
         this.clock.clearTimeout(timer);
@@ -269,6 +304,7 @@ export class AgentRuntime {
       partOfDay: p?.part_of_day,
       memory: [...this.memory],
       triggers,
+      ...(this.task ? { task: this.task.text } : {}),
     };
   }
 
@@ -283,8 +319,21 @@ export class AgentRuntime {
       this.config.answers === 'long' ? LONG_SAY_LENGTH : MAX_SAY_LENGTH,
     );
     for (const reason of reply.discarded) this.host.log(`reply set aside: ${reason}`);
+    // The task goes on, or ends with the outcome the agent declares (LAB-002.c).
+    const task = this.task;
+    if (task) {
+      if (reply.outcome) {
+        this.task = undefined;
+        this.remember(`you declared your task ${reply.outcome.result}: ${reply.outcome.reason}`);
+      }
+      task.listener.answered(reply.outcome);
+    } else if (reply.outcome) {
+      this.host.log('reply set aside: an outcome, but there is no task');
+    }
     if (reply.steps.length === 0) {
       this.stateNow = 'idle';
+      // A task is never left waiting: without actions the agent is asked again (plan F10 P5).
+      if (this.task) this.trigger({ kind: 'continue', done: 'nothing: your reply had no actions' });
       return;
     }
     for (const step of reply.steps) {
@@ -296,19 +345,30 @@ export class AgentRuntime {
         if (this.host.isAgent(step.to)) this.agentExchanges++;
       }
     }
-    this.run(reply.steps, reply.continueAfter === true);
+    // With a task the agent decides again when its actions end, asked or not (LAB-002.b).
+    this.run(reply.steps, reply.continueAfter === true, this.task !== undefined);
   }
 
-  private failed(error: unknown): void {
+  private failed(error: unknown, triggers: readonly AgentTrigger[]): void {
     if (this.stopped) return;
     const message = error instanceof Error ? error.message : String(error);
     this.host.log(`the request to ${this.brain.name} failed: ${message}`);
     this.stateNow = 'error';
+    if (this.task) {
+      // The scenario counts the failure; if the task goes on, the same question is asked again.
+      this.task.listener.failed(message);
+      if (this.task) this.pending.unshift(...triggers);
+      return;
+    }
     // Silence, or the fallback sentence of the world file (Q4).
     if (this.config.fallback) this.run([{ kind: 'say', text: this.config.fallback }]);
   }
 
-  private run(steps: readonly Step[], continueAfter = false): void {
+  /**
+   * Runs the steps of a reply. `continueAfter`: the agent asked to decide again at the end;
+   * `forTask`: it will be asked anyway, if its task still runs then (LAB-002.b).
+   */
+  private run(steps: readonly Step[], continueAfter = false, forTask = false): void {
     this.sequence?.cancel();
     this.stateNow = 'acting';
     const done = steps.map((s) => ('target' in s ? `${s.kind} ${s.target}` : s.kind)).join(', ');
@@ -320,7 +380,8 @@ export class AgentRuntime {
         if (failed) this.remember(`your ${failed.step.kind} failed: ${failed.reason}`);
         if (this.sequence === sequence && this.stateNow === 'acting') this.stateNow = 'idle';
         // A step of a longer plan: the agent decides the next one (A8.5).
-        if (continueAfter && !cancelled && this.sequence === sequence) {
+        const again = continueAfter || (forTask && this.task !== undefined);
+        if (again && !cancelled && this.sequence === sequence) {
           this.trigger({
             kind: 'continue',
             done,
