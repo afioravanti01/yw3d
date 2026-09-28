@@ -98,7 +98,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-005.b · Dip: T10.01
   - `Brain.think` restituisce `{ reply, usage }` (P6) per tutti i cervelli, secondo la tabella di T10.01; il cervello finto riporta consumo zero.
   - Fatto quando: test unit dei cervelli con gli output registrati in T10.01; gli agenti di F08 funzionano come prima.
-- [ ] **T10.04** Istruzioni versionate
+- [x] **T10.04** Istruzioni versionate
   - Req: LAB-008.a · Dip: —
   - Il testo fisso delle istruzioni si separa dal contesto variabile; `INSTRUCTIONS_NAME` e impronta (P7) sono esposti al runtime.
   - Fatto quando: un test verifica che cambiando il testo cambi l'impronta e che il contesto costruito resti invariato rispetto a F08.
@@ -157,3 +157,4 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 ## Deviazioni dal piano
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
+| T10.04 | Il contesto invariato rispetto a F08 è stato verificato una volta, confrontando byte per byte i contesti prodotti prima e dopo la modifica (persona umana con risposte brevi e lunghe, animale), non con un test permanente | Un test «invariato rispetto a F08» andrebbe riscritto già in T10.05, che cambia le istruzioni; il test permanente verifica nome e impronta | Nessuno |

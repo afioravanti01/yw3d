@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { HEARING_DISTANCE } from '../../core/agents/agentWorld';
 import { LONG_SAY_LENGTH } from './reply';
 import type { MapEntry, MapShape, WorldMap } from '../../core/map/worldMap';
@@ -212,49 +213,74 @@ function describeTrigger(t: AgentTrigger): string {
   }
 }
 
-/** The fixed instructions of every request (plan F08 P3). */
-function instructions(identity: AgentIdentity): string {
-  const animal = identity.body !== undefined && identity.body !== 'human';
-  const common = [
+/**
+ * The fixed text of the instructions of every request (plan F08 P3), without what belongs to a
+ * character: `{name}` and `{body}` are filled in for each agent. Its fingerprint is the version
+ * of the instructions (LAB-008.a, plan F10 P7).
+ */
+export const INSTRUCTION_TEXT = {
+  common: [
     `Coordinates are in blocks (1 block = 0.5 m): x grows to the east, z grows to the south. You can speak to someone only within ${HEARING_DISTANCE} blocks.`,
     'You act only through your reply: at most one sentence to say, and up to 5 actions done in order: walk_to (target: an id of the map, or x and z), look_at (target, or x and z), follow (target: a character or "player"; distance in blocks), wait (seconds), stop.',
     'Plans in steps: set "continue": true when your actions are one step of a longer plan and you must decide again once they are done (you will be asked); set it to false when you are done.',
     'This world has its own clock: the hour is time.of_day in the world state (dawn, day, dusk or night in time.part_of_day), not the real hour. Use it when asked the time, and let it color what you do.',
-  ];
-  const reply =
-    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …], "continue": false}.';
-  if (animal) {
-    // An animal: no human language, it moves about (CHAR-003.c, plan F09 P13).
-    return [
-      `You are ${identity.name}, an animal of yw3d, a world of blocks: a ${identity.body}.`,
-      identity.description ?? '',
-      identity.persona ?? '',
-      identity.goals?.length ? `Your goals: ${identity.goals.join('; ')}.` : '',
-      `You never speak a human language. In "say" you may only make a short sound of your kind (for a monkey: "Uh uh!", "Iiih!", "Ah-ah-ah!"), or say nothing. You understand people only a little: if called, you may come, follow or run away, as a ${identity.body} would.`,
+  ],
+  reply:
+    'Reply with one JSON object only, no other text: {"say": {"text": "…", "to": "an id, or null for aloud"} or null, "actions": [{"type": "walk_to", "target": "laghetto1"}, …], "continue": false}.',
+  goals: 'Your goals: {goals}.',
+  // An animal: no human language, it moves about (CHAR-003.c, plan F09 P13).
+  animal: {
+    who: 'You are {name}, an animal of yw3d, a world of blocks: a {body}.',
+    rules: [
+      'You never speak a human language. In "say" you may only make a short sound of your kind (for a monkey: "Uh uh!", "Iiih!", "Ah-ah-ah!"), or say nothing. You understand people only a little: if called, you may come, follow or run away, as a {body} would.',
       'When nothing in particular happens, move: walk_to somewhere interesting of your surroundings or of the world (a tree, a person, the water, a house), a different place each time, sometimes looking at things or waiting a moment. Never stand still for long.',
-      ...common,
-      reply,
-    ]
-      .filter((line) => line !== '')
-      .join('\n');
-  }
-  return [
-    `You are ${identity.name}, a character of yw3d, a world of blocks.`,
+    ],
+  },
+  human: {
+    who: 'You are {name}, a character of yw3d, a world of blocks.',
+    rules: [
+      'Stay in character. Answer in the language of whoever speaks to you.',
+      'The player can ask you to do things: do them, unless they are impossible in this world. Your character colors how you speak, never whether you help: grumble if it fits you, but go. "Vai da Anselmo", "portami al laghetto", "seguimi" are requests to you.',
+      'When someone speaks to you, answer them: say.to = their id.',
+      'Conversations: when the player asks you to talk with someone, or to ask them something, walk_to them with "continue": true; once there, speak to them (say.to = their id) and carry on the conversation as your character would, answering what they say. The player reads every message in the console: do not go back to report to the player, unless the player asks you to.',
+      'First use what the world state below says: places, characters, where things are. When asked what you see, or where something is, name the places and the characters of your surroundings with their names, their direction and roughly their distance in meters. When a question is not about this world, answer with your own knowledge, as your character would.',
+    ],
+    long: `When a question asks for it, answer fully and precisely, up to about 300 words (at most ${LONG_SAY_LENGTH} characters); otherwise keep it short. Markdown is allowed.`,
+    short: 'Keep what you say short: one to three sentences; Markdown is allowed.',
+  },
+} as const;
+
+/** Name of the instructions, changed by hand when they change on purpose (LAB-008.a). */
+export const INSTRUCTIONS_NAME = 'f10-1';
+
+/** First 12 hex digits of the SHA-256 of a fixed text of the instructions (plan F10 P7). */
+export function instructionsFingerprint(text: unknown = INSTRUCTION_TEXT): string {
+  return createHash('sha256').update(JSON.stringify(text)).digest('hex').slice(0, 12);
+}
+
+/** The version of the instructions, for traces and reports (LAB-008.a). */
+export const INSTRUCTIONS_VERSION = {
+  name: INSTRUCTIONS_NAME,
+  fingerprint: instructionsFingerprint(),
+} as const;
+
+/** The instructions of a character: the fixed text with its name, body and goals. */
+function instructions(identity: AgentIdentity): string {
+  const t = INSTRUCTION_TEXT;
+  const animal = identity.body !== undefined && identity.body !== 'human';
+  const fill = (line: string) =>
+    line.replaceAll('{name}', identity.name).replaceAll('{body}', identity.body ?? 'human');
+  // What the author wrote is used as it is: only the fixed text has placeholders.
+  const own = [
     identity.description ?? '',
     identity.persona ?? '',
-    identity.goals?.length ? `Your goals: ${identity.goals.join('; ')}.` : '',
-    'Stay in character. Answer in the language of whoever speaks to you.',
-    'The player can ask you to do things: do them, unless they are impossible in this world. Your character colors how you speak, never whether you help: grumble if it fits you, but go. "Vai da Anselmo", "portami al laghetto", "seguimi" are requests to you.',
-    'When someone speaks to you, answer them: say.to = their id.',
-    'Conversations: when the player asks you to talk with someone, or to ask them something, walk_to them with "continue": true; once there, speak to them (say.to = their id) and carry on the conversation as your character would, answering what they say. The player reads every message in the console: do not go back to report to the player, unless the player asks you to.',
-    'First use what the world state below says: places, characters, where things are. When asked what you see, or where something is, name the places and the characters of your surroundings with their names, their direction and roughly their distance in meters. When a question is not about this world, answer with your own knowledge, as your character would.',
-    ...common,
-    `${reply} ${
-      identity.answers === 'long'
-        ? `When a question asks for it, answer fully and precisely, up to about 300 words (at most ${LONG_SAY_LENGTH} characters); otherwise keep it short. Markdown is allowed.`
-        : 'Keep what you say short: one to three sentences; Markdown is allowed.'
-    }`,
-  ]
+    identity.goals?.length ? t.goals.replace('{goals}', identity.goals.join('; ')) : '',
+  ];
+  const body = animal ? t.animal : t.human;
+  const reply = animal
+    ? t.reply
+    : `${t.reply} ${identity.answers === 'long' ? t.human.long : t.human.short}`;
+  return [fill(body.who), ...own, ...body.rules.map(fill), ...t.common, reply]
     .filter((line) => line !== '')
     .join('\n');
 }

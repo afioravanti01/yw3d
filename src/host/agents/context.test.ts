@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { composeWorld } from '../../core/compose/composeWorld';
 import { TERRAIN_GENERATOR_VERSION } from '../../core/gen/terrain';
 import { createDefaultStructures } from '../../core/structures/builtin';
-import { buildContext, direction, surroundings, whereIs, type SeenEntity } from './context';
+import {
+  buildContext,
+  direction,
+  INSTRUCTION_TEXT,
+  INSTRUCTIONS_NAME,
+  INSTRUCTIONS_VERSION,
+  instructionsFingerprint,
+  surroundings,
+  whereIs,
+  type SeenEntity,
+} from './context';
 
 const WORLD = `version: 2
 name: Borgo
@@ -120,5 +130,22 @@ describe('what an agent knows of the world', () => {
     expect(text).toContain('Never stand still for long.');
     expect(text).not.toContain('Answer in the language of whoever speaks to you');
     expect(text).toContain('Nothing in particular: decide what to do now');
+  });
+
+  it('LAB-008.a: the instructions have a name and the fingerprint of their fixed text', () => {
+    expect(INSTRUCTIONS_VERSION.name).toBe(INSTRUCTIONS_NAME);
+    expect(INSTRUCTIONS_VERSION.fingerprint).toMatch(/^[0-9a-f]{12}$/);
+    expect(instructionsFingerprint(INSTRUCTION_TEXT)).toBe(INSTRUCTIONS_VERSION.fingerprint);
+    // Changing a word of the fixed text changes the fingerprint.
+    const changed = {
+      ...INSTRUCTION_TEXT,
+      human: { ...INSTRUCTION_TEXT.human, short: 'Keep what you say very short.' },
+    };
+    expect(instructionsFingerprint(changed)).not.toBe(INSTRUCTIONS_VERSION.fingerprint);
+    // What belongs to a character is not part of the version: the text is filled in per agent.
+    const input = { map, self, nearby, time: 0, memory: [], triggers: [] };
+    const text = buildContext({ ...input, identity: { id: 'x', name: 'Ugo', description: null } });
+    expect(text).toContain('You are Ugo, a character of yw3d');
+    expect(JSON.stringify(INSTRUCTION_TEXT)).not.toContain('Ugo');
   });
 });
