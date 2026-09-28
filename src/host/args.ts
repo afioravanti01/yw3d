@@ -30,6 +30,8 @@ export interface SeriesCliOptions {
 export type ParsedArgs =
   | { readonly kind: 'run'; readonly options: CliOptions }
   | { readonly kind: 'series'; readonly options: SeriesCliOptions }
+  /** `yw3d show <run> [--step n]` (LAB-005.d). */
+  | { readonly kind: 'show'; readonly run: string; readonly step: number | undefined }
   | { readonly kind: 'help' }
   | { readonly kind: 'error'; readonly message: string };
 
@@ -38,6 +40,7 @@ const MAX_SEED = 0xffffffff;
 
 export const USAGE = `Usage: yw3d <folder> [options]
        yw3d run <folder> [--runs <n>] [--brain <brain>]… [--budget <dollars>] [--allow-commands]
+       yw3d show <run> [--step <n>]
 
 Starts a yw3d world from <folder>/world.yaml and opens it in the browser.
 Structures in <folder>/structures/*.ts are loaded too: running yw3d on a folder
@@ -61,11 +64,15 @@ writes a trace of each run and a report in <folder>/runs.
                  fake, claude, codex, opencode, anthropic or openai, with model= and
                  effort= after commas, e.g. claude,model=sonnet,effort=low
                  (default: the brains of world.yaml)
-  --budget <d>   stop when the brains have reported this many dollars`;
+  --budget <d>   stop when the brains have reported this many dollars
+
+yw3d show: the timeline of a run, from the folder of the run or its trace.jsonl.
+  --step <n>     the whole context sent and the reply of step n`;
 
 /** Parses the command-line arguments after `yw3d` (plan F04 P12). */
 export function parseArgs(argv: readonly string[]): ParsedArgs {
   if (argv[0] === 'run') return parseSeriesArgs(argv.slice(1));
+  if (argv[0] === 'show') return parseShowArgs(argv.slice(1));
   let folder: string | undefined;
   let port = DEFAULT_PORT;
   let open = true;
@@ -189,4 +196,30 @@ function parseSeriesArgs(argv: readonly string[]): ParsedArgs {
   }
   if (folder === undefined) return error('yw3d run: missing the world folder');
   return { kind: 'series', options: { folder, runs, brains, budget, allowCommands, python } };
+}
+
+/** Parses `yw3d show <run> [--step n]` (LAB-005.d). */
+function parseShowArgs(argv: readonly string[]): ParsedArgs {
+  let run: string | undefined;
+  let step: number | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === '-h' || arg === '--help') return { kind: 'help' };
+    if (arg === '--step') {
+      const raw = argv[++i];
+      const n = Number(raw);
+      if (raw === undefined || !Number.isInteger(n) || n < 1) {
+        return { kind: 'error', message: `--step needs a step number, got ${raw ?? 'nothing'}` };
+      }
+      step = n;
+    } else if (arg.startsWith('-')) {
+      return { kind: 'error', message: `unknown option ${arg} of yw3d show` };
+    } else if (run !== undefined) {
+      return { kind: 'error', message: `only one run can be given, got ${run} and ${arg}` };
+    } else {
+      run = arg;
+    }
+  }
+  if (run === undefined) return { kind: 'error', message: 'yw3d show: missing the run' };
+  return { kind: 'show', run, step };
 }

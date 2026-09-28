@@ -129,7 +129,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-007.e–f · Dip: T10.09
   - Statistiche per condizione e scenario (esiti; media e deviazione standard di passi, azioni, tempo simulato, token, costo; latenza anche massima; parti scartate), intestazione comune, elenco delle esecuzioni; tabella nel terminale e `report.json`; nota «esito dichiarato dall'agente».
   - Fatto quando: test unit sulle statistiche e sul file.
-- [ ] **T10.11** `yw3d show`
+- [x] **T10.11** `yw3d show`
   - Req: LAB-005.d · Dip: T10.07
   - Cronologia di un tracciato, un passo per riga; `--step n` per contesto e risposta completi.
   - Fatto quando: test unit su un tracciato d'esempio.

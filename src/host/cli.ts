@@ -3,6 +3,7 @@ import { performance } from 'node:perf_hooks';
 import { parseArgs, USAGE, type SeriesCliOptions } from './args';
 import { parseBrain, runSeries, type BrainCondition } from './lab/series';
 import { buildReport, printReport, writeReport } from './lab/report';
+import { stepDetail, timeline, traceFileOf } from './lab/show';
 import { createModuleServer, viteModuleLoader } from './moduleLoader';
 import { startConsole, terminalInput } from './console';
 import { commandConsent, fileConsentStore } from './consent';
@@ -29,6 +30,7 @@ export async function main(
     return 2;
   }
   if (parsed.kind === 'series') return series(parsed.options, terminal);
+  if (parsed.kind === 'show') return show(parsed.run, parsed.step, terminal);
   const { options } = parsed;
   const resolved = resolveWorldFolder(options.folder);
   if (!resolved.ok) {
@@ -115,5 +117,26 @@ async function series(options: SeriesCliOptions, terminal: Terminal): Promise<nu
   } finally {
     input?.close?.();
     await vite.close();
+  }
+}
+
+/** `yw3d show <run>`: the timeline of a run, or one of its steps in full (LAB-005.d). */
+function show(run: string, step: number | undefined, terminal: Terminal): number {
+  const file = traceFileOf(run);
+  if (!file) {
+    terminal.line(`${PREFIX}: ${run} is not a run: give its folder in runs/ or its trace.jsonl`);
+    return 1;
+  }
+  try {
+    const lines = step === undefined ? timeline(file) : stepDetail(file, step);
+    if (typeof lines === 'string') {
+      terminal.line(`${PREFIX}: ${lines}`);
+      return 1;
+    }
+    for (const line of lines) terminal.line(line);
+    return 0;
+  } catch (error) {
+    terminal.line(`${PREFIX}: ${(error as Error).message}`);
+    return 1;
   }
 }

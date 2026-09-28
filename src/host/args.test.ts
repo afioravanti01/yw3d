@@ -157,4 +157,16 @@ describe('yw3d command line', () => {
     expect(USAGE).toContain('--brain <b>');
     expect(USAGE).toContain('--budget <d>');
   });
+
+  it('LAB-005.d, CLI-001.c: yw3d show takes a run and a step', () => {
+    expect(parseArgs(['show', 'valle/runs/x'])).toEqual({
+      kind: 'show',
+      run: 'valle/runs/x',
+      step: undefined,
+    });
+    expect(parseArgs(['show', 'x', '--step', '3'])).toEqual({ kind: 'show', run: 'x', step: 3 });
+    expect(parseArgs(['show'])).toEqual({ kind: 'error', message: 'yw3d show: missing the run' });
+    expect(parseArgs(['show', 'x', '--step', '0'])).toMatchObject({ kind: 'error' });
+    expect(USAGE).toContain('yw3d show <run> [--step <n>]');
+  });
 });

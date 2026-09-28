@@ -11,6 +11,7 @@ import type { HostMessage } from '../../protocol/messages';
 import { HostSession } from '../session';
 import type { ScenarioOutcome } from './scenarioRun';
 import { fingerprint, readTrace, RUNS_DIR, TRACE_FILE } from './trace';
+import { stepDetail, timeline, traceFileOf } from './show';
 import { UNKNOWN_USAGE } from '../agents/brain';
 import { AnthropicBrain } from '../agents/brains/anthropic';
 import { INSTRUCTIONS_VERSION } from '../agents/context';
@@ -428,5 +429,42 @@ describe('the perturbations of a scenario', () => {
     const again: HostMessage[] = [];
     s.connect((m) => again.push(m));
     expect(again[0]).toMatchObject({ type: 'hello', blocks: [] });
+  });
+});
+
+describe('yw3d show', () => {
+  it('LAB-005.d: the timeline of a run, a step per line, and the whole context and reply of a step', async () => {
+    const { run, trace } = await lab(
+      scenario(`task: "Vai alla Fontana.", time_limit: 120, perturbations: [
+      { at: 0.5, say: { by: ugo, text: "Attenta, Marta!" } } ]`),
+    );
+    await run(20);
+    const { file } = trace();
+    expect(traceFileOf(path.dirname(file))).toBe(file);
+    expect(traceFileOf(file)).toBe(file);
+    expect(traceFileOf(path.join(path.dirname(file), 'nothing'))).toBeUndefined();
+    const lines = timeline(file);
+    expect(lines[0]).toMatch(/^run of .* · world Borgo .* · seed 5$/);
+    expect(lines.join('\n')).toMatch(
+      /scenario prova \(.*world\.yaml\) for marta: Vai alla Fontana\. · limit 120 s, 50 steps/,
+    );
+    expect(lines).toContain('brain of marta: fake');
+    const body = lines.slice(lines.indexOf('') + 1).join('\n');
+    expect(body).toMatch(/0\.\d\d {2}marta {7}asks its brain \[1\]: task/);
+    expect(body).toMatch(
+      /marta {7}reply \[1\]: walk_to fontana · 0 tokens in, 0 out, \$0\.0000, \d+ ms/,
+    );
+    expect(body).toMatch(/marta {7}→ walk_to fontana/);
+    expect(body).toMatch(/— {11}perturbation of prova: ugo says: Attenta, Marta!/);
+    expect(body).toMatch(/ugo {9}says: Attenta, Marta!/);
+    expect(body).toMatch(/marta {9}action done/);
+    expect(body).toMatch(/marta {7}outcome of prova: succeeded after [\d.]+ s and 2 steps/);
+    expect(body).toMatch(/end of the run: every scenario ended$/);
+    const detail = stepDetail(file, 1) as string[];
+    expect(detail[0]).toMatch(/^step 1 · marta, request 1 at [\d.]+ s$/);
+    expect(detail).toContain('CONTEXT SENT:');
+    expect(detail.join('\n')).toContain('YOUR TASK:\nVai alla Fontana.');
+    expect(detail.join('\n')).toMatch(/REPLY at [\d.]+ s, after \d+ ms:\n\{\n {2}"say": null/);
+    expect(stepDetail(file, 9)).toBe('there is no step 9: this run has 2');
   });
 });
