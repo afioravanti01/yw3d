@@ -13,7 +13,7 @@
 | F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
 | F08 | Agenti LLM | `done` (G3, 2026-09-27) | F07 |
 | F09 | Natura viva: tempo e luce | `done` (G3, 2026-09-27) | F02 |
-| F10 | Laboratorio: scenari e misure | `planning` | F08, F09 |
+| F10 | Laboratorio: scenari e misure | `implementing` | F08, F09 |
 | F11 | Controllare o programmare | planned | F10 |
 | F12 | Oggetti dichiarativi | planned | F02 |
 

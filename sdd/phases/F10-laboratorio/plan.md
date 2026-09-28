@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Stato | draft |
+| Stato | **approved** (G2, 2026-09-28) |
 | Spec | [spec.md](spec.md) v0.3 |
 | Data | 2026-09-28 |
 
