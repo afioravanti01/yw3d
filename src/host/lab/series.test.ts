@@ -7,7 +7,7 @@ import type { AgentDecl } from '../../core/yaml/worldFile';
 import type { Brain, Usage } from '../agents/brain';
 import { FakeBrain } from '../agents/brains/fake';
 import type { DeclaredCommand } from '../consent';
-import type { ModuleLoader } from '../moduleLoader';
+import { PROJECT_ROOT, type ModuleLoader } from '../moduleLoader';
 import type { HostSession } from '../session';
 import { resolveWorldFolder, WORLD_FILE } from '../worldFolder';
 import { parseBrain, runSeries, type BrainCondition } from './series';
@@ -280,5 +280,30 @@ describe('the report of a series', () => {
     const lines: string[] = [];
     printReport({ line: (t) => lines.push(t) }, report, 'r.json');
     expect(lines.join('\n')).toContain('some brains report no cost');
+  });
+});
+
+describe('the example of the laboratory', () => {
+  it('LAB-009.a: the three scenarios of examples/laboratorio run with the fake brain', async () => {
+    const resolved = resolveWorldFolder(path.join(PROJECT_ROOT, 'examples', 'laboratorio'));
+    if (!resolved.ok) throw new Error(resolved.message);
+    const result = await runSeries({
+      folder: resolved.folder,
+      loader: noModules,
+      terminal: { line: () => {} },
+      consent: async () => true,
+      runs: 1,
+      brains: [brain('fake')],
+      drive: fast,
+      seriesFolder: mkdtempSync(path.join(tmpdir(), 'yw3d-example-')),
+    });
+    const outcomes = result.runs[0]!.outcomes;
+    expect(outcomes.map((o) => o.scenario).sort()).toEqual([
+      'commissione',
+      'esplorazione',
+      'in-due',
+    ]);
+    // The fake brain goes only where a task names a single place: a reference at no cost.
+    for (const o of outcomes) expect(['succeeded', 'failed']).toContain(o.result);
   });
 });

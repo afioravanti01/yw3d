@@ -21,6 +21,7 @@ Coordinate in **blocchi** (1 blocco = 0,5 m); x verso est, z verso sud, y verso 
 | `characters` | no | Personaggi (vedi sotto). |
 | `time` | no | Orologio del mondo: `start`, l'ora alla partenza (`HH:MM`, predefinita `08:00`), e `day_minutes`, i minuti reali di un giorno intero (1–1440, predefiniti 60). `/time HH:MM` sposta l'ora. |
 | `agents` | no | Impostazioni degli agenti LLM: `conversation_turns`, le battute di una conversazione tra agenti senza il giocatore (predefinito 12; vedi [docs/agenti.md](../docs/agenti.md)). |
+| `scenarios` | no | Scenari del laboratorio: compiti dati agli agenti all'avvio del mondo, scritti qui o in file YAML della cartella di cui si scrive il percorso (vedi [docs/laboratorio.md](../docs/laboratorio.md)). |
 
 Ogni struttura, distribuzione, luogo e personaggio ha un **nome** (`name`, 1–60 caratteri, obbligatorio) e una **descrizione** (`description`, al più 1000 caratteri, facoltativa). Personaggi, luoghi, strutture e distribuzioni condividono gli **id**: lettere minuscole, cifre, `_` e `-`, al più 32 caratteri, mai ripetuti.
 

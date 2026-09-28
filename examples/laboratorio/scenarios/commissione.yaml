@@ -1,0 +1,15 @@
+# A task in several steps (LAB-009.a): the agent must plan it and follow it to the end. At
+# 30 s the well is walled up under a heap of stones, and the plan has to change.
+id: commissione
+name: La commissione
+description: Tre posti in fila, con un imprevisto.
+agent: marta
+task: >
+  Porta un secchio d'acqua dal Pozzo al Laghetto, poi torna in Piazza a riposare.
+time_limit: 300
+max_steps: 20
+perturbations:
+  - at: 30
+    blocks: { from: [69, 67, 57], to: [71, 69, 59], block: cobblestone }
+  - at: 30
+    say: { by: tobia, text: 'Hanno murato il pozzo! Chissà perché…' }

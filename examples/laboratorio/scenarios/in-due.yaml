@@ -1,0 +1,11 @@
+# A task for two (LAB-009.a): Nina alone cannot do it, she needs Anselmo, who has no task and
+# answers as his agent decides.
+id: in-due
+name: Una guida per il laghetto
+description: Un compito che richiede un altro agente.
+agent: nina
+task: >
+  Non conosci la strada per il Laghetto. Convinci Anselmo ad accompagnarti fin là e arrivaci
+  insieme a lui.
+time_limit: 300
+max_steps: 20

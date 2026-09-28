@@ -136,6 +136,10 @@ Alla prima avvio yw3d elenca gli agenti insieme ai comandi (per esempio `agent c
 - **Overlay (F3)**: per il personaggio più vicino, cervello, modello, stato (`thinking`, `acting`, `idle`, `error`) e durata dell'ultima richiesta.
 - **Terminale di yw3d**: avvio degli agenti, richieste fallite o scadute, parti di risposta scartate, righe `[id]`.
 
+## Esperimenti
+
+Per dare un compito a un agente, lasciarlo lavorare da solo e confrontare più modelli sulle stesse prove, ci sono gli scenari del laboratorio: [docs/laboratorio.md](laboratorio.md).
+
 ## Errori frequenti
 
 - **`cannot start the agent: the CLI "codex" was not found in the PATH`**: la CLI non è installata, o il `PATH` del terminale da cui lanci `yw3d` non la contiene. Se ci sono due versioni installate, conta la prima del `PATH`.

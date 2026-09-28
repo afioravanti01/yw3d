@@ -1,0 +1,78 @@
+# Example world folder of the laboratory of yw3d (docs/laboratorio.md): a small village where
+# three agents get a task each when the world starts, and work on it on their own. Every agent
+# uses the fake brain, which needs no LLM: the scenarios run for free. To try real models, run a
+# series with other brains, e.g.
+#   yw3d run examples/laboratorio --runs 3 --brain claude,model=haiku --budget 0.50
+# or give the agents another brain here (see docs/agenti.md).
+# Run it with: yw3d examples/laboratorio
+# Coordinates are in blocks (1 block = 0.5 m); see worlds/README.md for the format.
+version: 2
+name: Il borgo del laboratorio
+description: >-
+  Un piccolo borgo in una valle, con una piazza, un pozzo, un casolare in pietra, una torre di
+  guardia, un laghetto a sud e una grande quercia.
+terrain:
+  seed: 7
+  generator: 1
+  size: [128, 96, 128]
+
+player:
+  at: [64, 64]
+
+places:
+  - id: piazza
+    name: Piazza
+    description: La piazza del borgo, davanti al casolare.
+    at: [60, 56]
+  - id: pozzo
+    name: Pozzo
+    description: Il vecchio pozzo del borgo.
+    at: [70, 58]
+
+structures:
+  - type: stone_farmhouse
+    id: casolare
+    name: Casolare in pietra
+    description: La casa più grande del borgo; ci vive Anselmo.
+    at: [40, 40]
+  - type: pond
+    id: laghetto
+    name: Laghetto
+    description: Un laghetto di acqua ferma, con le carpe.
+    at: [60, 95]
+    params: { radius: 8 }
+  - type: oak
+    id: quercia
+    name: Grande quercia
+    at: [80, 80]
+
+characters:
+  # The three agents with a scenario (scenarios/*.yaml).
+  - id: marta
+    name: Marta
+    description: La pescatrice del borgo, sempre di corsa.
+    at: [62, 60]
+    agent: { mode: fake }
+  - id: tobia
+    name: Tobia
+    description: Il garzone, curioso di tutto.
+    at: [66, 62]
+    agent: { mode: fake }
+  - id: nina
+    name: Nina
+    description: La più giovane del borgo, timida.
+    at: [58, 62]
+    agent: { mode: fake }
+  # Anselmo has no task: the others may need him.
+  - id: anselmo
+    name: Anselmo
+    description: Il vecchio saggio del borgo, conosce ogni pietra della valle.
+    at: [48, 52]
+    agent: { mode: fake }
+
+# The scenarios of the laboratory: each one gives a task to an agent when the world starts (and
+# at every reload). Comment out a line to leave that agent free.
+scenarios:
+  - scenarios/commissione.yaml
+  - scenarios/esplorazione.yaml
+  - scenarios/in-due.yaml

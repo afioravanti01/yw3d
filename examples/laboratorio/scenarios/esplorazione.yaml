@@ -1,0 +1,11 @@
+# An exploration (LAB-009.a): the agent must find something in the world and report it to
+# someone. The answer is checked by reading the trace: the tree is the Grande quercia.
+id: esplorazione
+name: L'albero più grande
+description: Trovare qualcosa nel mondo e riferirlo.
+agent: tobia
+task: >
+  Trova l'albero più grande del borgo, vai a vederlo da vicino e poi racconta ad Anselmo dove si
+  trova.
+time_limit: 300
+max_steps: 20

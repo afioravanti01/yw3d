@@ -137,7 +137,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-006.a–b · Dip: T10.07, T10.08
   - `yw3d <cartella> --replay <esecuzione>` con il cervello `replay` (P12); avviso se le impronte dei file non coincidono.
   - Fatto quando: test unit: le risposte arrivano in ordine e non prima dei tempi registrati; avviso sui file cambiati.
-- [ ] **T10.13** Esempi e guida
+- [x] **T10.13** Esempi e guida
   - Req: LAB-009.a–b, LAB-002.e · Dip: T10.10, T10.11, T10.12
   - `examples/laboratorio/` con tre scenari (commissione in più passi, esplorazione con resoconto a un personaggio, compito in due agenti), provati con il cervello finto e con un modello vero; `docs/laboratorio.md`; rimandi da README e `docs/agenti.md`.
   - Fatto quando: gli scenari girano con il cervello finto in un test; la guida copre tutte le voci di LAB-009.b.
@@ -168,3 +168,5 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 | T10.09 | Formato di `--brain`: il nome e poi `model=` ed `effort=` separati da virgole (`claude,model=sonnet,effort=low`), non con i due punti come in P11 | I modelli di Ollama hanno i due punti nel nome (`llama3.1:8b`) | Nessuno |
 | T10.09 | Durante una serie il terminale mostra solo le righe degli scenari, degli errori e del consenso, più una riga per esecuzione | Ogni esecuzione ricarica il mondo: le righe di composizione, ripetute per ogni esecuzione, nascondevano l'avanzamento | Nessuno: LAB-007.d chiede cervello, esiti, tempo e spesa per esecuzione |
 | T10.12 | In rigioco tutti gli agenti del mondo usano il cervello `replay`, non solo quelli con uno scenario, e restano nella loro modalità: niente consenso né controllo della CLI | Nessuna chiamata a un LLM durante il rigioco; la modalità originale mantiene il tempo limite della richiesta, che per un cervello finto sarebbe di 5 s | Nessuno |
+| T10.13 | Gli esempi sono provati qui solo con il cervello finto (un test li esegue a ogni `npm run check`); la prova con un modello vero passa a T10.14, insieme alla prima serie | Una prova con un modello vero costa: la spesa si concorda con l'utente prima di T10.14 | Nessuno |
+| T10.13 | Gli scenari dell'esempio sono su tre agenti diversi nello stesso mondo, più un quarto agente senza compito | Un agente ha al più uno scenario (LAB-001.b) | Nessuno |
