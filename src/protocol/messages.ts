@@ -84,6 +84,8 @@ export type HostMessage =
       readonly views: number;
       /** The hour of the world, minutes after midnight (TIME-001.b); null before a world. */
       readonly clock: number | null;
+      /** Lines of the laboratory of the world now running, oldest first (LAB-002.d). */
+      readonly lab?: readonly string[];
     }
   | {
       readonly type: 'world';
@@ -107,7 +109,9 @@ export type HostMessage =
   /** A sentence the player hears (DIALOG-002.a). */
   | { readonly type: 'line'; readonly line: SpokenLine }
   /** A sentence of the driving view that could not be said, e.g. an unknown `@id`. */
-  | { readonly type: 'say_error'; readonly error: string };
+  | { readonly type: 'say_error'; readonly error: string }
+  /** A line of the laboratory for the console: a scenario started or ended (LAB-002.d). */
+  | { readonly type: 'lab'; readonly text: string };
 
 export type ViewMessage =
   | {

@@ -1,0 +1,7 @@
+# A scenario of the laboratory for the end-to-end tests (F10): Eco, with the fake brain, goes to
+# the well next to it and declares the task done.
+id: pozzo
+name: Al pozzo
+agent: eco
+task: Vai al Pozzo.
+time_limit: 120

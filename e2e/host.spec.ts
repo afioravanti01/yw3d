@@ -228,3 +228,19 @@ test('AGENT-002.a, AGENT-003.a, DEBUG-001.a: an agent of the world answers in th
     .poll(lines)
     .toContainEqual(expect.stringContaining('Driven by: LLM agent, fake (fake)'));
 });
+
+test('LAB-002.a, LAB-002.d: a scenario of the world runs on its own; the console reports its task and outcome, also to a view that comes later', async ({
+  page,
+}) => {
+  await open(page);
+  const lines = () =>
+    page.evaluate(() =>
+      (globalThis as unknown as { __yw3d: { consoleLines(): string[] } }).__yw3d.consoleLines(),
+    );
+  await expect
+    .poll(lines, { timeout: 20_000 })
+    .toContainEqual('Scenario «Al pozzo» assegnato a Eco: Vai al Pozzo.');
+  await expect
+    .poll(lines, { timeout: 20_000 })
+    .toContainEqual(expect.stringMatching(/^Scenario «Al pozzo» \(Eco\): riuscito dopo /));
+});

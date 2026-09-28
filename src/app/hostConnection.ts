@@ -35,6 +35,8 @@ export interface HostHandlers {
   line(line: SpokenLine): void;
   /** A sentence of this view that could not be said. */
   sayError(error: string): void;
+  /** A line of the laboratory (LAB-002.d). */
+  lab(text: string): void;
   closed(): void;
 }
 
@@ -181,6 +183,8 @@ export class HostConnection {
         if (message.player) this.record(message.player);
         this.recordCharacters(message.characters);
         this.handlers.hello(message);
+        // What the scenarios of the world said before this view came (LAB-002.d).
+        for (const text of message.lab ?? []) this.handlers.lab(text);
         break;
       case 'world':
         this.handlers.world(message.world, message.diagnostics);
@@ -203,6 +207,9 @@ export class HostConnection {
         break;
       case 'say_error':
         this.handlers.sayError(message.error);
+        break;
+      case 'lab':
+        this.handlers.lab(message.text);
         break;
       case 'pong': {
         const sent = this.pings.get(message.id);

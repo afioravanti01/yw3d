@@ -386,6 +386,7 @@ async function main(): Promise<void> {
           showMessages(toMessages(diagnostics), current ? 'ready' : 'error'),
         line: (line) => messageConsole.message(line, connection!.role === 'driver'),
         sayError: (error) => messageConsole.add(error, 'error'),
+        lab: (text) => messageConsole.add(text, 'info'),
         role: (role) => {
           hook.connection = { role };
           messageConsole.canWrite = role === 'driver';

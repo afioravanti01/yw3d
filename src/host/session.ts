@@ -31,6 +31,7 @@ import { DEFAULT_CONVERSATION_TURNS, type AgentDecl } from '../core/yaml/worldFi
 import type { ModuleLoader } from './moduleLoader';
 import { PREFIX, printDiagnostics, type Terminal } from './terminal';
 import { structureFiles, type WorldFolder } from './worldFolder';
+import { ScenarioRun, type ScenarioOutcome } from './lab/scenarioRun';
 
 /** A world composed by the host, with what the views need to compose the same one. */
 export interface SessionWorld {
@@ -65,6 +66,8 @@ export interface SessionOptions {
   readonly checkPython?: (python: string) => PythonCheck;
   /** The sentences the player hears (DIALOG-004.a): the console of the host. */
   readonly heard?: (line: SpokenLine) => void;
+  /** A scenario of the world ended (LAB-002.c): for the series of runs. */
+  readonly scenarioEnded?: (outcome: ScenarioOutcome) => void;
 }
 
 /** The program of a character and whether it runs (DEBUG-001.a, plan F07 P15). */
@@ -138,6 +141,10 @@ export class HostSession {
   private lastIntent: { intent: Intent; at: number } | undefined;
   private views: View[] = [];
   private nextViewId = 1;
+  /** The scenarios of the world now running, or ended since it was loaded (LAB-002). */
+  private scenarioRuns: ScenarioRun[] = [];
+  /** Lines of the laboratory of this world, for the views that come later (LAB-002.d). */
+  private labLines: string[] = [];
 
   constructor(
     readonly folder: WorldFolder,
@@ -316,6 +323,9 @@ export class HostSession {
    * when their commands may run (PROTO-003.b, PY-003.c: they restart at every reload).
    */
   private async restartControllers(world: SessionWorld): Promise<void> {
+    for (const run of this.scenarioRuns) run.interrupt('the world was reloaded');
+    this.scenarioRuns = [];
+    this.labLines = [];
     for (const controller of this.controllers) controller.stop();
     this.controllers = [];
     this.programs.clear();
@@ -339,6 +349,7 @@ export class HostSession {
     // The world may have changed while the user was answering.
     if (this.world !== world) return;
     this.startAgents(allowed);
+    this.startScenarios(world);
     if (!allowed || declared.every((c) => 'agent' in c)) return;
     const programs = declared.filter((c) => c.program);
     if (programs.length > 0) {
@@ -447,6 +458,34 @@ export class HostSession {
     });
   }
 
+  /** Every scenario of the world starts from scratch with the world (LAB-002.a). */
+  private startScenarios(world: SessionWorld): void {
+    for (const scenario of world.result.scenarios) {
+      const character = world.result.characters.find((c) => c.id === scenario.agent);
+      this.scenarioRuns.push(
+        new ScenarioRun(
+          scenario,
+          character?.name ?? scenario.agent,
+          this.runtimes.get(scenario.agent),
+          {
+            now: () => this.sim?.time ?? 0,
+            log: (line) => this.terminal.line(`${PREFIX}  ${line}`),
+            notice: (text) => {
+              this.labLines.push(text);
+              this.broadcast({ type: 'lab', text });
+            },
+            ended: (outcome) => this.options.scenarioEnded?.(outcome),
+          },
+        ),
+      );
+    }
+  }
+
+  /** The scenarios of the world now running, or ended since it was loaded (LAB-002). */
+  get scenarios(): readonly ScenarioRun[] {
+    return this.scenarioRuns;
+  }
+
   /** The agent of a character and what it is doing, if it has one (DEBUG-001.a). */
   agentOf(characterId: string): AgentStatus | undefined {
     return this.runtimes.get(characterId)?.status;
@@ -459,6 +498,7 @@ export class HostSession {
 
   /** Stops the controllers: the host is closing. */
   close(): void {
+    for (const run of this.scenarioRuns) run.interrupt('the host closed');
     for (const controller of this.controllers) controller.stop();
     this.controllers = [];
   }
@@ -555,6 +595,7 @@ export class HostSession {
       this.steps++;
     }
     if (steps > 0) {
+      for (const run of this.scenarioRuns) run.tick();
       this.broadcast({
         type: 'state',
         step: this.steps,
@@ -628,6 +669,7 @@ export class HostSession {
       characters: this.characterSnapshots(),
       views: this.views.length,
       clock: this.sim?.clock.minutes ?? null,
+      lab: [...this.labLines],
     });
     const currentRole = () => this.roleOf(view);
     return {

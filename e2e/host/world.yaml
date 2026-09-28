@@ -8,6 +8,8 @@ terrain:
   size: [128, 96, 128]
 player:
   at: [64, 64]
+places:
+  - { id: pozzo, name: Pozzo, at: [64, 59] }
 structures:
   - { type: tower, name: Torre 1, at: [70, 70] }
   - { type: stone_farmhouse, name: Casolare 1, at: [40, 40] }
@@ -28,3 +30,5 @@ characters:
     description: Un agente di prova, con il cervello finto.
     at: [64, 60]
     agent: { mode: fake }
+scenarios:
+  - scenarios/eco.yaml

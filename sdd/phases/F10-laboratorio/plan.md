@@ -106,7 +106,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-002.a–c, AGENT-003.a · Dip: T10.04
   - Sezione del compito nel contesto e istruzioni sull'esito, solo con uno scenario; campo `outcome` nella risposta (P4); runtime in modalità scenario (P5): trigger `task` all'avvio a prescindere dall'iniziativa, nuova domanda a fine azioni, esito dichiarato che chiude lo scenario. Il cervello finto svolge un compito: va alla meta nominata e poi dichiara «riuscito».
   - Fatto quando: test unit con orologio finto: il compito parte senza messaggi, le domande proseguono, l'esito arriva; fuori da uno scenario `outcome` si scarta.
-- [ ] **T10.06** Motore degli scenari
+- [x] **T10.06** Motore degli scenari
   - Req: LAB-002.b–d · Dip: T10.02, T10.03, T10.05
   - `scenarioRun`: parte a ogni caricamento del mondo, conta passi e tempo simulato, chiude con il primo esito (dichiarato, tempo scaduto, passi esauriti, errore), poi l'agente torna com'era nel file. Esiti nel terminale e nella console delle viste.
   - Fatto quando: test unit per ogni esito, con il cervello finto e con cervelli che falliscono; e2e dell'esito nella console.
@@ -158,3 +158,5 @@ T10.01, T10.02 e T10.04 sono indipendenti. PC1 viene prima di perturbazioni, ser
 | Task | Deviazione | Motivo | Impatto sulla spec |
 |---|---|---|---|
 | T10.04 | Il contesto invariato rispetto a F08 è stato verificato una volta, confrontando byte per byte i contesti prodotti prima e dopo la modifica (persona umana con risposte brevi e lunghe, animale), non con un test permanente | Un test «invariato rispetto a F08» andrebbe riscritto già in T10.05, che cambia le istruzioni; il test permanente verifica nome e impronta | Nessuno |
+| T10.06 | L'host conserva le righe del laboratorio del mondo in corso e le manda nel `hello` alle viste che si collegano dopo | Lo scenario parte all'avvio dell'host, prima che il browser si colleghi: senza, la vista non vedrebbe né il compito né l'esito | Nessuno: LAB-002.d chiede che la console riporti l'esito |
+| T10.06 | Il mondo di prova degli e2e (`e2e/host`) ha un luogo e uno scenario importato per Eco, vicino al punto di partenza | Un e2e dell'esito nella console; il luogo vicino lascia Eco il personaggio più vicino al giocatore, come vuole l'e2e di AGENT-002 | Nessuno |
