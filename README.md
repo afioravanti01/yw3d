@@ -14,6 +14,7 @@ Mondo 3D a blocchi immerso nella natura, descritto da un file YAML e abitato da 
 | [sdd/specs/](sdd/specs/) | spec vive: come si comporta il sistema oggi |
 | [sdd/decisions.md](sdd/decisions.md) | registro delle decisioni |
 | [sdd/experiment.md](sdd/experiment.md) | ipotesi e metriche dell'esperimento |
+| [sdd/research.md](sdd/research.md) | domande di ricerca sugli agenti LLM, protocollo e diario |
 
 ## Usare yw3d
 

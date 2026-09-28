@@ -13,8 +13,13 @@
 | F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
 | F08 | Agenti LLM | `done` (G3, 2026-09-27) | F07 |
 | F09 | Natura viva: tempo e luce | `done` (G3, 2026-09-27) | F02 |
+| F10 | Laboratorio: scenari, turni e misure | `specifying` | F08, F09 |
+| F11 | Controllare o programmare | planned | F10 |
+| F12 | Oggetti dichiarativi | planned | F02 |
 
 La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09. F09 si è ristretta al tempo e alla luce: vento e acqua sono stati tolti durante la fase, particelle e audio sono tra le idee in attesa.
+
+Dopo la chiusura di F09, D-013 ha fatto della ricerca sugli agenti LLM il filone principale: prima gli strumenti comuni degli esperimenti (F10), poi gli esperimenti, con domande e ipotesi in [research.md](research.md); i mondi in YAML crescono al servizio della ricerca (F12), e la metodologia SDD diventa un documento formale.
 
 ## F01 — Fondamenta e mondo voxel
 **Obiettivo:** un mondo a blocchi finito, generato in modo deterministico, con uno stile riconoscibilmente diverso da Minecraft, esplorabile con una camera libera. Fondamenta tecniche: separazione core/rendering, test headless, tracciabilità automatica.
@@ -118,11 +123,53 @@ Vento sulle foglie e acqua animata erano previsti e sono stati tolti durante la 
 **Demo:** porto il mondo alle 19:00 con `/time`, guardo il tramonto e la notte con le finestre accese; la scimmietta gira da sola per il borgo.
 **Aree:** TIME (nuova); RENDER, CHAR, YAML, PROTO, PY, AGENT, DIALOG, DEBUG, PERF (modificati).
 
+## F10 — Laboratorio: scenari, turni e misure
+**Obiettivo:** gli strumenti comuni a tutti gli esperimenti sugli agenti, così che un risultato si possa ripetere, confrontare e rivedere (D-013).
+- Tempo a turni: la simulazione avanza a passi e aspetta la risposta degli agenti; il tempo reale resta la modalità normale.
+- Scenari nel file del mondo: l'obiettivo detto all'agente, un verificatore che l'agente non vede (successo, fallimento, tempo limite), perturbazioni a tempo (una meta che si sposta, un passaggio bloccato, un personaggio che cambia stato).
+- Tracciato di ogni esecuzione: contesto inviato, risposta, azioni, esiti, token, costo e latenza, in un formato che permetta di rivedere l'esecuzione.
+- Esecuzione in serie da riga di comando: uno scenario, uno o più cervelli, N esecuzioni; un rapporto con esito, passi, costo, latenza e variabilità.
+- Istruzioni agli agenti versionate e riportate nel rapporto.
+- Budget di costo dichiarato per ogni serie, con arresto al superamento.
+
+**Note per la spec:** conciliare il tempo a turni con P10 (costituzione alla v1.5); il cervello finto come riferimento a costo zero per provare ogni scenario; primi scenari di esempio (commissione in più passi, domanda sul mondo con risposta verificabile, compito in due).
+**Demo:** lancio 5 esecuzioni di uno scenario con due modelli e leggo nel rapporto chi ha raggiunto l'obiettivo, in quanti passi e con quale costo; riapro un'esecuzione e ne rivedo i passi.
+**Aree:** LAB (nuova); AGENT, HOST, CLI, YAML, TIME (modificati).
+
+## F11 — Controllare o programmare
+**Obiettivo:** il primo esperimento di [research.md](research.md) (R1): sullo stesso corpo e negli stessi scenari, confrontare un LLM che guida il personaggio passo per passo, un LLM che scrive il programma Python del personaggio, e un ibrido in cui il programma richiama l'LLM quando qualcosa non va come previsto.
+- Modalità «autore»: l'LLM scrive o riscrive il programma del suo personaggio, che l'host valida e avvia con le regole dei programmi (PY).
+- Escalation: un programma può chiedere aiuto al suo LLM con il contesto dell'imprevisto, e ricevere una decisione o un programma nuovo.
+- Scenari con perturbazioni, eseguiti in serie con F10; risultati e analisi nel diario di research.md.
+
+**Demo:** il rapporto confronta le tre modalità su tre scenari: successo, costo, latenza e tenuta agli imprevisti.
+**Aree:** AGENT, PY, LAB (modificati).
+
+## F12 — Oggetti dichiarativi
+**Obiettivo:** nuovi oggetti descritti nel YAML come composizione di forme semplici, senza TypeScript (D-013).
+- Forme: parallelepipedo, cilindro, sfera o cupola, piramide, tetto a falde; posizione, dimensioni, blocco, cave o piene.
+- Sottrazione (porte, finestre, cavità), ripetizione, simmetria, riuso di un oggetto dentro un altro, parametri semplici con valore predefinito.
+- Gli oggetti si posizionano come le strutture e compaiono nella mappa dei personaggi con nome, descrizione e punto d'arrivo.
+- Errori con file, riga e campo (P4); niente condizioni né cicli oltre la ripetizione.
+
+**Note per la spec:** criteri `[manuale]` sulla comodità di scrittura (un pozzo, una panchina, una fontana in poche righe) e prova d'uso presto (process.md); misurare quanto spesso un LLM scrive un oggetto valido, come primo dato per R5.
+**Demo:** scrivo un pozzo nel `world.yaml`, salvo, e compare nella piazza; un agente sa dove si trova.
+**Aree:** YAML, STRUCT, MAP (modificati).
+
+## Fasi successive (indicative)
+L'ordine segue le domande di [research.md](research.md); ogni fase di ricerca usa il laboratorio di F10.
+- **Percezione a richiesta e osservabilità parziale** (R2): un riassunto breve più strumenti per guardare, descrivere e ricordare; l'agente sa solo ciò che ha visto; eventualmente la propria visuale come immagine.
+- **Memoria tra episodi** (R3): osservazioni salvate in SQLite, recupero e riflessione, memoria individuale o condivisa.
+- **Socialità e vita spontanea** (R4): stato interno dei personaggi visibile all'osservatore e non agli altri agenti; sessioni lunghe con iniziativa autonoma e modelli economici o locali.
+- **LLM che costruiscono** (R5): mondi e oggetti scritti da un LLM; poi modifica dei blocchi durante la simulazione.
+- **Il mondo si allarga:** forma del terreno scelta nel file (colline, pianura, montagna, isola…); nuovi oggetti, elementi della natura, animali ed elementi architettonici, ognuno con qualcosa che un personaggio può farci (D-013).
+
+Fuori dalle fasi: **metodologia SDD**, un documento formale con il metodo seguito in yw3d e le lezioni con i dati di [experiment.md](experiment.md).
+
 ## Idee in attesa (non pianificate)
 - Blocchi non cubici (rampe, cunei) per tetti e terreno più morbido.
-- Modifica dei blocchi in gioco e salvataggio dello stato.
-- Altre strutture: ponti, recinti, mulini, sentieri.
-- Personaggi che conversano tra loro.
+- Salvataggio dello stato del mondo.
+- Altre strutture: ponti, recinti, mulini, sentieri (con F12 anche come oggetti dichiarativi).
 - Comandi di programmazione nella console dei messaggi (D-010).
 - Interazione senza browser (D-008): console di comandi dell'host oltre al dialogo di F06, mappa testuale nel terminale, screenshot su richiesta, riproduzione delle sessioni registrate.
 - Apertura di una cartella del mondo direttamente dal browser, senza host (trascinamento o selettore di file).

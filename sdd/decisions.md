@@ -165,3 +165,27 @@ Data: 2026-09-27 · Stato: accettata (prima della spec di F08; rivista lo stesso
 - Il protocollo dei controllori resta su due canali (stdio, WebSocket); il terzo (MCP) esce da F08. Costituzione alla v1.4.
 - Gli agenti passano dal consenso (PROTO-005): in modalità `headless` l'host lancia una CLI, in modalità `api` usa la rete e la chiave dell'utente.
 - Il core resta senza rete e senza processi: gli agenti vivono in `src/host`, e senza host (solo browser) un personaggio con un agente sta fermo.
+
+## D-013 — Dopo F09: un laboratorio di ricerca sugli agenti LLM
+Data: 2026-09-28 · Stato: accettata · Aggiorna la visione di D-008 e D-012
+
+**Contesto.** Con F01–F09 il mondo è descritto in YAML, i personaggi sono guidati da programmi e da agenti LLM, e il giorno scorre. Il progetto era nato con due intenzioni: costruire mondi 3D dal YAML, e mettere alla prova gli LLM in un ambiente che conoscono misurandone le caratteristiche. La prima c'è; della seconda ci sono gli agenti ma quasi nessuna misura: latenza e costo rilevati a mano nella retro di F08, istruzioni agli agenti messe a punto per tentativi. L'utente vuole che yw3d diventi un luogo di innovazione e ricerca sugli LLM.
+
+**Decisione.**
+1. **Tre filoni, con una priorità.** (a) La ricerca sugli agenti LLM è il filone principale. (b) I mondi in YAML crescono al servizio della ricerca. (c) L'esperimento SDD prosegue come ora e se ne scrive la metodologia in un documento formale.
+2. **Prima il laboratorio, poi gli esperimenti.** Gli esperimenti richiedono strumenti comuni: tempo a turni, tracciato completo di ogni esecuzione, scenari nel file del mondo (obiettivo detto all'agente, verificatore che l'agente non vede, perturbazioni a tempo), esecuzione in serie con un rapporto, istruzioni agli agenti versionate. Senza questi un risultato è un aneddoto.
+3. **Domande di ricerca dichiarate.** Le domande, le ipotesi e il diario degli esperimenti stanno in [research.md](research.md), come l'esperimento SDD sta in [experiment.md](experiment.md). Ogni esperimento dichiara variabili, misure, numero di esecuzioni e budget di costo.
+4. **Oggetti dichiarativi come composizione di forme.** Un oggetto nel YAML è un elenco di parti: forme semplici (parallelepipedo, cilindro, sfera o cupola, piramide, tetto a falde) con posizione, dimensioni e blocco, più sottrazione, ripetizione, simmetria, riuso di altri oggetti e parametri semplici. Niente condizioni né cicli oltre la ripetizione: quando serve una logica, resta la struttura in TypeScript (STRUCT).
+5. **Il mondo cresce per possibilità d'azione.** Oggetti, animali ed elementi architettonici nuovi valgono per ciò che un personaggio può farci (aprire, raccogliere, attraversare, usare), non solo per come appaiono.
+
+**Alternative.**
+- *Continuare ad arricchire il mondo senza misure*: il mondo cresce, la domanda sugli LLM resta senza risposta.
+- *Usare una piattaforma esistente* (Minecraft con Mindcraft o Voyager): ecosistema ricco, ma mondo non dichiarativo, poco riproducibile, e senza lo stesso corpo guidato ora da codice ora da un LLM.
+- *Oggetti disegnati strato per strato in ASCII*: scartata dall'utente, impraticabile oltre gli oggetti minuscoli.
+- *Un linguaggio degli oggetti con condizioni e cicli*: ripeterebbe l'errore del linguaggio dei comportamenti di F06 (D-010).
+
+**Conseguenze.**
+- Roadmap rivista: F10 Laboratorio, F11 Controllare o programmare, F12 Oggetti dichiarativi; le fasi successive sono indicative.
+- Il tempo a turni tocca P10 («il mondo non aspetta i controllori»): negli esperimenti il mondo aspetta per scelta. La spec di F10 proporrà come conciliarlo e la costituzione passerà alla v1.5 con quella spec, non prima.
+- Il costo degli LLM diventa un vincolo di progetto: ogni esperimento lo stima prima e lo misura dopo; le sessioni lunghe usano modelli economici o locali.
+- Il server MCP, lasciato aperto da D-012, torna come tema di ricerca (percezione a richiesta tramite strumenti), non come canale del protocollo.

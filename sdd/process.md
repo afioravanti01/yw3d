@@ -9,6 +9,7 @@ sdd/
 ├─ roadmap.md            fasi, stato, dipendenze
 ├─ decisions.md          registro delle decisioni (ADR leggere)
 ├─ experiment.md         ipotesi e metriche dell'esperimento SDD
+├─ research.md           domande, protocollo e diario della ricerca sugli agenti LLM
 ├─ specs/                SPEC VIVE: come si comporta il sistema oggi, per area
 ├─ phases/FNN-nome/
 │  ├─ spec.md            cosa e perché della fase (delta rispetto alle spec vive)
