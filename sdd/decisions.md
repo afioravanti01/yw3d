@@ -189,3 +189,18 @@ Data: 2026-09-28 · Stato: accettata · Aggiorna la visione di D-008 e D-012
 - Il tempo a turni tocca P10 («il mondo non aspetta i controllori»): negli esperimenti il mondo aspetta per scelta. La spec di F10 proporrà come conciliarlo e la costituzione passerà alla v1.5 con quella spec, non prima.
 - Il costo degli LLM diventa un vincolo di progetto: ogni esperimento lo stima prima e lo misura dopo; le sessioni lunghe usano modelli economici o locali.
 - Il server MCP, lasciato aperto da D-012, torna come tema di ricerca (percezione a richiesta tramite strumenti), non come canale del protocollo.
+
+## D-014 — Niente tempo a turni: il mondo non aspetta nemmeno negli esperimenti
+Data: 2026-09-28 · Stato: accettata (alla revisione del piano di F10, emendamento A10.1) · Supera D-013 punto 2 sul tempo a turni e la costituzione v1.5
+
+**Contesto.** D-013 e la spec di F10 prevedevano il tempo a turni: durante uno scenario il mondo si fermava mentre un agente pensava, così un modello lento non avrebbe visto un mondo diverso da quello visto da uno veloce, e le esecuzioni con il cervello finto sarebbero state identiche. Con G1 la costituzione era passata alla v1.5, con un'eccezione a P10. Rileggendo il piano, l'utente l'ha rifiutato: «Non fa niente se il tempo va avanti e gli altri personaggi si muovono, queste sono perturbazioni normali nel mondo. La prova non deve essere uguale bit a bit».
+
+**Decisione.** Il mondo non si ferma mai, nemmeno durante gli scenari. Il tempo di risposta di un modello fa parte del risultato di un esperimento: un modello lento agisce in un mondo che nel frattempo è andato avanti. Le esecuzioni non si ripetono identiche; la ripetibilità si ottiene con più esecuzioni per condizione e con il tracciato, non con il determinismo. P10 resta senza eccezioni (costituzione v1.6).
+
+**Alternative.**
+- *Tempo a turni* (D-013, spec v0.2 di F10): esecuzioni ripetibili, ma un mondo che si ferma a ogni richiesta non è il mondo in cui gli agenti vivono davvero, e nasconde la latenza, che è una delle caratteristiche da misurare.
+
+**Conseguenze.**
+- LAB-003 è rimosso dalla spec di F10; AGENT-006.a e TIME-002.a restano come in F08 e F09.
+- Il tracciato registra il tempo simulato della richiesta e dell'arrivo di ogni risposta; il rigioco ridà le risposte agli stessi tempi simulati e segue l'originale da vicino, senza esserne una copia.
+- In [research.md](research.md) la latenza diventa una variabile degli esperimenti invece di un disturbo; le serie hanno bisogno di più esecuzioni per condizione.

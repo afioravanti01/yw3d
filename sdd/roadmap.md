@@ -13,13 +13,13 @@
 | F07 | Console dei messaggi e personaggi in Python | `done` (G3, 2026-09-27) | F06 |
 | F08 | Agenti LLM | `done` (G3, 2026-09-27) | F07 |
 | F09 | Natura viva: tempo e luce | `done` (G3, 2026-09-27) | F02 |
-| F10 | Laboratorio: scenari, turni e misure | `planning` | F08, F09 |
+| F10 | Laboratorio: scenari e misure | `planning` | F08, F09 |
 | F11 | Controllare o programmare | planned | F10 |
 | F12 | Oggetti dichiarativi | planned | F02 |
 
 La struttura da F04 in poi è stata rivista dopo la chiusura di F03 con la decisione D-008 (host headless e controllori esterni in qualunque linguaggio). Dopo la chiusura di F05, D-009 ha inserito F06 (comportamenti, mappa e dialogo) come prerequisito degli agenti LLM. Dopo l'uso di F06, D-010 ha sostituito il linguaggio dei comportamenti con programmi in Python e il dialogo con una console dei messaggi (F07); gli agenti LLM passano a F08, la natura viva a F09. F09 si è ristretta al tempo e alla luce: vento e acqua sono stati tolti durante la fase, particelle e audio sono tra le idee in attesa.
 
-Dopo la chiusura di F09, D-013 ha fatto della ricerca sugli agenti LLM il filone principale: prima gli strumenti comuni degli esperimenti (F10), poi gli esperimenti, con domande e ipotesi in [research.md](research.md); i mondi in YAML crescono al servizio della ricerca (F12), e la metodologia SDD diventa un documento formale.
+Dopo la chiusura di F09, D-013 ha fatto della ricerca sugli agenti LLM il filone principale: prima gli strumenti comuni degli esperimenti (F10), poi gli esperimenti, con domande e ipotesi in [research.md](research.md); i mondi in YAML crescono al servizio della ricerca (F12), e la metodologia SDD diventa un documento formale. Alla revisione del piano di F10, D-014 ha tolto il tempo a turni: il mondo non aspetta gli agenti nemmeno negli esperimenti.
 
 ## F01 — Fondamenta e mondo voxel
 **Obiettivo:** un mondo a blocchi finito, generato in modo deterministico, con uno stile riconoscibilmente diverso da Minecraft, esplorabile con una camera libera. Fondamenta tecniche: separazione core/rendering, test headless, tracciabilità automatica.
@@ -123,18 +123,16 @@ Vento sulle foglie e acqua animata erano previsti e sono stati tolti durante la 
 **Demo:** porto il mondo alle 19:00 con `/time`, guardo il tramonto e la notte con le finestre accese; la scimmietta gira da sola per il borgo.
 **Aree:** TIME (nuova); RENDER, CHAR, YAML, PROTO, PY, AGENT, DIALOG, DEBUG, PERF (modificati).
 
-## F10 — Laboratorio: scenari, turni e misure
-**Obiettivo:** gli strumenti comuni a tutti gli esperimenti sugli agenti, così che un risultato si possa ripetere, confrontare e rivedere (D-013).
-- Tempo a turni: la simulazione avanza a passi e aspetta la risposta degli agenti; il tempo reale resta la modalità normale.
-- Scenari nel file del mondo: l'obiettivo detto all'agente, un verificatore che l'agente non vede (successo, fallimento, tempo limite), perturbazioni a tempo (una meta che si sposta, un passaggio bloccato, un personaggio che cambia stato).
-- Tracciato di ogni esecuzione: contesto inviato, risposta, azioni, esiti, token, costo e latenza, in un formato che permetta di rivedere l'esecuzione.
-- Esecuzione in serie da riga di comando: uno scenario, uno o più cervelli, N esecuzioni; un rapporto con esito, passi, costo, latenza e variabilità.
+## F10 — Laboratorio: scenari e misure
+**Obiettivo:** gli strumenti comuni a tutti gli esperimenti sugli agenti, così che un risultato si possa confrontare e rivedere (D-013). Il mondo non si ferma mentre gli agenti pensano (D-014).
+- Scenari nel file del mondo, o importati da un file: il compito assegnato a un agente all'avvio, che lo svolge da solo e dichiara l'esito; tempo limite, passi massimi, perturbazioni a tempo (una frase, un luogo che si sposta, un passaggio bloccato, obiettivi che cambiano).
+- Tracciato di ogni esecuzione: contesto inviato, risposta, azioni, esiti, token, costo e latenza; `yw3d show` per leggerlo, `--replay` per rivederlo nel browser.
+- Esecuzione in serie da riga di comando (`yw3d run`): uno o più cervelli, N esecuzioni; un rapporto con esiti, passi, costo, latenza e variabilità.
 - Istruzioni agli agenti versionate e riportate nel rapporto.
-- Budget di costo dichiarato per ogni serie, con arresto al superamento.
+- Tetto di spesa per ogni serie, con arresto al superamento.
 
-**Note per la spec:** conciliare il tempo a turni con P10 (costituzione alla v1.5); il cervello finto come riferimento a costo zero per provare ogni scenario; primi scenari di esempio (commissione in più passi, domanda sul mondo con risposta verificabile, compito in due).
-**Demo:** lancio 5 esecuzioni di uno scenario con due modelli e leggo nel rapporto chi ha raggiunto l'obiettivo, in quanti passi e con quale costo; riapro un'esecuzione e ne rivedo i passi.
-**Aree:** LAB (nuova); AGENT, HOST, CLI, YAML, TIME (modificati).
+**Demo:** lancio 5 esecuzioni di uno scenario con due modelli e leggo nel rapporto chi ha dichiarato di avercela fatta, in quanti passi e con quale costo; riapro un'esecuzione e ne rivedo i passi.
+**Aree:** LAB (nuova); AGENT, YAML, CLI (modificati).
 
 ## F11 — Controllare o programmare
 **Obiettivo:** il primo esperimento di [research.md](research.md) (R1): sullo stesso corpo e negli stessi scenari, confrontare un LLM che guida il personaggio passo per passo, un LLM che scrive il programma Python del personaggio, e un ibrido in cui il programma richiama l'LLM quando qualcosa non va come previsto.

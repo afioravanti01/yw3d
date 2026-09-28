@@ -55,7 +55,9 @@ Ogni serie di esecuzioni dichiara, prima di partire:
 
 Dopo: dati grezzi (tracciati) conservati; rapporto con media e variabilità; esito dell'ipotesi (confermata, smentita, dati insufficienti). Il cervello finto esegue ogni scenario prima dei modelli veri, per verificare lo scenario a costo zero.
 
-**Minacce alla validità**, da ricordare in ogni analisi: variabilità degli LLM tra esecuzioni; sensibilità alle istruzioni; modelli che cambiano nel tempo con lo stesso nome; conoscenze pregresse dei modelli su Minecraft e simili; tempo reale al posto dei turni; **esito dichiarato dall'agente** (F10), non verificato dall'esterno, da controllare a campione rigiocando le esecuzioni.
+**Minacce alla validità**, da ricordare in ogni analisi: variabilità degli LLM tra esecuzioni; sensibilità alle istruzioni; modelli che cambiano nel tempo con lo stesso nome; conoscenze pregresse dei modelli su Minecraft e simili; **esito dichiarato dall'agente** (F10), non verificato dall'esterno, da controllare a campione rigiocando le esecuzioni.
+
+**Il mondo non si ferma (D-014).** Mentre un agente pensa il mondo va avanti: la latenza di un modello cambia il mondo che trova quando agisce. È una caratteristica del modello, da misurare e da riportare accanto agli esiti, non un disturbo da eliminare. Per questo le esecuzioni non si ripetono identiche, e le conclusioni si traggono da più esecuzioni per condizione.
 
 ## Stato
 Le domande richiedono il laboratorio di F10 ([roadmap](roadmap.md)). Fino ad allora il diario raccoglie solo osservazioni.
@@ -65,3 +67,4 @@ Le domande richiedono il laboratorio di F10 ([roadmap](roadmap.md)). Fino ad all
 
 ## Diario
 - **2026-09-28** Avvio del filone (D-013). Dalle prove d'uso di F08 restano tre osservazioni che valgono come prime ipotesi: un LLM tende a pianificare un passo alla volta e a non chiedere di continuare; un personaggio «burbero» rifiuta le richieste restando nel personaggio; un saluto interrompe una commissione. Latenza misurata: 3,8–8,3 s per Claude Code (`sonnet`, effort `low`), 8–10 s per Codex, 7,8–43 s per opencode con il modello gratuito.
+- **2026-09-28** Scelta di metodo (D-014): niente tempo a turni. Gli agenti agiscono in un mondo che non li aspetta, come nell'uso reale; la latenza entra tra le misure.
