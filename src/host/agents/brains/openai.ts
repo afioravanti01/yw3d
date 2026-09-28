@@ -1,5 +1,5 @@
 import type { AgentDecl } from '../../../core/yaml/worldFile';
-import { BrainError, type Brain, type BrainRequest } from '../brain';
+import { BrainError, reported, type Brain, type BrainRequest, type Thought } from '../brain';
 import { REPLY_SCHEMA } from '../reply';
 import { apiKey, postJson } from './api';
 
@@ -38,7 +38,7 @@ export class OpenAiBrain implements Brain {
     };
   }
 
-  async think(request: BrainRequest, signal: AbortSignal): Promise<unknown> {
+  async think(request: BrainRequest, signal: AbortSignal): Promise<Thought> {
     const key = apiKey(this.agent, this.env);
     const post = (withSchema: boolean) =>
       postJson(
@@ -59,11 +59,22 @@ export class OpenAiBrain implements Brain {
       this.schemaRefused = true;
       answer = await post(false);
     }
-    const message = (answer as { choices?: { message?: { content?: string; refusal?: string } }[] })
-      .choices?.[0]?.message;
+    const { choices, usage } = answer as {
+      choices?: { message?: { content?: string; refusal?: string } }[];
+      usage?: Record<string, unknown>;
+    };
+    const message = choices?.[0]?.message;
     if (message?.refusal)
       throw new BrainError(`openai api refused: ${message.refusal.slice(0, 200)}`);
     if (typeof message?.content !== 'string') throw new BrainError('openai api gave no reply');
-    return message.content;
+    // Tokens when the service sends them; never a price (plan F10, table of T10.01).
+    return {
+      reply: message.content,
+      usage: {
+        input_tokens: reported(usage?.prompt_tokens),
+        output_tokens: reported(usage?.completion_tokens),
+        cost_usd: null,
+      },
+    };
   }
 }

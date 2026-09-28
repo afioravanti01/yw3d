@@ -246,7 +246,7 @@ export class AgentRuntime {
       aborted,
     ])
       .then(
-        (raw) => this.answered(raw),
+        (thought) => this.answered(thought.reply),
         (error: unknown) => this.failed(error),
       )
       .finally(() => {

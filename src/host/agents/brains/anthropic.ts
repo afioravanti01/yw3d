@@ -1,5 +1,5 @@
 import type { AgentDecl } from '../../../core/yaml/worldFile';
-import type { Brain, BrainRequest } from '../brain';
+import { reported, sumReported, type Brain, type BrainRequest, type Thought } from '../brain';
 import { REPLY_SCHEMA } from '../reply';
 import { apiKey, postJson } from './api';
 
@@ -37,7 +37,7 @@ export class AnthropicBrain implements Brain {
     };
   }
 
-  async think(request: BrainRequest, signal: AbortSignal): Promise<unknown> {
+  async think(request: BrainRequest, signal: AbortSignal): Promise<Thought> {
     const key = apiKey(this.agent, this.env);
     const answer = (await postJson(
       'anthropic api',
@@ -46,13 +46,30 @@ export class AnthropicBrain implements Brain {
       this.body(request.text),
       key,
       signal,
-    )) as { content?: { type: string; name?: string; input?: unknown; text?: string }[] };
+    )) as {
+      content?: { type: string; name?: string; input?: unknown; text?: string }[];
+      usage?: Record<string, unknown>;
+    };
     const blocks = answer.content ?? [];
     const tool = blocks.find((b) => b.type === 'tool_use' && b.name === 'reply');
-    if (tool) return tool.input;
-    return blocks
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text ?? '')
-      .join('\n');
+    const usage = answer.usage ?? {};
+    return {
+      reply:
+        tool?.input ??
+        blocks
+          .filter((b) => b.type === 'text')
+          .map((b) => b.text ?? '')
+          .join('\n'),
+      // Tokens only: the API reports no price (plan F10, table of T10.01).
+      usage: {
+        input_tokens: sumReported(
+          usage.input_tokens,
+          usage.cache_creation_input_tokens,
+          usage.cache_read_input_tokens,
+        ),
+        output_tokens: reported(usage.output_tokens),
+        cost_usd: null,
+      },
+    };
   }
 }

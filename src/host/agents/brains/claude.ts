@@ -1,5 +1,12 @@
 import type { AgentDecl } from '../../../core/yaml/worldFile';
-import { BrainError, type Brain, type BrainRequest } from '../brain';
+import {
+  BrainError,
+  reported,
+  sumReported,
+  type Brain,
+  type BrainRequest,
+  type Thought,
+} from '../brain';
 import { REPLY_SCHEMA } from '../reply';
 import { agentWorkFolder, runCli } from './cli';
 
@@ -33,13 +40,19 @@ export class ClaudeBrain implements Brain {
     ];
   }
 
-  async think(request: BrainRequest, signal: AbortSignal): Promise<unknown> {
+  async think(request: BrainRequest, signal: AbortSignal): Promise<Thought> {
     const { stdout } = await runCli('claude', this.args(), request.text, {
       cwd: this.cwd,
       env: this.env,
       signal,
     });
-    let result: { is_error?: boolean; result?: unknown; structured_output?: unknown };
+    let result: {
+      is_error?: boolean;
+      result?: unknown;
+      structured_output?: unknown;
+      total_cost_usd?: unknown;
+      usage?: Record<string, unknown>;
+    };
     try {
       result = JSON.parse(stdout) as typeof result;
     } catch {
@@ -48,6 +61,19 @@ export class ClaudeBrain implements Brain {
     if (result.is_error) {
       throw new BrainError(`claude: ${String(result.result ?? 'error').slice(0, 200)}`);
     }
-    return result.structured_output ?? result.result;
+    // Tokens read from the cache count as input too (plan F10, table of T10.01).
+    const usage = result.usage ?? {};
+    return {
+      reply: result.structured_output ?? result.result,
+      usage: {
+        input_tokens: sumReported(
+          usage.input_tokens,
+          usage.cache_creation_input_tokens,
+          usage.cache_read_input_tokens,
+        ),
+        output_tokens: reported(usage.output_tokens),
+        cost_usd: reported(result.total_cost_usd),
+      },
+    };
   }
 }

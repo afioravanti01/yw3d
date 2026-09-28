@@ -32,12 +32,13 @@ const agent = (fields: Partial<AgentDecl> = {}) =>
   ({ mode: 'headless', cli: 'claude', initiative: 'reactive', every: 60, ...fields }) as AgentDecl;
 const request = { text: 'CONTEXT', input: {} } as unknown as BrainRequest;
 const reply = { say: { text: 'Ciao!', to: 'player' }, actions: [] };
+const signal = () => new AbortController().signal;
 
 describe('the Claude Code brain', () => {
   it('AGENT-001.b: without model and effort the CLI keeps its own; with them it gets them', async () => {
     const cli = fakeCli(JSON.stringify({ is_error: false, structured_output: reply }));
     const brain = new ClaudeBrain(agent(), cli.env);
-    expect(await brain.think(request, new AbortController().signal)).toEqual(reply);
+    expect((await brain.think(request, new AbortController().signal)).reply).toEqual(reply);
     const args = cli.read('args').trimEnd().split('\n');
     expect(args).toEqual([
       '-p',
@@ -85,7 +86,30 @@ describe('the Claude Code brain', () => {
       JSON.stringify({ is_error: false, result: '{"say": null, "actions": []}' }),
     );
     expect(
-      await new ClaudeBrain(agent(), text.env).think(request, new AbortController().signal),
+      (await new ClaudeBrain(agent(), text.env).think(request, new AbortController().signal)).reply,
     ).toBe('{"say": null, "actions": []}');
+  });
+
+  it('LAB-005.b: tokens, cache included, and the cost that Claude Code reports', async () => {
+    const cli = fakeCli(
+      JSON.stringify({
+        structured_output: reply,
+        total_cost_usd: 0.0356,
+        usage: {
+          input_tokens: 2,
+          cache_creation_input_tokens: 8542,
+          cache_read_input_tokens: 5985,
+          output_tokens: 20,
+        },
+      }),
+    );
+    const thought = await new ClaudeBrain(agent(), cli.env).think(request, signal());
+    expect(thought.usage).toEqual({ input_tokens: 14529, output_tokens: 20, cost_usd: 0.0356 });
+    const silent = fakeCli(JSON.stringify({ structured_output: reply }));
+    expect((await new ClaudeBrain(agent(), silent.env).think(request, signal())).usage).toEqual({
+      input_tokens: null,
+      output_tokens: null,
+      cost_usd: null,
+    });
   });
 });

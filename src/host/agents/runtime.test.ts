@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ActionRequest, Perception } from '../../core/agents/agentWorld';
 import type { WorldMap } from '../../core/map/worldMap';
 import type { AgentDecl } from '../../core/yaml/worldFile';
-import type { Brain, BrainRequest } from './brain';
+import { UNKNOWN_USAGE, type Brain, type BrainRequest, type Thought } from './brain';
 import {
   AgentRuntime,
   MAX_REQUESTS_PER_MINUTE,
@@ -55,8 +55,14 @@ class ScriptedBrain implements Brain {
     resolve: (v: unknown) => void;
     signal: AbortSignal;
   }[] = [];
-  think(request: BrainRequest, signal: AbortSignal): Promise<unknown> {
-    return new Promise((resolve) => this.requests.push({ request, resolve, signal }));
+  think(request: BrainRequest, signal: AbortSignal): Promise<Thought> {
+    return new Promise((resolve) =>
+      this.requests.push({
+        request,
+        resolve: (reply) => resolve({ reply, usage: UNKNOWN_USAGE }),
+        signal,
+      }),
+    );
   }
   answer(i: number, reply: unknown): Promise<void> {
     this.requests[i]!.resolve(reply);

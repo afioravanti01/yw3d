@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { TERRAIN_GENERATOR_VERSION } from '../../core/gen/terrain';
 import type { DeclaredCommand } from '../consent';
+import { UNKNOWN_USAGE } from './brain';
 import type { ModuleLoader } from '../moduleLoader';
 import { startConsole } from '../console';
 import { HostSession } from '../session';
@@ -196,7 +197,10 @@ characters:
       noModules,
       { line: (t) => lines.push(t) },
       {
-        brain: () => ({ name: 'test', think: () => answer() }),
+        brain: () => ({
+          name: 'test',
+          think: () => answer().then((reply) => ({ reply, usage: UNKNOWN_USAGE })),
+        }),
       },
     );
     sessions.push(s);

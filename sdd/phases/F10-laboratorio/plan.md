@@ -57,7 +57,7 @@ Verificato il 2026-09-28 con una chiamata vera per CLI; per le API, dai campi `u
 | Cervello | Token in ingresso | Token in uscita | Costo | Come |
 |---|---|---|---|---|
 | Claude Code 2.1.283 | `usage.input_tokens` + `cache_creation_input_tokens` + `cache_read_input_tokens` | `usage.output_tokens` | `total_cost_usd` (prezzo di listino, anche con un abbonamento) | l'output `--output-format json` che il cervello già legge |
-| Codex 0.157.1 | `usage.input_tokens` (comprende `cached_input_tokens`) | `usage.output_tokens` + `reasoning_output_tokens` | non disponibile | `--json`: eventi su stdout, l'ultimo `turn.completed` porta `usage`; la risposta resta nel file di `-o` |
+| Codex 0.157.1 | `usage.input_tokens` (comprende `cached_input_tokens`) | `usage.output_tokens` (comprende `reasoning_output_tokens`) | non disponibile | `--json`: eventi su stdout, l'ultimo `turn.completed` porta `usage`; la risposta resta nel file di `-o` |
 | opencode 2.0.18 | `info.tokens.input` + `cache.read` + `cache.write` | `info.tokens.output` + `reasoning` | `info.cost` (0 con i modelli gratuiti) | `--format json` non riporta il consumo: si legge l'id della sessione dagli eventi e poi `opencode session export <id>`, una seconda chiamata locale per richiesta |
 | API Anthropic | `usage.input_tokens` + campi della cache | `usage.output_tokens` | non disponibile | risposta di `/v1/messages` |
 | API compatibili OpenAI | `usage.prompt_tokens` | `usage.completion_tokens` | non disponibile | risposta di `/chat/completions`; alcuni servizi compatibili non mandano `usage`: allora anche i token sono non disponibili |
@@ -94,7 +94,7 @@ Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando
   - Req: LAB-001.a–c, YAML-001.a · Dip: —
   - Schema di `scenarios` (P2) e dello scenario: id, nome, descrizione, agente, compito, tempo limite, passi (predefinito 50), perturbazioni (solo la forma; l'effetto arriva in T10.08). Importazione dai file della cartella nell'host, con gli errori sul file importato; controlli incrociati (agente esistente e con `agent:`, uno scenario per agente); l'hash del mondo non cambia.
   - Fatto quando: test unit verdi, compresi un file importato con un errore e un file importato salvato che ricarica il mondo.
-- [ ] **T10.03** Consumo dei cervelli
+- [x] **T10.03** Consumo dei cervelli
   - Req: LAB-005.b · Dip: T10.01
   - `Brain.think` restituisce `{ reply, usage }` (P6) per tutti i cervelli, secondo la tabella di T10.01; il cervello finto riporta consumo zero.
   - Fatto quando: test unit dei cervelli con gli output registrati in T10.01; gli agenti di F08 funzionano come prima.

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { AgentDecl } from '../../../core/yaml/worldFile';
-import { BrainError, type Brain, type BrainRequest } from '../brain';
+import { BrainError, sumReported, type Brain, type BrainRequest, type Thought } from '../brain';
 import { REPLY_SCHEMA } from '../reply';
 import { agentWorkFolder, runCli } from './cli';
 
@@ -35,6 +35,7 @@ export class CodexBrain implements Brain {
       '-s',
       'read-only',
       '--ephemeral',
+      '--json',
       '--skip-git-repo-check',
       '-C',
       this.cwd,
@@ -43,17 +44,43 @@ export class CodexBrain implements Brain {
     ];
   }
 
-  async think(request: BrainRequest, signal: AbortSignal): Promise<unknown> {
+  async think(request: BrainRequest, signal: AbortSignal): Promise<Thought> {
     const output = path.join(this.cwd, `reply-${++this.requests}.json`);
-    await runCli('codex', this.args(output), request.text, {
+    const { stdout } = await runCli('codex', this.args(output), request.text, {
       cwd: this.cwd,
       env: this.env,
       signal,
     });
+    let reply: string;
     try {
-      return readFileSync(output, 'utf8');
+      reply = readFileSync(output, 'utf8');
     } catch {
       throw new BrainError('codex wrote no reply');
     }
+    // `--json` prints events; the last `turn.completed` has the tokens, never the cost (T10.01).
+    const usage = codexUsage(stdout);
+    return {
+      reply,
+      usage: {
+        input_tokens: sumReported(usage?.input_tokens),
+        // Reasoning tokens are part of the output tokens.
+        output_tokens: sumReported(usage?.output_tokens),
+        cost_usd: null,
+      },
+    };
   }
+}
+
+/** The usage of the last completed turn in the events of `codex exec --json`. */
+function codexUsage(stdout: string): Record<string, unknown> | undefined {
+  let usage: Record<string, unknown> | undefined;
+  for (const line of stdout.split('\n')) {
+    try {
+      const event = JSON.parse(line) as { type?: string; usage?: Record<string, unknown> };
+      if (event.type === 'turn.completed' && event.usage) usage = event.usage;
+    } catch {
+      // Not an event: Codex may print other lines.
+    }
+  }
+  return usage;
 }

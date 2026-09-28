@@ -53,14 +53,17 @@ describe('the API brains', () => {
   it('AGENT-001.c: Anthropic: the key from the environment, a forced tool with the schema; with an effort, thinking', async () => {
     const server = await api(() => ({
       status: 200,
-      body: { content: [{ type: 'tool_use', name: 'reply', input: REPLY }] },
+      body: {
+        content: [{ type: 'tool_use', name: 'reply', input: REPLY }],
+        usage: { input_tokens: 100, cache_read_input_tokens: 20, output_tokens: 7 },
+      },
     }));
     const brain = new AnthropicBrain(
       agent({ provider: 'anthropic', model: 'claude-haiku-4-5' }),
       { ANTHROPIC_API_KEY: KEY },
       server.url,
     );
-    expect(readReply(await brain.think(request, signal()), known).steps).toEqual([
+    expect(readReply((await brain.think(request, signal())).reply, known).steps).toEqual([
       { kind: 'say', text: 'Ciao!', to: 'player' },
     ]);
     const first = server.seen[0]!;
@@ -92,7 +95,10 @@ describe('the API brains', () => {
       }
       return {
         status: 200,
-        body: { choices: [{ message: { content: `Ecco: ${JSON.stringify(REPLY)}` } }] },
+        body: {
+          choices: [{ message: { content: `Ecco: ${JSON.stringify(REPLY)}` } }],
+          usage: { prompt_tokens: 50, completion_tokens: 9 },
+        },
       };
     });
     const brain = new OpenAiBrain(
@@ -105,7 +111,7 @@ describe('the API brains', () => {
       }),
       { OLLAMA_KEY: KEY },
     );
-    expect(readReply(await brain.think(request, signal()), known).steps).toHaveLength(1);
+    expect(readReply((await brain.think(request, signal())).reply, known).steps).toHaveLength(1);
     expect(server.seen.map((s) => s.url)).toEqual(['/v1/chat/completions', '/v1/chat/completions']);
     expect(server.seen[0]!.headers.authorization).toBe(`Bearer ${KEY}`);
     expect(server.seen[0]!.body).toMatchObject({
@@ -118,6 +124,43 @@ describe('the API brains', () => {
     refuse = false;
     await brain.think(request, signal());
     expect(server.seen[2]!.body.response_format).toBeUndefined();
+  });
+
+  it('LAB-005.b: the APIs report tokens, never a price', async () => {
+    const server = await api(({ url }) =>
+      url.startsWith('/v1/messages')
+        ? {
+            status: 200,
+            body: {
+              content: [{ type: 'tool_use', name: 'reply', input: REPLY }],
+              usage: { input_tokens: 100, cache_read_input_tokens: 20, output_tokens: 7 },
+            },
+          }
+        : {
+            status: 200,
+            body: { choices: [{ message: { content: JSON.stringify(REPLY) } }] },
+          },
+    );
+    const anthropic = new AnthropicBrain(
+      agent({ provider: 'anthropic', model: 'x' }),
+      { ANTHROPIC_API_KEY: KEY },
+      server.url,
+    );
+    expect((await anthropic.think(request, signal())).usage).toEqual({
+      input_tokens: 120,
+      output_tokens: 7,
+      cost_usd: null,
+    });
+    // A compatible service without usage: nothing is known, nothing is guessed.
+    const local = new OpenAiBrain(
+      agent({ provider: 'openai', model: 'llama3', base_url: `${server.url}/v1` }),
+      { OPENAI_API_KEY: KEY },
+    );
+    expect((await local.think(request, signal())).usage).toEqual({
+      input_tokens: null,
+      output_tokens: null,
+      cost_usd: null,
+    });
   });
 
   it('AGENT-001.c, AGENT-006.c: a missing key, an HTTP error and the time limit end the request; the key never appears', async () => {
