@@ -51,6 +51,20 @@ Sopra il motore stanno tre comandi: `yw3d run`, che esegue le serie senza server
 | P11 | Formato dei cervelli sulla riga di comando: `--brain fake`, `--brain claude[:modello[:effort]]`, `codex[…]`, `opencode[:modello]`, `anthropic:modello[:effort]`, `openai:modello[:effort]`; ripetibile, una condizione per `--brain`. Persona, obiettivi, `base_url` e chiave restano quelli del file | Un file di condizioni | È sufficiente per F10 e si legge nel rapporto |
 | P12 | Rigioco: il cervello `replay` ridà le risposte registrate di quel personaggio in ordine, e restituisce ciascuna non prima del tempo simulato in cui era arrivata nell'originale (o subito, se quel tempo è già passato). Se le risposte finiscono, l'agente resta fermo e il terminale lo dice | Rigiocare le azioni invece delle risposte | Rigiocando le risposte si rivede anche l'effetto del mondo (fisica, percorsi); i tempi registrati mantengono il ritmo dell'originale |
 
+## Consumo dei cervelli (esito di T10.01)
+Verificato il 2026-09-28 con una chiamata vera per CLI; per le API, dai campi `usage` della documentazione e dal codice dei cervelli di F08.
+
+| Cervello | Token in ingresso | Token in uscita | Costo | Come |
+|---|---|---|---|---|
+| Claude Code 2.1.283 | `usage.input_tokens` + `cache_creation_input_tokens` + `cache_read_input_tokens` | `usage.output_tokens` | `total_cost_usd` (prezzo di listino, anche con un abbonamento) | l'output `--output-format json` che il cervello già legge |
+| Codex 0.157.1 | `usage.input_tokens` (comprende `cached_input_tokens`) | `usage.output_tokens` + `reasoning_output_tokens` | non disponibile | `--json`: eventi su stdout, l'ultimo `turn.completed` porta `usage`; la risposta resta nel file di `-o` |
+| opencode 2.0.18 | `info.tokens.input` + `cache.read` + `cache.write` | `info.tokens.output` + `reasoning` | `info.cost` (0 con i modelli gratuiti) | `--format json` non riporta il consumo: si legge l'id della sessione dagli eventi e poi `opencode session export <id>`, una seconda chiamata locale per richiesta |
+| API Anthropic | `usage.input_tokens` + campi della cache | `usage.output_tokens` | non disponibile | risposta di `/v1/messages` |
+| API compatibili OpenAI | `usage.prompt_tokens` | `usage.completion_tokens` | non disponibile | risposta di `/chat/completions`; alcuni servizi compatibili non mandano `usage`: allora anche i token sono non disponibili |
+| Finto | 0 | 0 | 0 | — |
+
+Conseguenza: il tetto di spesa di una serie è efficace con Claude Code e opencode; con Codex e le API il costo è «non disponibile» e il rapporto lo segnala (LAB-007.c).
+
 ## Strategia di test
 - **Unit (Vitest):** schema degli scenari e importazione con errori sul file giusto; modifiche di blocchi con P3 e griglia ricostruita; runtime in modalità scenario con orologio finto; motore degli scenari con il cervello finto (esiti, limiti, perturbazioni); tracciato completo e senza chiave; serie con tetto di spesa, usando cervelli finti con un costo simulato; statistiche del rapporto; `show`; cervello `replay` con i tempi registrati.
 - **E2E (Playwright):** una vista collegata a un mondo con uno scenario e il cervello finto: esito nella console; blocchi posati da una perturbazione, visibili anche a una vista che si collega dopo.
@@ -72,7 +86,7 @@ Nessuna. SHA-256 viene da `node:crypto`.
 ## Task
 Formato: `Req:` requisiti coperti · `Dip:` task da cui dipende · `Fatto quando:` criterio di completamento. Task non pianificati: suffisso `+`.
 
-- [ ] **T10.01** Cosa riportano CLI e API
+- [x] **T10.01** Cosa riportano CLI e API
   - Req: LAB-005.b · Dip: —
   - Una chiamata vera per CLI (Claude Code, Codex, opencode) per capire dove si trovano token e costo nell'output e quali opzioni servono (es. `--json` per Codex); per le API, i campi `usage` dalla documentazione. Nessun codice di prodotto.
   - Fatto quando: una tabella nel piano dice, per ogni cervello, cosa si legge e cosa è «non disponibile».
