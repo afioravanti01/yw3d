@@ -187,3 +187,12 @@ characters:
       model: haiku
       initiative: autonomous
       every: 20
+
+scenarios:
+  - id: commissione
+    name: La commissione
+    agent: pescatrice
+    task: >
+      Vai dal saggio Anselmo, chiedigli qual è il pesce più raro del laghetto,
+      poi vai al Laghetto del borgo.
+    time_limit: 600
